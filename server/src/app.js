@@ -1,0 +1,16 @@
+import cors from "cors";
+import express from "express";
+import morgan from "morgan";
+import apiRoutes from "./routes/index.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import { tenant } from "./middleware/tenant.js";
+import { corsOptions } from "./config/cors.js";
+const app = express();
+app.use(cors(corsOptions));
+app.options("*splat", cors(corsOptions));
+app.use(express.json({ limit: "2mb" }));
+app.use(morgan("dev"));
+app.use("/api", tenant, apiRoutes);
+app.use(notFound);
+app.use(errorHandler);
+export default app;

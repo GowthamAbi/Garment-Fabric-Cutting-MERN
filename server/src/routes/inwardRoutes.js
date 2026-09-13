@@ -1,0 +1,10 @@
+import { Router } from "express";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { createInward, getBundleByQr, listBundles, listInwards, verifyBundleWeight } from "../controllers/inwardController.js";
+const router = Router();
+router.get("/", asyncHandler(listInwards));
+router.post("/", asyncHandler(createInward));
+router.get("/bundles", asyncHandler(listBundles));
+router.get("/bundles/qr/:qrToken", asyncHandler(getBundleByQr));
+router.patch("/bundles/:bundleNo/weight", asyncHandler(verifyBundleWeight));
+export default router;

@@ -1,0 +1,3 @@
+import SequenceCounter from "../models/SequenceCounter.js";
+export async function nextBomNo(t){const filter={companyId:t.companyId,factoryId:t.factoryId,sequenceName:"GARMENT_BOM"};let c=await SequenceCounter.findOneAndUpdate(filter,{$inc:{currentValue:1}},{new:true});if(!c){try{c=await SequenceCounter.create({...filter,currentValue:1,updatedBy:t.updatedBy});}catch(error){if(error.code!==11000)throw error;c=await SequenceCounter.findOneAndUpdate(filter,{$inc:{currentValue:1}},{new:true});}}return `BOM-${String(c.currentValue).padStart(4,"0")}`;}
+export function prepareMeasurements(rows=[]){return rows.map(x=>({...x,totalWeightPerPieceKg:Number((Number(x.cuttingWeightPerPieceKg||0)+Number(x.foldingWeightPerPieceKg||0)).toFixed(6))}));}

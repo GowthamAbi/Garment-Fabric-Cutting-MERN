@@ -1,0 +1,15 @@
+import { Router } from "express";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { dashboard } from "../controllers/dashboardController.js";
+import masterRoutes from "./masterRoutes.js";
+import inwardRoutes from "./inwardRoutes.js";
+import outwardRoutes from "./outwardRoutes.js";
+import cuttingRoutes from "./cuttingRoutes.js";
+const router = Router();
+router.get("/health", (_request, response) => response.json({ success: true, service: "Garment Fabric Cutting API" }));
+router.get("/dashboard", asyncHandler(dashboard));
+router.use("/masters", masterRoutes);
+router.use("/inwards", inwardRoutes);
+router.use("/outwards", outwardRoutes);
+router.use("/cutting", cuttingRoutes);
+export default router;
