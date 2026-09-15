@@ -25,7 +25,7 @@ function Application() {
             : ["fabric_admin", "fabric_entry"].includes(user?.role)
               ? "Fabric Master"
               : ["cutting_admin", "cutting_entry"].includes(user?.role)
-                ? "Fabric Cutting Plan"
+                ? "Production Plan Data Entry"
                 : ["elastic_admin", "elastic_entry"].includes(user?.role)
                   ? "Elastic Requirement"
                   : user?.role?.includes("production")
@@ -48,7 +48,7 @@ function Application() {
               : ["fabric_admin", "fabric_entry"].includes(user.role)
                 ? "Fabric Master"
                 : ["cutting_admin", "cutting_entry"].includes(user.role)
-                  ? "Fabric Cutting Plan"
+                  ? "Production Plan Data Entry"
                   : ["elastic_admin", "elastic_entry"].includes(user.role)
                     ? "Elastic Requirement"
                     : ["department_incharge", "department_entry"].includes(

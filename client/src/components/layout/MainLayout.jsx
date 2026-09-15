@@ -68,20 +68,8 @@ const navigation = [
     ],
   ],
   [
-    "Production Plan Entry",
+    "Production Plan",
     ClipboardList,
-    [
-      "saas_super_admin",
-      "company_admin",
-      "admin",
-      "fabric_admin",
-      "cutting_admin",
-      "cutting_entry",
-    ],
-  ],
-  [
-    "Production Plan Print",
-    Printer,
     [
       "saas_super_admin",
       "company_admin",
@@ -125,8 +113,13 @@ const navigation = [
       "elastic_entry",
     ],
   ],
-  ["Department History", FileClock, ["fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry"]],
-  ["Department Print", Printer, ["fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry"]],
+  ["Department History", FileClock, ["fabric_admin", "fabric_entry"]],
+  ["Department Print", Printer, ["fabric_admin", "fabric_entry"]],
+  [
+    "Fabric Stock",
+    Boxes,
+    ["saas_super_admin", "admin", "fabric_admin", "fabric_entry"],
+  ],
   ["Modules", Sparkles, ["saas_super_admin", "admin"]],
   [
     "Dashboard",
@@ -349,19 +342,25 @@ export default function MainLayout({ page, onPageChange, children }) {
       "Subscription Usage",
     ].includes(page),
   );
+  const [productionPlanOpen, setProductionPlanOpen] = useState(
+    [
+      "Production Plan Data Entry",
+      "Production Plan Print",
+      "Production Plan History",
+    ].includes(page),
+  );
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const departmentPage =
     {
-      FABRIC: ["Fabric Master", "Fabric Inward", "Department History", "Department Print"],
-      CUTTING: [
-        "Production Plan Entry",
-        "Production Plan Print",
-        "Cutting Actual Entry",
-        "Fabric Waste",
+      FABRIC: [
+        "Fabric Master",
+        "Fabric Inward",
+        "Fabric Stock",
         "Department History",
         "Department Print",
       ],
+      CUTTING: ["Production Plan", "Cutting Actual Entry", "Fabric Waste"],
       ACCESSORIES: [
         "Dashboard",
         "Inward",
@@ -437,7 +436,41 @@ export default function MainLayout({ page, onPageChange, children }) {
                 ),
             )
             .map(([name, Icon]) =>
-              name === "Company Subscription" ? (
+              name === "Production Plan" ? (
+                <div className="nav-group" key={name}>
+                  <button
+                    className={
+                      page.startsWith("Production Plan ") ? "group-active" : ""
+                    }
+                    onClick={() => setProductionPlanOpen((open) => !open)}
+                  >
+                    <Icon />
+                    <span>Production Plan</span>
+                    <ChevronDown
+                      className={
+                        productionPlanOpen ? "chevron open" : "chevron"
+                      }
+                    />
+                  </button>
+                  {productionPlanOpen && (
+                    <div className="nav-submenu">
+                      {[
+                        "Production Plan Data Entry",
+                        "Production Plan Print",
+                        "Production Plan History",
+                      ].map((label) => (
+                        <button
+                          key={label}
+                          className={page === label ? "active" : ""}
+                          onClick={() => selectPage(label)}
+                        >
+                          {label.replace("Production Plan ", "")}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : name === "Company Subscription" ? (
                 <div className="nav-group" key={name}>
                   <button
                     className={

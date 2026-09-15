@@ -54,7 +54,7 @@ function entryPage(department) {
   return (
     {
       FABRIC: "Fabric Inward",
-      CUTTING: "Fabric Cutting Plan",
+      CUTTING: "Production Plan Data Entry",
       ACCESSORIES: "Inward",
       ELASTIC: "Production Control",
     }[department] || "Dashboard"

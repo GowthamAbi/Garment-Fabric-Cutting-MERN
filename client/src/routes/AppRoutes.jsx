@@ -36,6 +36,8 @@ import SubscriptionCenterPage from "../pages/saas/SubscriptionCenterPage.jsx";
 import ProductionPlanEntryPage from "../pages/fabric/ProductionPlanEntryPage.jsx";
 import ProductionPlanPrintPage from "../pages/fabric/ProductionPlanPrintPage.jsx";
 import DepartmentRecordPage from "../pages/fabric/DepartmentRecordPage.jsx";
+import ProductionPlanHistoryPage from "../pages/fabric/ProductionPlanHistoryPage.jsx";
+import FabricStockPage from "../pages/fabric/FabricStockPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
@@ -65,10 +67,19 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Subscription Bills":
     case "Subscription Usage":
       return <SubscriptionCenterPage mode={page} />;
-    case "Production Plan Entry":
+    case "Production Plan Data Entry":
       return <ProductionPlanEntryPage notify={notify} />;
     case "Production Plan Print":
       return <ProductionPlanPrintPage notify={notify} />;
+    case "Production Plan History":
+      return (
+        <ProductionPlanHistoryPage
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Fabric Stock":
+      return <FabricStockPage notify={notify} />;
     case "Department History":
       return <DepartmentRecordPage mode="history" notify={notify} />;
     case "Department Print":

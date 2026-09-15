@@ -6,6 +6,7 @@ import FabricWaste from "../models/FabricWaste.js";
 import FabricBundleStock from "../models/FabricBundleStock.js";
 import GarmentItemMaster from "../models/GarmentItemMaster.js";
 import ProcessMaster from "../models/ProcessMaster.js";
+import Sequence from "../models/Sequence.js";
 import ApiError from "../utils/ApiError.js";
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 import {
@@ -272,8 +273,25 @@ export async function listInwardBundles(req, res) {
   );
 }
 
-async function fabricStockForGroup(fabricGroup) {
-  return FabricInwardLot.aggregate([
+async function nextPlanNo(user) {
+  const tenant = {
+    companyId: user.companyId,
+    factoryId: user.factoryId,
+    key: "FABRIC_PRODUCTION_PLAN",
+  };
+  const row = await Sequence.findOneAndUpdate(
+    tenant,
+    {
+      $inc: { value: 1 },
+      $setOnInsert: tenant,
+    },
+    { upsert: true, new: true, setDefaultsOnInsert: true },
+  );
+  return String(row.value).padStart(4, "0");
+}
+
+async function fabricStockForGroup(fabricGroup, excludePlanId = null) {
+  const grossRows = await FabricInwardLot.aggregate([
     { $match: { fabricGroup: upper(fabricGroup), status: { $ne: "HOLD" } } },
     { $unwind: "$colours" },
     { $match: { "colours.balanceWeightKg": { $gt: 0 } } },
@@ -285,13 +303,49 @@ async function fabricStockForGroup(fabricGroup) {
       },
     },
     { $sort: { _id: 1 } },
-  ]).then((rows) =>
-    rows.map((row) => ({
+  ]);
+  const planFilter = {
+    fabricGroup: upper(fabricGroup),
+    status: { $nin: ["CANCELLED"] },
+    ...(excludePlanId && { _id: { $ne: excludePlanId } }),
+  };
+  const plans = await FabricCutPlan.find(planFilter).lean();
+  const reserved = new Map();
+  for (const plan of plans) {
+    for (const colour of plan.colours || []) {
+      const issued = (plan.allocations || [])
+        .filter((entry) => upper(entry.colour) === upper(colour.colour))
+        .reduce((sum, entry) => sum + num(entry.weightKg), 0);
+      const openReservation = Math.max(0, num(colour.wantedWeightKg) - issued);
+      reserved.set(
+        upper(colour.colour),
+        num(reserved.get(upper(colour.colour))) + openReservation,
+      );
+    }
+  }
+  return grossRows
+    .map((row) => ({
       colour: row._id,
-      availableWeightKg: Number(row.availableWeightKg.toFixed(3)),
+      grossWeightKg: Number(row.availableWeightKg.toFixed(3)),
+      reservedWeightKg: Number(num(reserved.get(row._id)).toFixed(3)),
+      availableWeightKg: Number(
+        Math.max(0, row.availableWeightKg - num(reserved.get(row._id))).toFixed(
+          3,
+        ),
+      ),
       fabricCodes: row.fabricCodes,
-    })),
-  );
+    }))
+    .filter((row) => row.availableWeightKg > 0);
+}
+
+export async function listFabricStock(req, res) {
+  const groups = await FabricMaster.distinct("fabricGroup", { active: true });
+  const result = [];
+  for (const group of groups) {
+    const rows = await fabricStockForGroup(group);
+    result.push(...rows.map((row) => ({ fabricGroup: group, ...row })));
+  }
+  res.json(result);
 }
 
 export async function getPlanSetup(req, res) {
@@ -305,11 +359,14 @@ export async function getPlanSetup(req, res) {
     );
   res.json({
     item,
-    stockColours: await fabricStockForGroup(item.fabricGroup),
+    stockColours: await fabricStockForGroup(
+      item.fabricGroup,
+      req.query.excludePlanId || null,
+    ),
   });
 }
 
-export async function createPlan(req, res) {
+async function buildPlanData(req, excludePlanId = null) {
   const itemCode = upper(req.body.itemCode);
   const itemMaster = await GarmentItemMaster.findOne({ itemCode });
   if (!itemMaster)
@@ -319,8 +376,7 @@ export async function createPlan(req, res) {
       409,
       "Item Master is waiting for Company Admin approval",
     );
-  if (!upper(req.body.orderNo))
-    throw new ApiError(400, "Order No is required");
+  if (!upper(req.body.orderNo)) throw new ApiError(400, "Order No is required");
   const dcType = upper(req.body.dcType || "FRESH_LOT");
   if (!["FRESH_LOT", "FOLDING_LOT"].includes(dcType))
     throw new ApiError(400, "Select Fresh Lot or Folding Lot");
@@ -329,10 +385,16 @@ export async function createPlan(req, res) {
   ];
   if (!selectedColours.length)
     throw new ApiError(400, "Select at least one available fabric colour");
-  const stockRows = await fabricStockForGroup(itemMaster.fabricGroup);
+  const stockRows = await fabricStockForGroup(
+    itemMaster.fabricGroup,
+    excludePlanId,
+  );
   const stockMap = new Map(stockRows.map((row) => [row.colour, row]));
   if (selectedColours.some((colour) => !stockMap.has(colour)))
-    throw new ApiError(409, "One or more selected colours have no fabric stock");
+    throw new ApiError(
+      409,
+      "One or more selected colours have no fabric stock",
+    );
   const input = (req.body.sizes || []).map((x) => ({
     size: upper(x.size),
     pcs: num(x.pcs),
@@ -365,13 +427,14 @@ export async function createPlan(req, res) {
       (row) => upper(row.size) === line.size,
     );
     if (!measurement)
-      throw new ApiError(400, `Item Master measurement missing for size ${line.size}`);
+      throw new ApiError(
+        400,
+        `Item Master measurement missing for size ${line.size}`,
+      );
     const perPieceKg = Number(
       (
         num(measurement.cuttingPieceWeightKg) +
-        (dcType === "FOLDING_LOT"
-          ? num(measurement.foldingPieceWeightKg)
-          : 0)
+        (dcType === "FOLDING_LOT" ? num(measurement.foldingPieceWeightKg) : 0)
       ).toFixed(6),
     );
     if (perPieceKg <= 0)
@@ -414,33 +477,71 @@ export async function createPlan(req, res) {
     }
   }
   const colours = [...colourPlans.values()];
-  const planNo = upper(req.body.planNo) || generateReferenceNo("FCP"),
-    dcNo = upper(req.body.dcNo) || planNo,
-    row = await FabricCutPlan.create({
-      planNo,
-      orderNo: upper(req.body.orderNo),
-      dcNo,
-      dcType,
-      itemCode: itemMaster.itemCode,
-      itemName: itemMaster.itemName,
-      style: upper(req.body.style),
-      bomNo: itemMaster.itemCode,
-      fabricCode: stockRows[0]?.fabricCodes?.[0] || "",
-      fabricGroup: itemMaster.fabricGroup,
-      numberOfColours: selectedColours.length,
-      colours,
-      totalPlannedPcs: input.reduce((s, x) => s + x.pcs, 0),
-      totalWantedWeightKg: Number(
-        colours.reduce((s, x) => s + x.wantedWeightKg, 0).toFixed(3),
-      ),
-      createdBy: req.user.name,
-    });
+  return {
+    orderNo: upper(req.body.orderNo),
+    dcType,
+    itemCode: itemMaster.itemCode,
+    itemName: itemMaster.itemName,
+    style: upper(req.body.style),
+    bomNo: itemMaster.itemCode,
+    fabricCode: stockRows[0]?.fabricCodes?.[0] || "",
+    fabricGroup: itemMaster.fabricGroup,
+    numberOfColours: selectedColours.length,
+    colours,
+    totalPlannedPcs: input.reduce((s, x) => s + x.pcs, 0),
+    totalWantedWeightKg: Number(
+      colours.reduce((s, x) => s + x.wantedWeightKg, 0).toFixed(3),
+    ),
+    notes: String(req.body.notes || "").trim(),
+    createdBy: req.user.name,
+  };
+}
+
+export async function createPlan(req, res) {
+  const planNo = await nextPlanNo(req.user);
+  const data = await buildPlanData(req);
+  const row = await FabricCutPlan.create({
+    ...data,
+    planNo,
+    dcNo: upper(req.body.dcNo) || planNo,
+  });
   res.status(201).json(row);
+}
+
+export async function updatePlan(req, res) {
+  const existing = await FabricCutPlan.findById(req.params.id);
+  if (!existing) throw new ApiError(404, "Production Plan not found");
+  if (existing.issuedWeightKg > 0 || existing.allocations.length)
+    throw new ApiError(409, "Issued plan cannot be edited");
+  const data = await buildPlanData(req, existing._id);
+  Object.assign(existing, data, {
+    dcNo: upper(req.body.dcNo) || existing.planNo,
+  });
+  await existing.save();
+  res.json(existing);
+}
+
+export async function deletePlan(req, res) {
+  const existing = await FabricCutPlan.findById(req.params.id);
+  if (!existing) throw new ApiError(404, "Production Plan not found");
+  if (existing.issuedWeightKg > 0 || existing.allocations.length)
+    throw new ApiError(409, "Issued plan cannot be deleted");
+  await existing.deleteOne();
+  res.json({ message: "Production Plan deleted and reserved stock released" });
 }
 export async function listPlans(req, res) {
   const f = {};
   if (req.query.planNo) f.planNo = upper(req.query.planNo);
   if (req.query.dcNo) f.dcNo = upper(req.query.dcNo);
+  if (req.query.from || req.query.to) {
+    f.createdAt = {};
+    if (req.query.from) f.createdAt.$gte = new Date(req.query.from);
+    if (req.query.to) {
+      const end = new Date(req.query.to);
+      end.setHours(23, 59, 59, 999);
+      f.createdAt.$lte = end;
+    }
+  }
   res.json(await FabricCutPlan.find(f).sort({ createdAt: -1 }));
 }
 export async function getPlan(req, res) {
@@ -572,8 +673,7 @@ export async function elasticRequirement(req, res) {
     itemCode: actual.itemCode,
     status: "APPROVED",
   }).sort({ updatedAt: -1 });
-  if (!itemMaster)
-    throw new ApiError(404, "Approved Item Master not found");
+  if (!itemMaster) throw new ApiError(404, "Approved Item Master not found");
   const lines = actual.lines.map((x) => {
     const m = itemMaster.sizes.find((s) => upper(s.size) === upper(x.size)),
       measurement = num(m?.elasticMeasurementMtr);

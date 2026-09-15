@@ -34,6 +34,9 @@ same company/factory/department history and appends new audited records.
    cutting weight; Folding Lot uses cutting + folding weight. It divides PCS
    evenly and automatically reallocates from a low-stock colour to other
    selected colours. Insufficient total stock blocks saving.
+   Plan No is an automatic four-digit tenant sequence. Saving reserves the
+   required colour stock, while edit/delete recalculates or releases that
+   reservation. Once fabric is physically issued, edit/delete is blocked.
 7. Fabric Issue consumes the scanned inward and colour through FIFO roll stock.
 8. Cutting Actual records colour/size actual PCS, bundle count and bundle
    weight. Issued KG minus bundle KG is stored in Fabric Waste Warehouse.
@@ -49,6 +52,11 @@ them. Fabric receipt and roll labels use dedicated A4 layouts with Print and PDF
 download, plus date-range/DC/fabric/type filters. Production Plan has separate
 Data Entry and professional A4 Print/PDF pages. Fabric and Cutting roles also
 have department-scoped History and Print pages.
+
+The Cutting sidebar groups Production Plan into Data Entry, Print and History.
+The print sheet shows colour/size lines, size-wise total PCS and required KG,
+supports multi-page A4 output, and excludes internal available-stock figures.
+Fabric Stock shows Gross, Reserved and Available KG with Excel, Print and PDF.
 
 ## Elastic Cutting DC workflow
 

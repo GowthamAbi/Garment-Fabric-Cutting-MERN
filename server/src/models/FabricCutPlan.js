@@ -63,6 +63,7 @@ const schema = new mongoose.Schema(
       ],
       default: "PLANNED",
     },
+    notes: { type: String, default: "", trim: true },
     createdBy: String,
   },
   { timestamps: true },

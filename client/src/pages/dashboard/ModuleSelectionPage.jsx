@@ -27,7 +27,7 @@ export default function ModuleSelectionPage({ onSelect }) {
 
         <button
           className="module-card cutting-module"
-          onClick={() => onSelect("Fabric Cutting Plan")}
+          onClick={() => onSelect("Production Plan Data Entry")}
         >
           <i>
             <Scissors />

@@ -164,6 +164,7 @@ export default function FabricCuttingPage({ mode, notify }) {
   async function saveActual(event) {
     event.preventDefault();
     const row = await api.saveActual(actual);
+    setActual(row);
     notify?.("Cutting saved. Waste: " + row.wasteWeightKg + " KG");
     load();
   }
@@ -597,7 +598,7 @@ export default function FabricCuttingPage({ mode, notify }) {
       )}
 
       {mode === "actual" && actual && (
-        <form className="card table-wrap" onSubmit={saveActual}>
+        <form className="card table-wrap print-document actual-print-document" onSubmit={saveActual}>
           <PlanHeader plan={currentPlan} />
           <table>
             <thead>
@@ -835,7 +836,12 @@ function SizeRows({ rows, setRows }) {
 
 function DataList({ rows, loading, search, setSearch, load }) {
   return (
-    <div className="card">
+    <div className="card print-document report-print-document">
+      <div className="print-report-header">
+        <small>ACCESSORIES FLOW</small>
+        <h2>Department Report</h2>
+        <p>Generated {new Date().toLocaleDateString()}</p>
+      </div>
       <div className="lookup-bar">
         <input
           placeholder="Search reference or code"
@@ -900,7 +906,7 @@ function DataList({ rows, loading, search, setSearch, load }) {
 function PlanHeader({ plan }) {
   return (
     <div className="print-heading">
-      <h3>Garment Production Plan</h3>
+      <h3>Production Plan</h3>
       <div>
         <span>
           <small>Plan No</small>
