@@ -25,16 +25,43 @@ import AuditBackupPage from "../pages/saas/AuditBackupPage.jsx";
 import OnboardingPage from "../pages/saas/OnboardingPage.jsx";
 import SuperAdminDashboardPage from "../pages/saas/SuperAdminDashboardPage.jsx";
 import ProfileSettingsPage from "../pages/saas/ProfileSettingsPage.jsx";
-import GarmentFlowPage from "../pages/garments/GarmentFlowPage.jsx";
 import FabricCuttingPage from "../pages/fabric/FabricCuttingPage.jsx";
+import FabricMasterPage from "../pages/fabric/FabricMasterPage.jsx";
+import FabricInwardPage from "../pages/fabric/FabricInwardPage.jsx";
+import GarmentItemMasterPage from "../pages/master/GarmentItemMasterPage.jsx";
+import CompanyAdminDashboardPage from "../pages/dashboard/CompanyAdminDashboardPage.jsx";
+import DepartmentDashboardPage from "../pages/dashboard/DepartmentDashboardPage.jsx";
+import CompanyInsightsPage from "../pages/dashboard/CompanyInsightsPage.jsx";
+import SubscriptionCenterPage from "../pages/saas/SubscriptionCenterPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
     case "Fabric Master":
-      return <FabricCuttingPage mode="master" notify={notify} />;
+      return <FabricMasterPage notify={notify} />;
     case "Fabric Inward":
-      return <FabricCuttingPage mode="inward" notify={notify} />;
+      return <FabricInwardPage notify={notify} />;
+    case "Item Master":
+      return <GarmentItemMasterPage notify={notify} />;
+    case "Company Dashboard":
+      return (
+        <CompanyAdminDashboardPage
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Department Dashboard":
+      return <DepartmentDashboardPage onPageChange={onPageChange} />;
+    case "Company Reports":
+    case "Company Timeline":
+    case "Company Stock":
+    case "Company Approvals":
+      return <CompanyInsightsPage mode={page} notify={notify} />;
+    case "Subscription Plan":
+    case "Subscription Purchase":
+    case "Subscription Bills":
+    case "Subscription Usage":
+      return <SubscriptionCenterPage mode={page} />;
     case "Fabric Cutting Plan":
       return <FabricCuttingPage mode="plan" notify={notify} />;
     case "Cutting Actual Entry":
@@ -43,29 +70,6 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <FabricCuttingPage mode="waste" notify={notify} />;
     case "Elastic Requirement":
       return <FabricCuttingPage mode="elastic" notify={notify} />;
-    case "Garment Dashboard":
-      return <GarmentFlowPage mode="dashboard" notify={notify} />;
-    case "BOM":
-      return <GarmentFlowPage mode="bom" notify={notify} />;
-    case "Garment PO":
-      return <GarmentFlowPage mode="po" notify={notify} />;
-    case "Materials Status":
-      return <GarmentFlowPage mode="materials" notify={notify} />;
-    case "Fabric":
-    case "Cutting":
-    case "Accessories":
-    case "Elastic":
-    case "Stitching":
-    case "Finishing":
-    case "Packing":
-    case "Dispatch":
-      return (
-        <GarmentFlowPage
-          mode="department"
-          department={page.toUpperCase()}
-          notify={notify}
-        />
-      );
     case "SaaS Owner Dashboard":
       return <SuperAdminDashboardPage notify={notify} />;
     case "Companies":

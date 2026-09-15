@@ -2,8 +2,12 @@ import mongoose from "mongoose";
 const detail = new mongoose.Schema(
   {
     dia: { type: String, required: true, trim: true },
-    rollCount: { type: Number, required: true, min: 1 },
-    weightKg: { type: Number, required: true, min: 0.001 },
+    sampleRolls: { type: Number, default: 0, min: 0 },
+    sampleWeightKg: { type: Number, default: 0, min: 0 },
+    lotRolls: { type: Number, default: 0, min: 0 },
+    lotWeightKg: { type: Number, default: 0, min: 0 },
+    totalRolls: { type: Number, default: 0, min: 0 },
+    totalWeightKg: { type: Number, default: 0, min: 0 },
   },
   { _id: true },
 );
@@ -21,10 +25,15 @@ const schema = new mongoose.Schema(
   {
     inwardNo: { type: String, required: true, uppercase: true, trim: true },
     sampleInwardNo: { type: String, default: "", uppercase: true, trim: true },
+    inwardType: {
+      type: String,
+      enum: ["SAMPLE", "LOT", "BOTH"],
+      default: "LOT",
+    },
+    referenceName: { type: String, default: "", trim: true },
     fabricCode: { type: String, required: true, uppercase: true, trim: true },
+    fabricName: { type: String, required: true, trim: true },
     fabricGroup: { type: String, required: true, uppercase: true, trim: true },
-    itemCode: { type: String, required: true, uppercase: true, trim: true },
-    itemName: { type: String, required: true, trim: true },
     compactingCode: String,
     compactingName: String,
     dyeingCode: String,
@@ -35,6 +44,10 @@ const schema = new mongoose.Schema(
     colours: { type: [colour], default: [] },
     totalRolls: { type: Number, default: 0 },
     totalWeightKg: { type: Number, default: 0 },
+    totalSampleRolls: { type: Number, default: 0 },
+    totalSampleWeightKg: { type: Number, default: 0 },
+    totalLotRolls: { type: Number, default: 0 },
+    totalLotWeightKg: { type: Number, default: 0 },
     inwardDate: { type: Date, default: Date.now },
     status: {
       type: String,

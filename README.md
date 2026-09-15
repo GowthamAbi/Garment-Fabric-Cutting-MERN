@@ -4,38 +4,47 @@ Readable MVC-style MERN project with separate `client` and `server` folders. It
 merges Fabric, Cutting, Elastic, Accessories and garment delivery traceability
 under one multi-company SaaS login.
 
+## Role layout
+
+- `saas_super_admin`: companies, subscriptions and SaaS control.
+- `company_admin`: department dashboard, Reports, Timeline, Stock, Approvals,
+  Item/Fabric/Process Masters, users and Subscription menu. Operational entry
+  is blocked by the backend.
+- `department_incharge`: assigned department monitoring, history, timeline,
+  status, stock, reports and approvals.
+- `department_entry`: assigned department entry and print workflow only.
+- Existing Store and Production roles remain compatible.
+
+Creating a new department account never replaces existing data. It reads the
+same company/factory/department history and appends new audited records.
+
 ## Fabric to cutting workflow
 
-1. Fabric Master maps Fabric Code/Group, Item Code/Name, Compacting Code/Name
-   and Dyeing Code/Name.
-2. Fabric Inward generates an inward number and records Lot, Supplier DC and
-   multiple colours. Each colour opens a Dia, Roll Count and Weight popup.
-3. Every roll receives a unique printable QR label. Provisional per-roll weight
-   is calculated when only total roll count and total weight are entered.
-4. Cutting Plan reads the approved Item + Style BOM, divides size PCS across
+1. Fabric Master stores Fabric Code, Fabric Name, Fabric Group, Company Name
+   and Company Type. Item and Sample codes are intentionally excluded.
+2. Compacting and Dyeing use a separate Code → Name Process Master.
+3. Common Item Master stores Item Code/Name, Fabric Group, dynamic size-wise
+   cutting/folding weight, elastic measurement/ranges and per-piece accessories.
+4. Fabric Inward generates an inward number and records Supplier/DC,
+   Compacting/Dyeing and multiple colours with Dia-wise Sample Rolls/KG and Lot
+   Rolls/KG.
+5. Every roll receives a unique QR containing Inward No, Sample/Lot, Fabric
+   Group, Roll No, average weight, Colour, Dyeing and Compacting names.
+6. Cutting Plan reads the approved Item + Style BOM, divides size PCS across
    requested colours and calculates wanted KG from size-wise cutting weight.
-5. Fabric Issue consumes the scanned inward and colour through FIFO roll stock.
-6. Cutting Actual records colour/size actual PCS, bundle count and bundle
+7. Fabric Issue consumes the scanned inward and colour through FIFO roll stock.
+8. Cutting Actual records colour/size actual PCS, bundle count and bundle
    weight. Issued KG minus bundle KG is stored in Fabric Waste Warehouse.
-7. Elastic Requirement reads actual cutting PCS and approved size-wise elastic
+9. Elastic Requirement reads actual cutting PCS and approved size-wise elastic
    measurement, then produces a professional printable/CSV/PDF wanted-MTR sheet.
 
 An inward whose roll stock has already been issued cannot be edited; use an
 adjustment entry so historic stock and audit traceability remain correct.
 
-## Complete garment workflow
-
-The **Garment Flow** sidebar group adds an end-to-end, tenant-separated workflow:
-
-`BOM → PO → Fabric → Cutting → Accessories → Elastic → Stitching → Finishing → Packing → Dispatch`
-
-- BOM stores item, brand, style, fabric, colours, size-wise cutting/folding measurements and accessories. Non-admin changes can be sent for company-admin approval.
-- PO is uniquely tracked by PO + Style + Colour, includes size-wise quantities and reports cutting completed/pending quantities.
-- Materials Status uses the confirmed formula: `PO PCS × (Cutting KG + Folding KG) ÷ Colour Count` and compares the result with colour-wise fabric stock.
-- Every department entry is traced by DC, PO, item, style, colour and size with inward, outward, production, delivery, rework, rejection and waste movements.
-- Fabric stock is calculated from fabric inward less outward/waste/rejection. Cutting production updates the matching PO cutting balance.
-- Date/status/DC filters, CSV Excel-compatible downloads, loading feedback, audit middleware and company/factory isolation apply throughout the flow.
-- Stitching, Finishing, Packing and Dispatch are included as separate operational departments instead of being combined into Delivery.
+The old Garment Flow sidebar and pages are removed. Underlying historical
+traceability collections remain because Fabric/Cutting/Elastic data references
+them. Fabric receipt and roll labels use dedicated A4 layouts with Print and PDF
+download, plus date-range/reference/fabric/type filters.
 
 ## Elastic Cutting DC workflow
 

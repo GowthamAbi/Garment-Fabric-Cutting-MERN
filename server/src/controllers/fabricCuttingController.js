@@ -5,6 +5,8 @@ import FabricCutActual from "../models/FabricCutActual.js";
 import FabricWaste from "../models/FabricWaste.js";
 import FabricBundleStock from "../models/FabricBundleStock.js";
 import GarmentBom from "../models/GarmentBom.js";
+import GarmentItemMaster from "../models/GarmentItemMaster.js";
+import ProcessMaster from "../models/ProcessMaster.js";
 import ApiError from "../utils/ApiError.js";
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 import {
@@ -20,84 +22,96 @@ const upper = (v) =>
       .toUpperCase(),
   num = (v) => Number(v || 0);
 
-export async function listFabricMasters(req, res) {
-  const q = req.query.search
-    ? {
-        $or: ["fabricCode", "fabricGroup", "itemCode", "itemName"].map((k) => ({
-          [k]: { $regex: req.query.search, $options: "i" },
-        })),
-      }
-    : {};
-  res.json(await FabricMaster.find(q).sort({ fabricGroup: 1, itemName: 1 }));
-}
-export async function getFabricMaster(req, res) {
-  const v = upper(req.params.code),
-    row = await FabricMaster.findOne({
-      $or: [{ fabricCode: v }, { itemCode: v }],
-    });
-  if (!row) throw new ApiError(404, "Fabric master not found");
-  res.json(row);
-}
-export async function saveFabricMaster(req, res) {
-  const data = {
-    ...req.body,
-    fabricCode: upper(req.body.fabricCode),
-    fabricGroup: upper(req.body.fabricGroup),
-    itemCode: upper(req.body.itemCode),
-    createdBy: req.user.name,
-  };
-  const row = await FabricMaster.findOneAndUpdate(
-    { fabricCode: data.fabricCode, itemCode: data.itemCode },
-    data,
-    { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true },
-  );
-  res.status(201).json(row);
-}
 function inwardTotals(colours) {
   return colours.map((c) => {
     const details = (c.details || []).map((d) => ({
       dia: String(d.dia || "").trim(),
-      rollCount: num(d.rollCount),
-      weightKg: num(d.weightKg),
+      sampleRolls: num(d.sampleRolls),
+      sampleWeightKg: num(d.sampleWeightKg),
+      lotRolls: num(d.lotRolls),
+      lotWeightKg: num(d.lotWeightKg),
+      totalRolls: num(d.sampleRolls) + num(d.lotRolls),
+      totalWeightKg: Number(
+        (num(d.sampleWeightKg) + num(d.lotWeightKg)).toFixed(3),
+      ),
     }));
-    const weight = details.reduce((s, x) => s + x.weightKg, 0);
+    const totalSampleRolls = details.reduce((s, x) => s + x.sampleRolls, 0);
+    const totalSampleWeightKg = details.reduce(
+      (s, x) => s + x.sampleWeightKg,
+      0,
+    );
+    const totalLotRolls = details.reduce((s, x) => s + x.lotRolls, 0);
+    const totalLotWeightKg = details.reduce((s, x) => s + x.lotWeightKg, 0);
     return {
       colour: upper(c.colour),
       details,
-      totalRolls: details.reduce((s, x) => s + x.rollCount, 0),
-      totalWeightKg: Number(weight.toFixed(3)),
-      balanceWeightKg: Number(weight.toFixed(3)),
+      totalRolls: totalSampleRolls + totalLotRolls,
+      totalWeightKg: Number(
+        (totalSampleWeightKg + totalLotWeightKg).toFixed(3),
+      ),
+      balanceWeightKg: Number(
+        (totalSampleWeightKg + totalLotWeightKg).toFixed(3),
+      ),
     };
   });
 }
 
-async function createInwardBundles({ inwardNo, master, colours, createdBy }) {
+async function createInwardBundles({
+  inwardNo,
+  master,
+  colours,
+  compactingName,
+  dyeingName,
+  createdBy,
+}) {
+  let rollNo = 0;
   for (const colour of colours) {
     for (const line of colour.details) {
-      const average = Number((line.weightKg / line.rollCount).toFixed(3));
-      let assigned = 0;
-      for (let index = 1; index <= line.rollCount; index += 1) {
-        const rollWeight =
-          index === line.rollCount
-            ? Number((line.weightKg - assigned).toFixed(3))
-            : average;
-        assigned = Number((assigned + rollWeight).toFixed(3));
-        const bundleNo =
-          "FBR-" +
-          crypto.randomUUID().replaceAll("-", "").slice(0, 16).toUpperCase();
-        await FabricBundleStock.create({
-          bundleNo,
-          qrToken: "FABRIC_BUNDLE:" + bundleNo,
-          inwardNo,
-          fabricCode: master.fabricCode,
-          fabricGroup: master.fabricGroup,
-          colour: colour.colour,
-          dia: line.dia,
-          originalWeightKg: rollWeight,
-          balanceWeightKg: rollWeight,
-          provisionalWeight: line.rollCount > 1,
-          createdBy,
-        });
+      for (const [inwardType, count, weight] of [
+        ["SAMPLE", line.sampleRolls, line.sampleWeightKg],
+        ["LOT", line.lotRolls, line.lotWeightKg],
+      ]) {
+        if (!count) continue;
+        const average = Number((weight / count).toFixed(3));
+        let assigned = 0;
+        for (let index = 1; index <= count; index += 1) {
+          rollNo += 1;
+          const rollWeight =
+            index === count ? Number((weight - assigned).toFixed(3)) : average;
+          assigned = Number((assigned + rollWeight).toFixed(3));
+          const bundleNo =
+            "FBR-" +
+            crypto.randomUUID().replaceAll("-", "").slice(0, 16).toUpperCase();
+          const qrDetails = {
+            inwardNo,
+            inwardType,
+            fabricGroup: master.fabricGroup,
+            rollNo,
+            averageWeightKg: rollWeight,
+            colour: colour.colour,
+            dyeingName,
+            compactingName,
+          };
+          await FabricBundleStock.create({
+            bundleNo,
+            qrToken: JSON.stringify(qrDetails),
+            rollNo,
+            inwardType,
+            inwardNo,
+            fabricCode: master.fabricCode,
+            fabricName: master.fabricName,
+            fabricGroup: master.fabricGroup,
+            colour: colour.colour,
+            dia: line.dia,
+            dyeingName,
+            compactingName,
+            averageWeightKg: rollWeight,
+            originalWeightKg: rollWeight,
+            balanceWeightKg: rollWeight,
+            provisionalWeight: count > 1,
+            createdBy,
+          });
+        }
       }
     }
   }
@@ -106,6 +120,18 @@ export async function listInwards(req, res) {
   const f = {};
   if (req.query.inwardNo) f.inwardNo = upper(req.query.inwardNo);
   if (req.query.fabricCode) f.fabricCode = upper(req.query.fabricCode);
+  if (req.query.referenceName)
+    f.referenceName = { $regex: req.query.referenceName, $options: "i" };
+  if (req.query.inwardType) f.inwardType = upper(req.query.inwardType);
+  if (req.query.from || req.query.to) {
+    f.inwardDate = {};
+    if (req.query.from) f.inwardDate.$gte = new Date(req.query.from);
+    if (req.query.to) {
+      const end = new Date(req.query.to);
+      end.setHours(23, 59, 59, 999);
+      f.inwardDate.$lte = end;
+    }
+  }
   res.json(await FabricInwardLot.find(f).sort({ inwardDate: -1 }));
 }
 export async function getInward(req, res) {
@@ -119,28 +145,86 @@ export async function saveInward(req, res) {
   });
   if (!master) throw new ApiError(404, "Create Fabric Master first");
   const colours = inwardTotals(req.body.colours);
-  if (!colours.length || colours.some((c) => !c.colour || !c.details.length))
-    throw new ApiError(400, "Every colour needs Dia, Roll and Weight details");
+  if (
+    !colours.length ||
+    colours.some(
+      (c) =>
+        !c.colour ||
+        !c.details.length ||
+        c.details.some(
+          (d) => !d.dia || d.totalRolls <= 0 || d.totalWeightKg <= 0,
+        ),
+    )
+  )
+    throw new ApiError(
+      400,
+      "Every colour needs valid Dia, Roll and Weight details",
+    );
+  const compacting = req.body.compactingCode
+    ? await ProcessMaster.findOne({
+        processType: "COMPACTING",
+        code: upper(req.body.compactingCode),
+      })
+    : null;
+  const dyeing = req.body.dyeingCode
+    ? await ProcessMaster.findOne({
+        processType: "DYEING",
+        code: upper(req.body.dyeingCode),
+      })
+    : null;
+  if (req.body.compactingCode && !compacting)
+    throw new ApiError(404, "Compacting code not found");
+  if (req.body.dyeingCode && !dyeing)
+    throw new ApiError(404, "Dyeing code not found");
   const inwardNo = upper(req.body.inwardNo) || generateReferenceNo("FIN");
   const data = {
     inwardNo,
-    sampleInwardNo: upper(req.body.sampleInwardNo),
+    inwardType: upper(req.body.inwardType || "LOT"),
+    referenceName: String(req.body.referenceName || "").trim(),
     fabricCode: master.fabricCode,
+    fabricName: master.fabricName,
     fabricGroup: master.fabricGroup,
-    itemCode: master.itemCode,
-    itemName: master.itemName,
-    compactingCode: master.compactingCode,
-    compactingName: master.compactingName,
-    dyeingCode: master.dyeingCode,
-    dyeingName: master.dyeingName,
+    compactingCode: compacting?.code || "",
+    compactingName: compacting?.name || "",
+    dyeingCode: dyeing?.code || "",
+    dyeingName: dyeing?.name || "",
     supplier: req.body.supplier,
     dcNo: upper(req.body.dcNo),
-    lotNo: upper(req.body.lotNo),
+    lotNo: upper(req.body.lotNo || "NA"),
     inwardDate: req.body.inwardDate,
     colours,
     totalRolls: colours.reduce((s, c) => s + c.totalRolls, 0),
     totalWeightKg: Number(
       colours.reduce((s, c) => s + c.totalWeightKg, 0).toFixed(3),
+    ),
+    totalSampleRolls: colours.reduce(
+      (sum, colour) =>
+        sum + colour.details.reduce((s, line) => s + line.sampleRolls, 0),
+      0,
+    ),
+    totalSampleWeightKg: Number(
+      colours
+        .reduce(
+          (sum, colour) =>
+            sum +
+            colour.details.reduce((s, line) => s + line.sampleWeightKg, 0),
+          0,
+        )
+        .toFixed(3),
+    ),
+    totalLotRolls: colours.reduce(
+      (sum, colour) =>
+        sum + colour.details.reduce((s, line) => s + line.lotRolls, 0),
+      0,
+    ),
+    totalLotWeightKg: Number(
+      colours
+        .reduce(
+          (sum, colour) =>
+            sum + colour.details.reduce((s, line) => s + line.lotWeightKg, 0),
+          0,
+        )
+        .toFixed(3),
     ),
     createdBy: req.user.name,
   };
@@ -173,6 +257,8 @@ export async function saveInward(req, res) {
     inwardNo: row.inwardNo,
     master,
     colours,
+    compactingName: data.compactingName,
+    dyeingName: data.dyeingName,
     createdBy: req.user.name,
   });
   res.status(req.params.id ? 200 : 201).json(row);
@@ -195,9 +281,13 @@ export async function createPlan(req, res) {
       status: "APPROVED",
     }).sort({ updatedAt: -1 });
   if (!bom) throw new ApiError(404, "Approved BOM not found for Item + Style");
-  const master = await FabricMaster.findOne({ itemName });
-  if (!master)
-    throw new ApiError(404, "Fabric Master mapping not found for this item");
+  const itemMaster = await GarmentItemMaster.findOne({ itemName });
+  if (!itemMaster)
+    throw new ApiError(404, "Item Master mapping not found for this item");
+  const master = await FabricMaster.findOne({
+    fabricGroup: itemMaster.fabricGroup,
+  });
+  if (!master) throw new ApiError(404, "Fabric Group master not found");
   const requestedColours = Math.max(1, num(req.body.numberOfColours)),
     names = bom.colours.slice(0, requestedColours).map((c) => upper(c.name));
   if (names.length < requestedColours)
@@ -242,7 +332,7 @@ export async function createPlan(req, res) {
     row = await FabricCutPlan.create({
       planNo,
       dcNo,
-      itemCode: master.itemCode,
+      itemCode: itemMaster.itemCode,
       itemName,
       style,
       bomNo: bom.bomNo,

@@ -22,15 +22,37 @@ import {
   stopJob,
   deletePendingIssue,
 } from "../controllers/productionController.js";
-import { allowRoles } from "../middleware/roleMiddleware.js";
+import { allowDepartment, allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { getCuttingDc, getCuttingDcs, getMeasurements, saveCuttingDc } from "../controllers/cuttingDcController.js";
+import {
+  getCuttingDc,
+  getCuttingDcs,
+  getMeasurements,
+  saveCuttingDc,
+} from "../controllers/cuttingDcController.js";
 
 const router = Router();
-const productionAccess = allowRoles(
-  "saas_super_admin", "company_admin", "admin", "production", "production_planner",
-  "production_operator", "supervisor", "quality", "maintenance",
-  "sewing_coordinator", "management", "view_only",
+const productionAccess = allowDepartment(
+  "ELASTIC",
+  "saas_super_admin",
+  "company_admin",
+  "admin",
+  "production",
+  "production_planner",
+  "production_operator",
+  "supervisor",
+  "quality",
+  "maintenance",
+  "sewing_coordinator",
+  "management",
+  "view_only",
+);
+const productionPlanningWrite = allowDepartment(
+  "ELASTIC",
+  "saas_super_admin",
+  "admin",
+  "production_planner",
+  "production",
 );
 
 router.use(productionAccess);
@@ -40,8 +62,8 @@ router.get("/cutting-dcs/:dcNo", asyncHandler(getCuttingDc));
 router.post("/cutting-dcs", asyncHandler(saveCuttingDc));
 router.get("/measurements", asyncHandler(getMeasurements));
 router.get("/plans", asyncHandler(getPlans));
-router.post("/plans", allowRoles("saas_super_admin", "company_admin", "admin", "production_planner", "production"), asyncHandler(savePlan));
-router.put("/plans/:id", allowRoles("saas_super_admin", "company_admin", "admin", "production_planner", "production"), asyncHandler(savePlan));
+router.post("/plans", productionPlanningWrite, asyncHandler(savePlan));
+router.put("/plans/:id", productionPlanningWrite, asyncHandler(savePlan));
 router.get("/machines", asyncHandler(getMachines));
 router.post("/machines", asyncHandler(saveMachine));
 router.put("/machines/:id", asyncHandler(saveMachine));

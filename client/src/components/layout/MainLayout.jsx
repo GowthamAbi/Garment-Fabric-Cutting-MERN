@@ -26,12 +26,25 @@ import {
   ListChecks,
   PackageCheck,
   Truck,
+  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
+  ["Company Dashboard", LayoutDashboard, ["company_admin"]],
+  [
+    "Department Dashboard",
+    LayoutDashboard,
+    ["department_incharge", "department_entry"],
+  ],
+  ["Item Master", ClipboardList, ["company_admin", "admin"]],
+  ["Company Reports", BarChart3, ["company_admin"]],
+  ["Company Timeline", Clock3, ["company_admin"]],
+  ["Company Stock", Boxes, ["company_admin"]],
+  ["Company Approvals", ListChecks, ["company_admin"]],
+  ["Company Subscription", CreditCard, ["company_admin"]],
   [
     "Fabric Master",
     Boxes,
@@ -101,26 +114,7 @@ const navigation = [
       "elastic_entry",
     ],
   ],
-  ["Modules", Sparkles, ["saas_super_admin", "company_admin", "admin"]],
-  [
-    "Garment Flow",
-    Factory,
-    [
-      "saas_super_admin",
-      "company_admin",
-      "admin",
-      "store",
-      "production",
-      "production_planner",
-      "production_operator",
-      "supervisor",
-      "quality",
-      "maintenance",
-      "sewing_coordinator",
-      "management",
-      "view_only",
-    ],
-  ],
+  ["Modules", Sparkles, ["saas_super_admin", "admin"]],
   [
     "Dashboard",
     LayoutDashboard,
@@ -334,23 +328,41 @@ export default function MainLayout({ page, onPageChange, children }) {
       "Section Delivery",
     ].includes(page),
   );
-  const garmentPages = [
-    "Garment Dashboard",
-    "BOM",
-    "Garment PO",
-    "Materials Status",
-    "Fabric",
-    "Cutting",
-    "Accessories",
-    "Elastic",
-    "Stitching",
-    "Finishing",
-    "Packing",
-    "Dispatch",
-  ];
-  const [garmentOpen, setGarmentOpen] = useState(garmentPages.includes(page));
+  const [subscriptionOpen, setSubscriptionOpen] = useState(
+    [
+      "Subscription Plan",
+      "Subscription Purchase",
+      "Subscription Bills",
+      "Subscription Usage",
+    ].includes(page),
+  );
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
+  const departmentPage =
+    {
+      FABRIC: ["Fabric Master", "Fabric Inward"],
+      CUTTING: ["Fabric Cutting Plan", "Cutting Actual Entry", "Fabric Waste"],
+      ACCESSORIES: [
+        "Dashboard",
+        "Inward",
+        "PO",
+        "PO Pending",
+        "Print",
+        "Stock",
+        "History",
+        "Master Data",
+      ],
+      ELASTIC: [
+        "Production Dashboard",
+        "Production Planning",
+        "Cutting DC",
+        "Production Control",
+        "Status",
+        "Warehouse",
+        "Pending & Issues",
+        "Reports",
+      ],
+    }[user?.department] || [];
 
   function selectPage(pageName) {
     onPageChange(pageName);
@@ -381,69 +393,58 @@ export default function MainLayout({ page, onPageChange, children }) {
 
         <nav>
           {navigation
-            .filter(([, , roles]) => roles.includes(user?.role))
+            .filter(
+              ([name, , roles]) =>
+                (roles.includes(user?.role) ||
+                  (["department_incharge", "department_entry"].includes(
+                    user?.role,
+                  ) &&
+                    departmentPage.includes(name))) &&
+                name !== "Garment Flow" &&
+                !(
+                  user?.role === "company_admin" &&
+                  ![
+                    "Company Dashboard",
+                    "Item Master",
+                    "Fabric Master",
+                    "Company Reports",
+                    "Company Timeline",
+                    "Company Stock",
+                    "Company Approvals",
+                    "Company Subscription",
+                    "User Management",
+                  ].includes(name)
+                ),
+            )
             .map(([name, Icon]) =>
-              name === "Garment Flow" ? (
+              name === "Company Subscription" ? (
                 <div className="nav-group" key={name}>
                   <button
                     className={
-                      garmentPages.includes(page) ? "group-active" : ""
+                      page.startsWith("Subscription ") ? "group-active" : ""
                     }
-                    onClick={() => setGarmentOpen((open) => !open)}
+                    onClick={() => setSubscriptionOpen(!subscriptionOpen)}
                   >
                     <Icon />
-                    <span>Garment Flow</span>
+                    <span>Subscription</span>
                     <ChevronDown
-                      className={garmentOpen ? "chevron open" : "chevron"}
+                      className={subscriptionOpen ? "chevron open" : "chevron"}
                     />
                   </button>
-                  {garmentOpen && (
-                    <div className="nav-submenu garment-menu">
-                      <button
-                        className={page === "Garment Dashboard" ? "active" : ""}
-                        onClick={() => selectPage("Garment Dashboard")}
-                      >
-                        <LayoutDashboard />
-                        Dashboard
-                      </button>
-                      <button
-                        className={page === "BOM" ? "active" : ""}
-                        onClick={() => selectPage("BOM")}
-                      >
-                        <ClipboardList />
-                        BOM
-                      </button>
-                      <button
-                        className={page === "Garment PO" ? "active" : ""}
-                        onClick={() => selectPage("Garment PO")}
-                      >
-                        <ShoppingCart />
-                        PO
-                      </button>
-                      <button
-                        className={page === "Materials Status" ? "active" : ""}
-                        onClick={() => selectPage("Materials Status")}
-                      >
-                        <BarChart3 />
-                        Materials Status
-                      </button>
+                  {subscriptionOpen && (
+                    <div className="nav-submenu">
                       {[
-                        ["Fabric", Boxes],
-                        ["Cutting", Scissors],
-                        ["Accessories", Sparkles],
-                        ["Elastic", Activity],
-                        ["Stitching", Factory],
-                        ["Finishing", Settings2],
-                        ["Packing", PackageCheck],
-                        ["Dispatch", Truck],
-                      ].map(([label, SubIcon]) => (
+                        "Subscription Plan",
+                        "Subscription Purchase",
+                        "Subscription Bills",
+                        "Subscription Usage",
+                      ].map((label) => (
                         <button
                           key={label}
                           className={page === label ? "active" : ""}
                           onClick={() => selectPage(label)}
                         >
-                          <SubIcon />
-                          {label}
+                          {label.replace("Subscription ", "")}
                         </button>
                       ))}
                     </div>

@@ -24,7 +24,7 @@ export async function getCompanyWorkspace(request, response) {
   const company = await Company.findById(request.params.id).lean();
   if (!company) throw new ApiError(404, "Company not found");
   const users = await User.find({ companyId: company._id })
-    .select("name email role permissions active factoryId createdAt")
+    .select("name email role department permissions active factoryId createdAt")
     .sort({ role: 1, name: 1 })
     .lean();
   const departments = {
@@ -110,6 +110,8 @@ export async function updateCompanyUser(request, response) {
     "stitching_entry",
     "management",
     "view_only",
+    "department_incharge",
+    "department_entry",
   ];
   if (request.body.role && !allowedRoles.includes(request.body.role))
     throw new ApiError(400, "Invalid company role");
@@ -122,6 +124,9 @@ export async function updateCompanyUser(request, response) {
       }),
       ...(request.body.permissions && {
         permissions: request.body.permissions,
+      }),
+      ...(request.body.department !== undefined && {
+        department: request.body.department,
       }),
     },
     { new: true, runValidators: true },
@@ -173,12 +178,10 @@ export async function createCompany(request, response) {
     companyId: company._id,
     factoryId,
   });
-  response
-    .status(201)
-    .json({
-      company,
-      admin: { _id: user._id, name: user.name, email: user.email },
-    });
+  response.status(201).json({
+    company,
+    admin: { _id: user._id, name: user.name, email: user.email },
+  });
 }
 
 export async function updateCompany(request, response) {

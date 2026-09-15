@@ -12,23 +12,25 @@ import SuperAdminLayout from "./components/layout/SuperAdminLayout.jsx";
 
 function Application() {
   const { token, user } = useAuth();
-  const adminRoles = ["saas_super_admin", "company_admin", "admin"];
+  const adminRoles = ["saas_super_admin", "admin"];
   const [page, setPage] = useState(
     window.location.pathname === "/production"
       ? "Production Control"
       : user?.role === "saas_super_admin"
         ? "SaaS Owner Dashboard"
-        : adminRoles.includes(user?.role)
-          ? "Modules"
-          : ["fabric_admin", "fabric_entry"].includes(user?.role)
-            ? "Fabric Master"
-            : ["cutting_admin", "cutting_entry"].includes(user?.role)
-              ? "Fabric Cutting Plan"
-              : ["elastic_admin", "elastic_entry"].includes(user?.role)
-                ? "Elastic Requirement"
-                : user?.role?.includes("production")
-                  ? "Production Dashboard"
-                  : "Dashboard",
+        : user?.role === "company_admin"
+          ? "Company Dashboard"
+          : adminRoles.includes(user?.role)
+            ? "Modules"
+            : ["fabric_admin", "fabric_entry"].includes(user?.role)
+              ? "Fabric Master"
+              : ["cutting_admin", "cutting_entry"].includes(user?.role)
+                ? "Fabric Cutting Plan"
+                : ["elastic_admin", "elastic_entry"].includes(user?.role)
+                  ? "Elastic Requirement"
+                  : user?.role?.includes("production")
+                    ? "Production Dashboard"
+                    : "Dashboard",
   );
   const [message, setMessage] = useState("");
 
@@ -39,25 +41,31 @@ function Application() {
         ? "Production Control"
         : user.role === "saas_super_admin"
           ? "SaaS Owner Dashboard"
-          : adminRoles.includes(user.role)
-            ? "Modules"
-            : ["fabric_admin", "fabric_entry"].includes(user.role)
-              ? "Fabric Master"
-              : ["cutting_admin", "cutting_entry"].includes(user.role)
-                ? "Fabric Cutting Plan"
-                : ["elastic_admin", "elastic_entry"].includes(user.role)
-                  ? "Elastic Requirement"
-                  : user.role?.includes("production") ||
-                      [
-                        "supervisor",
-                        "quality",
-                        "maintenance",
-                        "sewing_coordinator",
-                        "management",
-                        "view_only",
-                      ].includes(user.role)
-                    ? "Production Dashboard"
-                    : "Dashboard";
+          : user.role === "company_admin"
+            ? "Company Dashboard"
+            : adminRoles.includes(user.role)
+              ? "Modules"
+              : ["fabric_admin", "fabric_entry"].includes(user.role)
+                ? "Fabric Master"
+                : ["cutting_admin", "cutting_entry"].includes(user.role)
+                  ? "Fabric Cutting Plan"
+                  : ["elastic_admin", "elastic_entry"].includes(user.role)
+                    ? "Elastic Requirement"
+                    : ["department_incharge", "department_entry"].includes(
+                          user.role,
+                        )
+                      ? "Department Dashboard"
+                      : user.role?.includes("production") ||
+                          [
+                            "supervisor",
+                            "quality",
+                            "maintenance",
+                            "sewing_coordinator",
+                            "management",
+                            "view_only",
+                          ].includes(user.role)
+                        ? "Production Dashboard"
+                        : "Dashboard";
     setPage(nextPage);
   }, [token, user?._id, user?.role]);
 

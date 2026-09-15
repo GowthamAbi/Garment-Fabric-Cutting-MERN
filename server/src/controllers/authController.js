@@ -14,6 +14,7 @@ function createToken(user) {
       companyId: user.companyId,
       factoryId: user.factoryId,
       permissions: user.permissions,
+      department: user.department,
     },
     process.env.JWT_SECRET,
     { expiresIn: "7d" },
@@ -31,6 +32,7 @@ function createAuthResponse(user) {
       companyId: user.companyId,
       factoryId: user.factoryId,
       permissions: user.permissions || [],
+      department: user.department || "",
     },
   };
 }
@@ -92,7 +94,7 @@ export async function getUsers(_request, response) {
   response.json(
     await User.find()
       .select(
-        "name email role permissions active companyId factoryId createdAt",
+        "name email role department permissions active companyId factoryId createdAt",
       )
       .sort({ createdAt: 1 }),
   );
@@ -123,6 +125,8 @@ export async function createUser(request, response) {
     "stitching_entry",
     "management",
     "view_only",
+    "department_incharge",
+    "department_entry",
   ];
   if (!name || !email || !password || !allowedRoles.includes(role)) {
     throw new ApiError(
@@ -146,17 +150,16 @@ export async function createUser(request, response) {
     password: await bcrypt.hash(password, 12),
     role,
     permissions: request.body.permissions || [],
+    department: request.body.department || "",
     companyId: targetCompanyId,
     factoryId: targetFactoryId,
   });
-  response
-    .status(201)
-    .json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+  response.status(201).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  });
 }
 
 export async function forgotPassword(request, response) {
@@ -246,7 +249,9 @@ export async function login(request, response) {
 
 export async function getProfile(request, response) {
   const user = await User.findById(request.user.id)
-    .select("name email role permissions active companyId factoryId createdAt")
+    .select(
+      "name email role department permissions active companyId factoryId createdAt",
+    )
     .lean();
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
@@ -265,7 +270,9 @@ export async function updateProfile(request, response) {
   const user = await User.findByIdAndUpdate(request.user.id, updates, {
     new: true,
     runValidators: true,
-  }).select("name email role permissions active companyId factoryId createdAt");
+  }).select(
+    "name email role department permissions active companyId factoryId createdAt",
+  );
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
 }

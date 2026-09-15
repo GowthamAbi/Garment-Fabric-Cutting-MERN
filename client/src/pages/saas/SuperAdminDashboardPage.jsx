@@ -36,6 +36,8 @@ const roles = [
   "sewing_coordinator",
   "management",
   "view_only",
+  "department_incharge",
+  "department_entry",
 ];
 
 const blankUser = {
@@ -43,6 +45,7 @@ const blankUser = {
   email: "",
   password: "",
   role: "fabric_entry",
+  department: "",
 };
 
 export default function SuperAdminDashboardPage({ notify }) {
@@ -271,6 +274,31 @@ export default function SuperAdminDashboardPage({ notify }) {
                 <option key={role}>{role}</option>
               ))}
             </select>
+            {["department_incharge", "department_entry"].includes(
+              form.role,
+            ) && (
+              <select
+                required
+                value={form.department}
+                onChange={(event) =>
+                  setForm({ ...form, department: event.target.value })
+                }
+              >
+                <option value="">Select department</option>
+                {[
+                  "FABRIC",
+                  "CUTTING",
+                  "ACCESSORIES",
+                  "ELASTIC",
+                  "STITCHING",
+                  "FINISHING",
+                  "PACKING",
+                  "DISPATCH",
+                ].map((department) => (
+                  <option key={department}>{department}</option>
+                ))}
+              </select>
+            )}
             <button className="primary">
               <Plus />
               Create User

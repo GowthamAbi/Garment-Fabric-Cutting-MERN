@@ -15,6 +15,39 @@ export const fabricCuttingApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  updateMaster: (id, data) =>
+    api("/fabric-cutting/masters/" + id, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+  deleteMaster: (id) =>
+    api("/fabric-cutting/masters/" + id, { method: "DELETE" }),
+  processes: (type = "") =>
+    api("/fabric-cutting/process-masters" + (type ? `?type=${type}` : "")),
+  process: (type, code) =>
+    api(`/fabric-cutting/process-masters/${type}/${encodeURIComponent(code)}`),
+  saveProcess: (data, id) =>
+    api("/fabric-cutting/process-masters" + (id ? "/" + id : ""), {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(data),
+    }),
+  itemMasters: (search = "") =>
+    api(
+      "/fabric-cutting/item-masters" +
+        (search ? `?search=${encodeURIComponent(search)}` : ""),
+    ),
+  saveItemMaster: (data, id) =>
+    api("/fabric-cutting/item-masters" + (id ? "/" + id : ""), {
+      method: id ? "PUT" : "POST",
+      body: JSON.stringify(data),
+    }),
+  approveItemMaster: (id, status = "APPROVED") =>
+    api(`/fabric-cutting/item-masters/${id}/approval`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  deleteItemMaster: (id) =>
+    api(`/fabric-cutting/item-masters/${id}`, { method: "DELETE" }),
   inwards: (params) => api("/fabric-cutting/inwards" + query(params)),
   inward: (number) =>
     api("/fabric-cutting/inwards/" + encodeURIComponent(number)),
