@@ -1,0 +1,5 @@
+.field input,
+.field select {
+  min-height: 42px;
+  line-height: 1.5;
+}

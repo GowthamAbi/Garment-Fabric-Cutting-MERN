@@ -1,1 +1,5 @@
-export const asyncHandler = (handler) => (request, response, next) => Promise.resolve(handler(request, response, next)).catch(next);
+export function asyncHandler(controllerFunction) {
+  return (request, response, next) => {
+    Promise.resolve(controllerFunction(request, response, next)).catch(next);
+  };
+}

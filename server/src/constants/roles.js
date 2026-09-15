@@ -1,0 +1,15 @@
+export const ROLES = {
+  SAAS_SUPER_ADMIN: "saas_super_admin",
+  COMPANY_ADMIN: "company_admin",
+  ADMIN: "admin",
+  STORE: "store",
+  PRODUCTION_PLANNER: "production_planner",
+  PRODUCTION_OPERATOR: "production_operator",
+  PRODUCTION: "production",
+  SUPERVISOR: "supervisor",
+  QUALITY: "quality",
+  MAINTENANCE: "maintenance",
+  SEWING_COORDINATOR: "sewing_coordinator",
+  MANAGEMENT: "management",
+  VIEW_ONLY: "view_only",
+};

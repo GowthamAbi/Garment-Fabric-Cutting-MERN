@@ -1,0 +1,4 @@
+export const TRANSACTION_TYPES = {
+  INWARD: "INWARD",
+  OUTWARD: "OUTWARD",
+};

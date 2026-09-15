@@ -1,6 +1,14 @@
 import "dotenv/config";
+import "./config/mongoosePlugins.js";
 import app from "./app.js";
 import { connectDatabase } from "./config/database.js";
-const port = Number(process.env.PORT || 5000);
+import { validateEnvironment } from "./config/environment.js";
+
+validateEnvironment();
 await connectDatabase();
-app.listen(port, () => console.log(`Garment API running on port ${port}`));
+
+const port = process.env.PORT || 5000;
+
+app.listen(port, () => {
+  console.log(`Accessories Flow API running on port ${port}`);
+});

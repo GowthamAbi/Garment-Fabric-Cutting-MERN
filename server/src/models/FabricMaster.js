@@ -1,25 +1,21 @@
 import mongoose from "mongoose";
-import { tenantFields } from "./plugins/tenantFields.js";
-
-const fabricMasterSchema = new mongoose.Schema(
+const schema = new mongoose.Schema(
   {
     fabricCode: { type: String, required: true, uppercase: true, trim: true },
     fabricGroup: { type: String, required: true, uppercase: true, trim: true },
-    fabricType: { type: String, required: true, uppercase: true, trim: true },
-    colour: { type: String, required: true, uppercase: true, trim: true },
-    dia: { type: String, default: "", uppercase: true, trim: true },
-    gsm: { type: Number, default: 0, min: 0 },
-    unit: { type: String, enum: ["KG"], default: "KG" },
+    itemCode: { type: String, required: true, uppercase: true, trim: true },
+    itemName: { type: String, required: true, trim: true },
+    compactingCode: { type: String, default: "", uppercase: true, trim: true },
+    compactingName: { type: String, default: "", trim: true },
+    dyeingCode: { type: String, default: "", uppercase: true, trim: true },
+    dyeingName: { type: String, default: "", trim: true },
     active: { type: Boolean, default: true },
-    customFields: { type: Map, of: String, default: {} },
+    createdBy: { type: String, default: "System" },
   },
   { timestamps: true },
 );
-
-tenantFields(fabricMasterSchema);
-fabricMasterSchema.index(
-  { companyId: 1, factoryId: 1, fabricCode: 1, colour: 1, dia: 1, gsm: 1 },
+schema.index(
+  { companyId: 1, factoryId: 1, fabricCode: 1, itemCode: 1 },
   { unique: true },
 );
-
-export default mongoose.model("FabricMaster", fabricMasterSchema);
+export default mongoose.model("FabricMaster", schema);
