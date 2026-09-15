@@ -7,8 +7,6 @@ const blankFabric = {
   fabricCode: "",
   fabricName: "",
   fabricGroup: "",
-  companyName: "",
-  companyType: "",
 };
 const blankProcess = { processType: "COMPACTING", code: "", name: "" };
 
@@ -154,8 +152,6 @@ export default function FabricMasterPage({ notify }) {
                 <th>Code</th>
                 <th>Fabric Name</th>
                 <th>Group</th>
-                <th>Company</th>
-                <th>Type</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -165,8 +161,6 @@ export default function FabricMasterPage({ notify }) {
                   <td>{row.fabricCode}</td>
                   <td>{row.fabricName}</td>
                   <td>{row.fabricGroup}</td>
-                  <td>{row.companyName || "—"}</td>
-                  <td>{row.companyType || "—"}</td>
                   <td>
                     <div className="row-actions">
                       {canManage && (

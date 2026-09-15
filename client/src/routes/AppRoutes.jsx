@@ -33,6 +33,9 @@ import CompanyAdminDashboardPage from "../pages/dashboard/CompanyAdminDashboardP
 import DepartmentDashboardPage from "../pages/dashboard/DepartmentDashboardPage.jsx";
 import CompanyInsightsPage from "../pages/dashboard/CompanyInsightsPage.jsx";
 import SubscriptionCenterPage from "../pages/saas/SubscriptionCenterPage.jsx";
+import ProductionPlanEntryPage from "../pages/fabric/ProductionPlanEntryPage.jsx";
+import ProductionPlanPrintPage from "../pages/fabric/ProductionPlanPrintPage.jsx";
+import DepartmentRecordPage from "../pages/fabric/DepartmentRecordPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
@@ -62,8 +65,14 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Subscription Bills":
     case "Subscription Usage":
       return <SubscriptionCenterPage mode={page} />;
-    case "Fabric Cutting Plan":
-      return <FabricCuttingPage mode="plan" notify={notify} />;
+    case "Production Plan Entry":
+      return <ProductionPlanEntryPage notify={notify} />;
+    case "Production Plan Print":
+      return <ProductionPlanPrintPage notify={notify} />;
+    case "Department History":
+      return <DepartmentRecordPage mode="history" notify={notify} />;
+    case "Department Print":
+      return <DepartmentRecordPage mode="print" notify={notify} />;
     case "Cutting Actual Entry":
       return <FabricCuttingPage mode="actual" notify={notify} />;
     case "Fabric Waste":

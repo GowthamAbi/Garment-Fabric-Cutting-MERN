@@ -40,6 +40,7 @@ const schema = new mongoose.Schema(
     dyeingName: String,
     supplier: { type: String, default: "" },
     dcNo: { type: String, default: "", uppercase: true },
+    lotDcNo: { type: String, default: "", uppercase: true, trim: true },
     lotNo: { type: String, required: true, uppercase: true, trim: true },
     colours: { type: [colour], default: [] },
     totalRolls: { type: Number, default: 0 },

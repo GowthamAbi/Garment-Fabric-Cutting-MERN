@@ -18,7 +18,7 @@ export async function listFabricMasters(request, response) {
   const search = String(request.query.search || "").trim();
   const filter = search
     ? {
-        $or: ["fabricCode", "fabricName", "fabricGroup", "companyName"].map(
+        $or: ["fabricCode", "fabricName", "fabricGroup"].map(
           (key) => ({ [key]: { $regex: search, $options: "i" } }),
         ),
       }
@@ -39,8 +39,6 @@ export async function saveFabricMaster(request, response) {
     fabricCode: upper(request.body.fabricCode),
     fabricName: String(request.body.fabricName || "").trim(),
     fabricGroup: upper(request.body.fabricGroup),
-    companyName: String(request.body.companyName || "").trim(),
-    companyType: String(request.body.companyType || "").trim(),
     active: request.body.active !== false,
     createdBy: request.user.name,
   };

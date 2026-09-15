@@ -4,7 +4,6 @@ import FabricCutPlan from "../models/FabricCutPlan.js";
 import FabricCutActual from "../models/FabricCutActual.js";
 import FabricWaste from "../models/FabricWaste.js";
 import FabricBundleStock from "../models/FabricBundleStock.js";
-import GarmentBom from "../models/GarmentBom.js";
 import GarmentItemMaster from "../models/GarmentItemMaster.js";
 import ProcessMaster from "../models/ProcessMaster.js";
 import ApiError from "../utils/ApiError.js";
@@ -14,6 +13,7 @@ import {
   calculateWantedWeight,
   calculateWaste,
   distributePieces,
+  allocatePiecesByStock,
 } from "../services/fabricFlowCalculations.js";
 import crypto from "node:crypto";
 const upper = (v) =>
@@ -120,8 +120,8 @@ export async function listInwards(req, res) {
   const f = {};
   if (req.query.inwardNo) f.inwardNo = upper(req.query.inwardNo);
   if (req.query.fabricCode) f.fabricCode = upper(req.query.fabricCode);
-  if (req.query.referenceName)
-    f.referenceName = { $regex: req.query.referenceName, $options: "i" };
+  if (req.query.dcNo) f.dcNo = upper(req.query.dcNo);
+  if (req.query.lotDcNo) f.lotDcNo = upper(req.query.lotDcNo);
   if (req.query.inwardType) f.inwardType = upper(req.query.inwardType);
   if (req.query.from || req.query.to) {
     f.inwardDate = {};
@@ -180,7 +180,6 @@ export async function saveInward(req, res) {
   const data = {
     inwardNo,
     inwardType: upper(req.body.inwardType || "LOT"),
-    referenceName: String(req.body.referenceName || "").trim(),
     fabricCode: master.fabricCode,
     fabricName: master.fabricName,
     fabricGroup: master.fabricGroup,
@@ -188,8 +187,8 @@ export async function saveInward(req, res) {
     compactingName: compacting?.name || "",
     dyeingCode: dyeing?.code || "",
     dyeingName: dyeing?.name || "",
-    supplier: req.body.supplier,
     dcNo: upper(req.body.dcNo),
+    lotDcNo: upper(req.body.lotDcNo),
     lotNo: upper(req.body.lotNo || "NA"),
     inwardDate: req.body.inwardDate,
     colours,
@@ -272,26 +271,68 @@ export async function listInwardBundles(req, res) {
     }),
   );
 }
-export async function createPlan(req, res) {
-  const itemName = String(req.body.itemName || "").trim(),
-    style = upper(req.body.style),
-    bom = await GarmentBom.findOne({
-      itemName,
-      style,
-      status: "APPROVED",
-    }).sort({ updatedAt: -1 });
-  if (!bom) throw new ApiError(404, "Approved BOM not found for Item + Style");
-  const itemMaster = await GarmentItemMaster.findOne({ itemName });
-  if (!itemMaster)
-    throw new ApiError(404, "Item Master mapping not found for this item");
-  const master = await FabricMaster.findOne({
-    fabricGroup: itemMaster.fabricGroup,
+
+async function fabricStockForGroup(fabricGroup) {
+  return FabricInwardLot.aggregate([
+    { $match: { fabricGroup: upper(fabricGroup), status: { $ne: "HOLD" } } },
+    { $unwind: "$colours" },
+    { $match: { "colours.balanceWeightKg": { $gt: 0 } } },
+    {
+      $group: {
+        _id: "$colours.colour",
+        availableWeightKg: { $sum: "$colours.balanceWeightKg" },
+        fabricCodes: { $addToSet: "$fabricCode" },
+      },
+    },
+    { $sort: { _id: 1 } },
+  ]).then((rows) =>
+    rows.map((row) => ({
+      colour: row._id,
+      availableWeightKg: Number(row.availableWeightKg.toFixed(3)),
+      fabricCodes: row.fabricCodes,
+    })),
+  );
+}
+
+export async function getPlanSetup(req, res) {
+  const itemCode = upper(req.params.itemCode);
+  const item = await GarmentItemMaster.findOne({ itemCode });
+  if (!item) throw new ApiError(404, "Item Code not found in Item Master");
+  if (item.status !== "APPROVED")
+    throw new ApiError(
+      409,
+      "Item Master is waiting for Company Admin approval",
+    );
+  res.json({
+    item,
+    stockColours: await fabricStockForGroup(item.fabricGroup),
   });
-  if (!master) throw new ApiError(404, "Fabric Group master not found");
-  const requestedColours = Math.max(1, num(req.body.numberOfColours)),
-    names = bom.colours.slice(0, requestedColours).map((c) => upper(c.name));
-  if (names.length < requestedColours)
-    throw new ApiError(400, "BOM does not contain requested number of colours");
+}
+
+export async function createPlan(req, res) {
+  const itemCode = upper(req.body.itemCode);
+  const itemMaster = await GarmentItemMaster.findOne({ itemCode });
+  if (!itemMaster)
+    throw new ApiError(404, "Item Code not found in Item Master");
+  if (itemMaster.status !== "APPROVED")
+    throw new ApiError(
+      409,
+      "Item Master is waiting for Company Admin approval",
+    );
+  if (!upper(req.body.orderNo))
+    throw new ApiError(400, "Order No is required");
+  const dcType = upper(req.body.dcType || "FRESH_LOT");
+  if (!["FRESH_LOT", "FOLDING_LOT"].includes(dcType))
+    throw new ApiError(400, "Select Fresh Lot or Folding Lot");
+  const selectedColours = [
+    ...new Set((req.body.selectedColours || []).map(upper).filter(Boolean)),
+  ];
+  if (!selectedColours.length)
+    throw new ApiError(400, "Select at least one available fabric colour");
+  const stockRows = await fabricStockForGroup(itemMaster.fabricGroup);
+  const stockMap = new Map(stockRows.map((row) => [row.colour, row]));
+  if (selectedColours.some((colour) => !stockMap.has(colour)))
+    throw new ApiError(409, "One or more selected colours have no fabric stock");
   const input = (req.body.sizes || []).map((x) => ({
     size: upper(x.size),
     pcs: num(x.pcs),
@@ -301,44 +342,92 @@ export async function createPlan(req, res) {
     throw new ApiError(400, "Every size needs a whole PCS value above zero");
   if (new Set(input.map((x) => x.size)).size !== input.length)
     throw new ApiError(400, "Duplicate sizes are not allowed in one plan");
-  const colours = names.map((colour, ci) => {
-    const sizes = input.map((line) => {
-      const m = bom.sizes.find((x) => upper(x.size) === line.size);
-      if (!m)
-        throw new ApiError(
-          400,
-          `BOM measurement missing for size ${line.size}`,
-        );
-      const plannedPcs = distributePieces(line.pcs, names.length)[ci],
-        wt = num(m.cuttingKg);
-      return {
-        size: line.size,
-        plannedPcs,
-        cuttingWeightPerPieceKg: wt,
-        wantedWeightKg: calculateWantedWeight(plannedPcs, wt),
-      };
-    });
-    return {
+  const remainingStock = new Map(
+    selectedColours.map((colour) => [
       colour,
-      sizes,
-      totalPcs: sizes.reduce((s, x) => s + x.plannedPcs, 0),
-      wantedWeightKg: Number(
-        sizes.reduce((s, x) => s + x.wantedWeightKg, 0).toFixed(3),
-      ),
-    };
-  });
+      Number(stockMap.get(colour).availableWeightKg),
+    ]),
+  );
+  const colourPlans = new Map(
+    selectedColours.map((colour) => [
+      colour,
+      {
+        colour,
+        sizes: [],
+        totalPcs: 0,
+        wantedWeightKg: 0,
+        availableWeightBeforeKg: stockMap.get(colour).availableWeightKg,
+      },
+    ]),
+  );
+  for (const line of input) {
+    const measurement = itemMaster.sizes.find(
+      (row) => upper(row.size) === line.size,
+    );
+    if (!measurement)
+      throw new ApiError(400, `Item Master measurement missing for size ${line.size}`);
+    const perPieceKg = Number(
+      (
+        num(measurement.cuttingPieceWeightKg) +
+        (dcType === "FOLDING_LOT"
+          ? num(measurement.foldingPieceWeightKg)
+          : 0)
+      ).toFixed(6),
+    );
+    if (perPieceKg <= 0)
+      throw new ApiError(409, `Piece weight is missing for size ${line.size}`);
+    let allocations;
+    try {
+      allocations = allocatePiecesByStock(
+        line.pcs,
+        perPieceKg,
+        selectedColours.map((colour) => ({
+          colour,
+          availableWeightKg: remainingStock.get(colour),
+        })),
+      );
+    } catch (error) {
+      if (error instanceof RangeError)
+        throw new ApiError(409, `${line.size}: ${error.message}`);
+      throw error;
+    }
+    for (const allocation of allocations) {
+      const colourPlan = colourPlans.get(allocation.colour);
+      colourPlan.sizes.push({
+        size: line.size,
+        plannedPcs: allocation.plannedPcs,
+        cuttingWeightPerPieceKg: perPieceKg,
+        wantedWeightKg: allocation.wantedWeightKg,
+      });
+      colourPlan.totalPcs += allocation.plannedPcs;
+      colourPlan.wantedWeightKg = Number(
+        (colourPlan.wantedWeightKg + allocation.wantedWeightKg).toFixed(3),
+      );
+      remainingStock.set(
+        allocation.colour,
+        Number(
+          (
+            remainingStock.get(allocation.colour) - allocation.wantedWeightKg
+          ).toFixed(3),
+        ),
+      );
+    }
+  }
+  const colours = [...colourPlans.values()];
   const planNo = upper(req.body.planNo) || generateReferenceNo("FCP"),
     dcNo = upper(req.body.dcNo) || planNo,
     row = await FabricCutPlan.create({
       planNo,
+      orderNo: upper(req.body.orderNo),
       dcNo,
+      dcType,
       itemCode: itemMaster.itemCode,
-      itemName,
-      style,
-      bomNo: bom.bomNo,
-      fabricCode: master.fabricCode,
-      fabricGroup: master.fabricGroup,
-      numberOfColours: names.length,
+      itemName: itemMaster.itemName,
+      style: upper(req.body.style),
+      bomNo: itemMaster.itemCode,
+      fabricCode: stockRows[0]?.fabricCodes?.[0] || "",
+      fabricGroup: itemMaster.fabricGroup,
+      numberOfColours: selectedColours.length,
       colours,
       totalPlannedPcs: input.reduce((s, x) => s + x.pcs, 0),
       totalWantedWeightKg: Number(
@@ -479,15 +568,15 @@ export async function elasticRequirement(req, res) {
       $or: [{ planNo: no }, { dcNo: no }],
     });
   if (!actual) throw new ApiError(404, "Cutting actual not completed");
-  const bom = await GarmentBom.findOne({
-    itemName: actual.itemName,
-    style: upper(actual.style),
+  const itemMaster = await GarmentItemMaster.findOne({
+    itemCode: actual.itemCode,
     status: "APPROVED",
   }).sort({ updatedAt: -1 });
-  if (!bom) throw new ApiError(404, "Approved Elastic BOM not found");
+  if (!itemMaster)
+    throw new ApiError(404, "Approved Item Master not found");
   const lines = actual.lines.map((x) => {
-    const m = bom.sizes.find((s) => upper(s.size) === upper(x.size)),
-      measurement = num(m?.elasticMeasurement);
+    const m = itemMaster.sizes.find((s) => upper(s.size) === upper(x.size)),
+      measurement = num(m?.elasticMeasurementMtr);
     if (!m || measurement <= 0)
       throw new ApiError(
         409,

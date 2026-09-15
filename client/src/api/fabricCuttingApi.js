@@ -59,6 +59,8 @@ export const fabricCuttingApi = {
       body: JSON.stringify(data),
     }),
   plans: (params) => api("/fabric-cutting/plans" + query(params)),
+  planSetup: (itemCode) =>
+    api("/fabric-cutting/plans/setup/" + encodeURIComponent(itemCode)),
   plan: (number) => api("/fabric-cutting/plans/" + encodeURIComponent(number)),
   savePlan: (data) =>
     api("/fabric-cutting/plans", {

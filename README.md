@@ -20,18 +20,20 @@ same company/factory/department history and appends new audited records.
 
 ## Fabric to cutting workflow
 
-1. Fabric Master stores Fabric Code, Fabric Name, Fabric Group, Company Name
-   and Company Type. Item and Sample codes are intentionally excluded.
+1. Fabric Master stores only Fabric Code, Fabric Name and Fabric Group. Item,
+   Sample, Company Name and Company Type fields are intentionally excluded.
 2. Compacting and Dyeing use a separate Code → Name Process Master.
 3. Common Item Master stores Item Code/Name, Fabric Group, dynamic size-wise
    cutting/folding weight, elastic measurement/ranges and per-piece accessories.
-4. Fabric Inward generates an inward number and records Supplier/DC,
+4. Fabric Inward generates an inward number and records DC No, Lot DC No,
    Compacting/Dyeing and multiple colours with Dia-wise Sample Rolls/KG and Lot
-   Rolls/KG.
+   Rolls/KG. Reference Name, Supplier and Item Name are excluded.
 5. Every roll receives a unique QR containing Inward No, Sample/Lot, Fabric
    Group, Roll No, average weight, Colour, Dyeing and Compacting names.
-6. Cutting Plan reads the approved Item + Style BOM, divides size PCS across
-   requested colours and calculates wanted KG from size-wise cutting weight.
+6. Production Plan reads the approved Item Master by Item Code. Fresh Lot uses
+   cutting weight; Folding Lot uses cutting + folding weight. It divides PCS
+   evenly and automatically reallocates from a low-stock colour to other
+   selected colours. Insufficient total stock blocks saving.
 7. Fabric Issue consumes the scanned inward and colour through FIFO roll stock.
 8. Cutting Actual records colour/size actual PCS, bundle count and bundle
    weight. Issued KG minus bundle KG is stored in Fabric Waste Warehouse.
@@ -44,7 +46,9 @@ adjustment entry so historic stock and audit traceability remain correct.
 The old Garment Flow sidebar and pages are removed. Underlying historical
 traceability collections remain because Fabric/Cutting/Elastic data references
 them. Fabric receipt and roll labels use dedicated A4 layouts with Print and PDF
-download, plus date-range/reference/fabric/type filters.
+download, plus date-range/DC/fabric/type filters. Production Plan has separate
+Data Entry and professional A4 Print/PDF pages. Fabric and Cutting roles also
+have department-scoped History and Print pages.
 
 ## Elastic Cutting DC workflow
 

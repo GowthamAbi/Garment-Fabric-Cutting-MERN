@@ -4,8 +4,6 @@ const schema = new mongoose.Schema(
     fabricCode: { type: String, required: true, uppercase: true, trim: true },
     fabricName: { type: String, required: true, trim: true },
     fabricGroup: { type: String, required: true, uppercase: true, trim: true },
-    companyName: { type: String, default: "", trim: true },
-    companyType: { type: String, default: "", trim: true },
     active: { type: Boolean, default: true },
     createdBy: { type: String, default: "System" },
   },

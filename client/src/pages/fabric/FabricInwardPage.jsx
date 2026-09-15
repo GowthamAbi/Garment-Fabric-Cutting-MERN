@@ -25,12 +25,11 @@ const colour = () => ({ colour: "", details: [detail()] });
 const blank = () => ({
   inwardNo: "",
   inwardType: "LOT",
-  referenceName: "",
   fabricCode: "",
   fabricName: "",
   fabricGroup: "",
-  supplier: "",
   dcNo: "",
+  lotDcNo: "",
   lotNo: "",
   compactingCode: "",
   compactingName: "",
@@ -60,7 +59,8 @@ export default function FabricInwardPage({ notify }) {
     from: "",
     to: "",
     inwardNo: "",
-    referenceName: "",
+    dcNo: "",
+    lotDcNo: "",
     fabricCode: "",
     inwardType: "",
   });
@@ -153,15 +153,6 @@ export default function FabricInwardPage({ notify }) {
                 <option>BOTH</option>
               </select>
             </label>
-            <label>
-              <span>Reference Name</span>
-              <input
-                value={form.referenceName}
-                onChange={(e) =>
-                  setForm({ ...form, referenceName: e.target.value })
-                }
-              />
-            </label>
             <Lookup
               label="Fabric Code"
               value={form.fabricCode}
@@ -169,26 +160,23 @@ export default function FabricInwardPage({ notify }) {
               lookup={lookupFabric}
             />
             <label>
-              <span>Fabric Name</span>
-              <input readOnly value={form.fabricName} />
-            </label>
-            <label>
               <span>Fabric Group</span>
               <input readOnly value={form.fabricGroup} />
             </label>
             <label>
-              <span>Supplier</span>
-              <input
-                value={form.supplier}
-                onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-              />
-            </label>
-            <label>
-              <span>Supplier DC / DC No</span>
+              <span>DC No</span>
               <input
                 required
                 value={form.dcNo}
                 onChange={(e) => setForm({ ...form, dcNo: e.target.value })}
+              />
+            </label>
+            <label>
+              <span>Lot DC No</span>
+              <input
+                required
+                value={form.lotDcNo}
+                onChange={(e) => setForm({ ...form, lotDcNo: e.target.value })}
               />
             </label>
             <label>
@@ -337,11 +325,20 @@ export default function FabricInwardPage({ notify }) {
               />
             </label>
             <label>
-              Reference
+              DC No
               <input
-                value={filters.referenceName}
+                value={filters.dcNo}
                 onChange={(e) =>
-                  setFilters({ ...filters, referenceName: e.target.value })
+                  setFilters({ ...filters, dcNo: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Lot DC No
+              <input
+                value={filters.lotDcNo}
+                onChange={(e) =>
+                  setFilters({ ...filters, lotDcNo: e.target.value })
                 }
               />
             </label>
@@ -380,9 +377,9 @@ export default function FabricInwardPage({ notify }) {
                 <th>Date</th>
                 <th>Inward No</th>
                 <th>Type</th>
-                <th>Reference</th>
                 <th>Fabric</th>
                 <th>DC No</th>
+                <th>Lot DC No</th>
                 <th>Rolls</th>
                 <th>Weight</th>
                 <th>View</th>
@@ -394,11 +391,11 @@ export default function FabricInwardPage({ notify }) {
                   <td>{new Date(row.inwardDate).toLocaleDateString()}</td>
                   <td>{row.inwardNo}</td>
                   <td>{row.inwardType}</td>
-                  <td>{row.referenceName || "—"}</td>
                   <td>
                     {row.fabricCode} · {row.fabricGroup}
                   </td>
                   <td>{row.dcNo}</td>
+                  <td>{row.lotDcNo || "—"}</td>
                   <td>{row.totalRolls}</td>
                   <td>{row.totalWeightKg} KG</td>
                   <td>
@@ -553,8 +550,8 @@ function Receipt({ inward, bundles, receiptRef }) {
             <b>{inward.compactingName || "—"}</b>
           </span>
           <span>
-            <small>Reference</small>
-            <b>{inward.referenceName || "—"}</b>
+            <small>Lot DC No</small>
+            <b>{inward.lotDcNo || "—"}</b>
           </span>
           <span>
             <small>Date</small>

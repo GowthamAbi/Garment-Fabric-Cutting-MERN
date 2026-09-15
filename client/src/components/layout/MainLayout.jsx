@@ -68,13 +68,24 @@ const navigation = [
     ],
   ],
   [
-    "Fabric Cutting Plan",
+    "Production Plan Entry",
     ClipboardList,
     [
       "saas_super_admin",
       "company_admin",
       "admin",
       "fabric_admin",
+      "cutting_admin",
+      "cutting_entry",
+    ],
+  ],
+  [
+    "Production Plan Print",
+    Printer,
+    [
+      "saas_super_admin",
+      "company_admin",
+      "admin",
       "cutting_admin",
       "cutting_entry",
     ],
@@ -114,6 +125,8 @@ const navigation = [
       "elastic_entry",
     ],
   ],
+  ["Department History", FileClock, ["fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry"]],
+  ["Department Print", Printer, ["fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry"]],
   ["Modules", Sparkles, ["saas_super_admin", "admin"]],
   [
     "Dashboard",
@@ -340,8 +353,15 @@ export default function MainLayout({ page, onPageChange, children }) {
   const { language, setLanguage } = useLanguage();
   const departmentPage =
     {
-      FABRIC: ["Fabric Master", "Fabric Inward"],
-      CUTTING: ["Fabric Cutting Plan", "Cutting Actual Entry", "Fabric Waste"],
+      FABRIC: ["Fabric Master", "Fabric Inward", "Department History", "Department Print"],
+      CUTTING: [
+        "Production Plan Entry",
+        "Production Plan Print",
+        "Cutting Actual Entry",
+        "Fabric Waste",
+        "Department History",
+        "Department Print",
+      ],
       ACCESSORIES: [
         "Dashboard",
         "Inward",

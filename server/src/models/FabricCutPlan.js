@@ -9,7 +9,13 @@ const size = new mongoose.Schema(
   { _id: false },
 );
 const colour = new mongoose.Schema(
-  { colour: String, sizes: [size], totalPcs: Number, wantedWeightKg: Number },
+  {
+    colour: String,
+    sizes: [size],
+    totalPcs: Number,
+    wantedWeightKg: Number,
+    availableWeightBeforeKg: Number,
+  },
   { _id: true },
 );
 const allocation = new mongoose.Schema(
@@ -25,12 +31,18 @@ const allocation = new mongoose.Schema(
 const schema = new mongoose.Schema(
   {
     planNo: { type: String, required: true, uppercase: true },
+    orderNo: { type: String, required: true, uppercase: true, trim: true },
     dcNo: { type: String, required: true, uppercase: true },
+    dcType: {
+      type: String,
+      enum: ["FRESH_LOT", "FOLDING_LOT"],
+      required: true,
+    },
     itemCode: { type: String, required: true, uppercase: true },
     itemName: { type: String, required: true },
-    style: { type: String, required: true, uppercase: true },
-    bomNo: { type: String, required: true, uppercase: true },
-    fabricCode: { type: String, required: true, uppercase: true },
+    style: { type: String, default: "", uppercase: true },
+    bomNo: { type: String, default: "", uppercase: true },
+    fabricCode: { type: String, default: "", uppercase: true },
     fabricGroup: { type: String, required: true, uppercase: true },
     numberOfColours: { type: Number, required: true, min: 1 },
     colours: [colour],
