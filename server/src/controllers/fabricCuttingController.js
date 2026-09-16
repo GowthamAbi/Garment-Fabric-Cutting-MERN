@@ -15,6 +15,7 @@ import {
   calculateWaste,
   distributePieces,
   allocatePiecesByStock,
+  resolveActualAvailableWeight,
 } from "../services/fabricFlowCalculations.js";
 import crypto from "node:crypto";
 const upper = (v) =>
@@ -291,18 +292,22 @@ async function nextPlanNo(user) {
 }
 
 async function fabricStockForGroup(fabricGroup, excludePlanId = null) {
-  const grossRows = await FabricInwardLot.aggregate([
-    { $match: { fabricGroup: upper(fabricGroup), status: { $ne: "HOLD" } } },
-    { $unwind: "$colours" },
-    { $match: { "colours.balanceWeightKg": { $gt: 0 } } },
+  const grossRows = await FabricBundleStock.aggregate([
+    {
+      $match: {
+        fabricGroup: upper(fabricGroup),
+        status: { $ne: "HOLD" },
+        balanceWeightKg: { $gt: 0 },
+      },
+    },
     {
       $group: {
-        _id: "$colours.colour",
-        availableWeightKg: { $sum: "$colours.balanceWeightKg" },
+        _id: { colour: "$colour", dia: "$dia" },
+        availableWeightKg: { $sum: "$balanceWeightKg" },
         fabricCodes: { $addToSet: "$fabricCode" },
       },
     },
-    { $sort: { _id: 1 } },
+    { $sort: { "_id.colour": 1, "_id.dia": 1 } },
   ]);
   const planFilter = {
     fabricGroup: upper(fabricGroup),
@@ -313,25 +318,38 @@ async function fabricStockForGroup(fabricGroup, excludePlanId = null) {
   const reserved = new Map();
   for (const plan of plans) {
     for (const colour of plan.colours || []) {
-      const issued = (plan.allocations || [])
+      let issuedRemaining = (plan.allocations || [])
         .filter((entry) => upper(entry.colour) === upper(colour.colour))
         .reduce((sum, entry) => sum + num(entry.weightKg), 0);
-      const openReservation = Math.max(0, num(colour.wantedWeightKg) - issued);
-      reserved.set(
-        upper(colour.colour),
-        num(reserved.get(upper(colour.colour))) + openReservation,
-      );
+      for (const size of colour.sizes || []) {
+        const key = `${upper(colour.colour)}|${upper(size.dia)}`;
+        const issuedForSize = Math.min(
+          issuedRemaining,
+          num(size.wantedWeightKg),
+        );
+        issuedRemaining = Number((issuedRemaining - issuedForSize).toFixed(3));
+        const openReservation = Math.max(
+          0,
+          num(size.wantedWeightKg) - issuedForSize,
+        );
+        reserved.set(key, num(reserved.get(key)) + openReservation);
+      }
     }
   }
   return grossRows
     .map((row) => ({
-      colour: row._id,
+      colour: row._id.colour,
+      dia: row._id.dia,
       grossWeightKg: Number(row.availableWeightKg.toFixed(3)),
-      reservedWeightKg: Number(num(reserved.get(row._id)).toFixed(3)),
+      reservedWeightKg: Number(
+        num(reserved.get(`${row._id.colour}|${row._id.dia}`)).toFixed(3),
+      ),
       availableWeightKg: Number(
-        Math.max(0, row.availableWeightKg - num(reserved.get(row._id))).toFixed(
-          3,
-        ),
+        Math.max(
+          0,
+          row.availableWeightKg -
+            num(reserved.get(`${row._id.colour}|${row._id.dia}`)),
+        ).toFixed(3),
       ),
       fabricCodes: row.fabricCodes,
     }))
@@ -389,12 +407,6 @@ async function buildPlanData(req, excludePlanId = null) {
     itemMaster.fabricGroup,
     excludePlanId,
   );
-  const stockMap = new Map(stockRows.map((row) => [row.colour, row]));
-  if (selectedColours.some((colour) => !stockMap.has(colour)))
-    throw new ApiError(
-      409,
-      "One or more selected colours have no fabric stock",
-    );
   const input = (req.body.sizes || []).map((x) => ({
     size: upper(x.size),
     pcs: num(x.pcs),
@@ -405,9 +417,9 @@ async function buildPlanData(req, excludePlanId = null) {
   if (new Set(input.map((x) => x.size)).size !== input.length)
     throw new ApiError(400, "Duplicate sizes are not allowed in one plan");
   const remainingStock = new Map(
-    selectedColours.map((colour) => [
-      colour,
-      Number(stockMap.get(colour).availableWeightKg),
+    stockRows.map((row) => [
+      `${row.colour}|${upper(row.dia)}`,
+      Number(row.availableWeightKg),
     ]),
   );
   const colourPlans = new Map(
@@ -418,7 +430,7 @@ async function buildPlanData(req, excludePlanId = null) {
         sizes: [],
         totalPcs: 0,
         wantedWeightKg: 0,
-        availableWeightBeforeKg: stockMap.get(colour).availableWeightKg,
+        availableWeightBeforeKg: 0,
       },
     ]),
   );
@@ -431,6 +443,19 @@ async function buildPlanData(req, excludePlanId = null) {
         400,
         `Item Master measurement missing for size ${line.size}`,
       );
+    const dia = upper(measurement.dia);
+    if (!dia)
+      throw new ApiError(
+        409,
+        `Dia is missing in Item Master for size ${line.size}`,
+      );
+    for (const colour of selectedColours) {
+      if (!remainingStock.has(`${colour}|${dia}`))
+        throw new ApiError(
+          409,
+          `${colour} colour has no fabric stock for Dia ${dia}`,
+        );
+    }
     const perPieceKg = Number(
       (
         num(measurement.cuttingPieceWeightKg) +
@@ -446,7 +471,7 @@ async function buildPlanData(req, excludePlanId = null) {
         perPieceKg,
         selectedColours.map((colour) => ({
           colour,
-          availableWeightKg: remainingStock.get(colour),
+          availableWeightKg: remainingStock.get(`${colour}|${dia}`),
         })),
       );
     } catch (error) {
@@ -458,6 +483,7 @@ async function buildPlanData(req, excludePlanId = null) {
       const colourPlan = colourPlans.get(allocation.colour);
       colourPlan.sizes.push({
         size: line.size,
+        dia,
         plannedPcs: allocation.plannedPcs,
         cuttingWeightPerPieceKg: perPieceKg,
         wantedWeightKg: allocation.wantedWeightKg,
@@ -467,10 +493,11 @@ async function buildPlanData(req, excludePlanId = null) {
         (colourPlan.wantedWeightKg + allocation.wantedWeightKg).toFixed(3),
       );
       remainingStock.set(
-        allocation.colour,
+        `${allocation.colour}|${dia}`,
         Number(
           (
-            remainingStock.get(allocation.colour) - allocation.wantedWeightKg
+            remainingStock.get(`${allocation.colour}|${dia}`) -
+            allocation.wantedWeightKg
           ).toFixed(3),
         ),
       );
@@ -605,18 +632,58 @@ export async function issueFabric(req, res) {
 export async function saveActual(req, res) {
   const plan = await FabricCutPlan.findOne({ planNo: upper(req.body.planNo) });
   if (!plan) throw new ApiError(404, "Plan not found");
-  const lines = (req.body.lines || []).map((x) => ({
-    ...x,
-    colour: upper(x.colour),
-    size: upper(x.size),
-    actualPcs: num(x.actualPcs),
-    bundleCount: num(x.bundleCount),
-    bundleWeightKg: num(x.bundleWeightKg),
-  }));
-  const bundle = lines.reduce((s, x) => s + x.bundleWeightKg, 0),
-    waste = calculateWaste(plan.issuedWeightKg, bundle);
-  if (waste < 0)
-    throw new ApiError(409, "Bundle weight cannot exceed issued fabric weight");
+  const lines = (req.body.lines || []).map((x) => {
+    const colour = upper(x.colour);
+    const size = upper(x.size);
+    const planLine = plan.colours
+      .find((row) => upper(row.colour) === colour)
+      ?.sizes.find((row) => upper(row.size) === size);
+    if (!planLine)
+      throw new ApiError(400, `${colour} / ${size} is not in this plan`);
+    const actualPcs = num(x.actualPcs);
+    const bundleWeightKg = num(x.bundleWeightKg);
+    const pieceWeightKg = num(planLine.cuttingWeightPerPieceKg);
+    const actualWeightKg = calculateWantedWeight(actualPcs, pieceWeightKg);
+    const lineWaste = calculateWaste(actualWeightKg, bundleWeightKg);
+    if (lineWaste < -0.0001)
+      throw new ApiError(
+        409,
+        `${colour} / ${size}: Bundle weight cannot exceed Actual Weight ${actualWeightKg.toFixed(3)} KG`,
+      );
+    return {
+      colour,
+      size,
+      dia: upper(planLine.dia),
+      plannedPcs: num(planLine.plannedPcs),
+      actualPcs,
+      pieceWeightKg,
+      plannedWeightKg: num(planLine.wantedWeightKg),
+      actualWeightKg,
+      bundleCount: num(x.bundleCount),
+      bundleWeightKg,
+      wasteWeightKg: Number(Math.max(0, lineWaste).toFixed(3)),
+    };
+  });
+  const effectiveIssuedWeight = resolveActualAvailableWeight(
+    plan.issuedWeightKg,
+    plan.totalWantedWeightKg,
+  );
+  const bundle = lines.reduce((s, x) => s + x.bundleWeightKg, 0);
+  if (bundle > effectiveIssuedWeight + 0.0001)
+    throw new ApiError(
+      409,
+      `Total Bundle Weight ${bundle.toFixed(3)} KG exceeds Received Weight ${effectiveIssuedWeight.toFixed(3)} KG`,
+    );
+  const totalActualWeightKg = Number(
+    lines.reduce((sum, line) => sum + line.actualWeightKg, 0).toFixed(3),
+  );
+  const waste = Number(
+    lines.reduce((sum, line) => sum + line.wasteWeightKg, 0).toFixed(3),
+  );
+  const efficiencyPercent =
+    totalActualWeightKg > 0
+      ? Number(((bundle / totalActualWeightKg) * 100).toFixed(2))
+      : 0;
   const data = {
     actualNo: generateReferenceNo("FCA"),
     planNo: plan.planNo,
@@ -624,12 +691,14 @@ export async function saveActual(req, res) {
     itemCode: plan.itemCode,
     itemName: plan.itemName,
     style: plan.style,
-    issuedWeightKg: plan.issuedWeightKg,
+    issuedWeightKg: effectiveIssuedWeight,
     lines,
     totalActualPcs: lines.reduce((s, x) => s + x.actualPcs, 0),
     totalBundleCount: lines.reduce((s, x) => s + x.bundleCount, 0),
     totalBundleWeightKg: Number(bundle.toFixed(3)),
+    totalActualWeightKg,
     wasteWeightKg: waste,
+    efficiencyPercent,
     status: req.body.status || "COMPLETED",
     remarks: req.body.remarks || "",
     createdBy: req.user.name,
@@ -647,6 +716,15 @@ export async function saveActual(req, res) {
       dcNo: plan.dcNo,
       itemCode: plan.itemCode,
       wasteWeightKg: waste,
+      lines: lines.map((line) => ({
+        colour: line.colour,
+        size: line.size,
+        dia: line.dia,
+        actualPcs: line.actualPcs,
+        actualWeightKg: line.actualWeightKg,
+        bundleWeightKg: line.bundleWeightKg,
+        wasteWeightKg: line.wasteWeightKg,
+      })),
       remarks: data.remarks,
       createdBy: req.user.name,
     },

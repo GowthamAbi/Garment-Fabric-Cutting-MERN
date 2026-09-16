@@ -18,9 +18,9 @@ export async function listFabricMasters(request, response) {
   const search = String(request.query.search || "").trim();
   const filter = search
     ? {
-        $or: ["fabricCode", "fabricName", "fabricGroup"].map(
-          (key) => ({ [key]: { $regex: search, $options: "i" } }),
-        ),
+        $or: ["fabricCode", "fabricName", "fabricGroup"].map((key) => ({
+          [key]: { $regex: search, $options: "i" },
+        })),
       }
     : {};
   response.json(await FabricMaster.find(filter).sort({ fabricGroup: 1 }));
@@ -120,12 +120,13 @@ export async function listItemMasters(request, response) {
 export async function saveItemMaster(request, response) {
   const sizes = (request.body.sizes || []).map((row) => ({
     size: upper(row.size),
+    dia: upper(row.dia),
     cuttingPieceWeightKg: Number(row.cuttingPieceWeightKg || 0),
     foldingPieceWeightKg: Number(row.foldingPieceWeightKg || 0),
     elasticMeasurementMtr: Number(row.elasticMeasurementMtr || 0),
   }));
-  if (!sizes.length || sizes.some((row) => !row.size))
-    throw new ApiError(400, "At least one valid size is required");
+  if (!sizes.length || sizes.some((row) => !row.size || !row.dia))
+    throw new ApiError(400, "Every size needs a valid Dia");
   const data = {
     ...request.body,
     itemCode: upper(request.body.itemCode),

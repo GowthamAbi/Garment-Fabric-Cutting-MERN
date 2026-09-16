@@ -3,6 +3,7 @@ import { Download, Printer, Search } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 import ProductionPlanDocument from "./ProductionPlanDocument.jsx";
+import { printElement } from "../../services/printService.js";
 
 export default function ProductionPlanPrintPage({ notify }) {
   const [number, setNumber] = useState("");
@@ -64,7 +65,7 @@ export default function ProductionPlanPrintPage({ notify }) {
         </label>
         {plan && (
           <div className="form-actions">
-            <button onClick={() => window.print()}>
+            <button onClick={() => printElement("production-plan-print")}>
               <Printer /> Print
             </button>
             <button onClick={pdf} disabled={busy}>
@@ -73,7 +74,9 @@ export default function ProductionPlanPrintPage({ notify }) {
           </div>
         )}
       </div>
-      <ProductionPlanDocument plan={plan} documentRef={ref} />
+      <div id="production-plan-print">
+        <ProductionPlanDocument plan={plan} documentRef={ref} />
+      </div>
     </section>
   );
 }

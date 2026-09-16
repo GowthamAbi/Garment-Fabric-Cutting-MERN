@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const sizeSchema = new mongoose.Schema(
   {
     size: { type: String, required: true, uppercase: true, trim: true },
+    dia: { type: String, required: true, uppercase: true, trim: true },
     cuttingPieceWeightKg: { type: Number, min: 0, default: 0 },
     foldingPieceWeightKg: { type: Number, min: 0, default: 0 },
     elasticMeasurementMtr: { type: Number, min: 0, default: 0 },

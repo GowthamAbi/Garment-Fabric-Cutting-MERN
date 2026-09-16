@@ -5,6 +5,7 @@ import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 
 const size = () => ({
   size: "",
+  dia: "",
   cuttingPieceWeightKg: "",
   foldingPieceWeightKg: "",
   elasticMeasurementMtr: "",
@@ -119,6 +120,7 @@ export default function GarmentItemMasterPage({ notify }) {
               <thead>
                 <tr>
                   <th>Size</th>
+                  <th>Dia</th>
                   <th>Cutting Piece KG</th>
                   <th>Folding Piece KG</th>
                   <th>Elastic MTR</th>
@@ -131,8 +133,10 @@ export default function GarmentItemMasterPage({ notify }) {
                     {Object.keys(size()).map((key) => (
                       <td key={key}>
                         <input
-                          required={key === "size"}
-                          type={key === "size" ? "text" : "number"}
+                          required={["size", "dia"].includes(key)}
+                          type={
+                            ["size", "dia"].includes(key) ? "text" : "number"
+                          }
                           step="0.001"
                           value={row[key]}
                           onChange={(e) =>

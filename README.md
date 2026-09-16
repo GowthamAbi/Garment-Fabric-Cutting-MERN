@@ -23,23 +23,28 @@ same company/factory/department history and appends new audited records.
 1. Fabric Master stores only Fabric Code, Fabric Name and Fabric Group. Item,
    Sample, Company Name and Company Type fields are intentionally excluded.
 2. Compacting and Dyeing use a separate Code → Name Process Master.
-3. Common Item Master stores Item Code/Name, Fabric Group, dynamic size-wise
-   cutting/folding weight, elastic measurement/ranges and per-piece accessories.
+3. Common Item Master stores Item Code/Name, Fabric Group, and mandatory
+   size-wise Dia, cutting/folding weight, elastic measurement/ranges and
+   per-piece accessories.
 4. Fabric Inward generates an inward number and records DC No, Lot DC No,
    Compacting/Dyeing and multiple colours with Dia-wise Sample Rolls/KG and Lot
    Rolls/KG. Reference Name, Supplier and Item Name are excluded.
 5. Every roll receives a unique QR containing Inward No, Sample/Lot, Fabric
    Group, Roll No, average weight, Colour, Dyeing and Compacting names.
-6. Production Plan reads the approved Item Master by Item Code. Fresh Lot uses
+6. Production Plan reads the approved Item Master by Item Code. The operator
+   enters Size + PCS; Dia is resolved automatically from Item Master. Fresh Lot uses
    cutting weight; Folding Lot uses cutting + folding weight. It divides PCS
    evenly and automatically reallocates from a low-stock colour to other
-   selected colours. Insufficient total stock blocks saving.
+   selected colours. Every reservation checks the exact Fabric Group + Colour +
+   Dia stock. Insufficient matching stock blocks saving.
    Plan No is an automatic four-digit tenant sequence. Saving reserves the
    required colour stock, while edit/delete recalculates or releases that
    reservation. Once fabric is physically issued, edit/delete is blocked.
 7. Fabric Issue consumes the scanned inward and colour through FIFO roll stock.
-8. Cutting Actual records colour/size actual PCS, bundle count and bundle
-   weight. Issued KG minus bundle KG is stored in Fabric Waste Warehouse.
+8. Cutting Actual uses one consolidated row per colour and dynamic size
+   columns. Actual KG is calculated from Actual PCS × item piece weight. Bundle
+   count/weight are entered, and Actual KG minus Bundle KG is saved by
+   Plan/DC/Colour/Size in Fabric Waste Warehouse. Negative waste is blocked.
 9. Elastic Requirement reads actual cutting PCS and approved size-wise elastic
    measurement, then produces a professional printable/CSV/PDF wanted-MTR sheet.
 
@@ -54,9 +59,10 @@ Data Entry and professional A4 Print/PDF pages. Fabric and Cutting roles also
 have department-scoped History and Print pages.
 
 The Cutting sidebar groups Production Plan into Data Entry, Print and History.
-The print sheet shows colour/size lines, size-wise total PCS and required KG,
-supports multi-page A4 output, and excludes internal available-stock figures.
-Fabric Stock shows Gross, Reserved and Available KG with Excel, Print and PDF.
+The print sheet shows a consolidated Colour/PCS/KG summary, a Size/Dia/PCS/KG
+summary, and a Size/Dia/Colour detail table. It supports multi-page A4 output
+and excludes internal available-stock figures. Fabric Stock is Dia-wise and
+shows Gross, Reserved and Available KG with Excel, Print and PDF.
 
 ## Elastic Cutting DC workflow
 

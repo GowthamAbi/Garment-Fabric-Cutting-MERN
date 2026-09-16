@@ -4,6 +4,8 @@ import { jsPDF } from "jspdf";
 import { exportCsv } from "../../api.js";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 import QRGenerator from "../../components/qr/QRGenerator.jsx";
+import CuttingActualMatrix from "./CuttingActualMatrix.jsx";
+import { printElement } from "../../services/printService.js";
 
 const emptyDetail = () => ({ dia: "", rollCount: "", weightKg: "" });
 const emptyColour = () => ({ colour: "", details: [emptyDetail()] });
@@ -149,7 +151,10 @@ export default function FabricCuttingPage({ mode, notify }) {
           colour.sizes.map((size) => ({
             colour: colour.colour,
             size: size.size,
+            dia: size.dia || "",
             plannedPcs: size.plannedPcs,
+            pieceWeightKg: size.cuttingWeightPerPieceKg,
+            plannedWeightKg: size.wantedWeightKg,
             actualPcs: size.plannedPcs,
             bundleCount: "",
             bundleWeightKg: "",
@@ -190,7 +195,12 @@ export default function FabricCuttingPage({ mode, notify }) {
   }
 
   async function downloadPdf() {
-    const target = document.querySelector(".print-document") || pageRef.current;
+    const target =
+      mode === "actual"
+        ? document.getElementById("cutting-actual-print")
+        : mode === "elastic"
+          ? document.getElementById("elastic-requirement-print")
+          : document.querySelector(".print-document") || pageRef.current;
     if (!target) return;
     notify?.("Preparing PDF...");
     try {
@@ -215,6 +225,29 @@ export default function FabricCuttingPage({ mode, notify }) {
     }
   }
 
+  function exportRows() {
+    if (mode === "actual") return actual?.lines || [];
+    if (mode === "elastic") return elastic?.lines || [];
+    if (mode !== "waste") return rows;
+
+    return rows.flatMap((row) =>
+      row.lines?.length
+        ? row.lines.map((line) => ({
+            wasteNo: row.wasteNo,
+            planNo: row.planNo,
+            dcNo: row.dcNo,
+            colour: line.colour,
+            size: line.size,
+            dia: line.dia,
+            actualPcs: line.actualPcs,
+            actualWeightKg: line.actualWeightKg,
+            bundleWeightKg: line.bundleWeightKg,
+            wasteWeightKg: line.wasteWeightKg,
+          }))
+        : [row],
+    );
+  }
+
   const titles = {
     master: "Fabric Master",
     inward: "Fabric Inward",
@@ -225,7 +258,7 @@ export default function FabricCuttingPage({ mode, notify }) {
   };
 
   return (
-    <section className="fabric-flow" ref={pageRef}>
+    <section className="fabric-flow professional-flow" ref={pageRef}>
       <div className="page-title">
         <div>
           <small>PLAN / DC TRACEABILITY</small>
@@ -236,18 +269,53 @@ export default function FabricCuttingPage({ mode, notify }) {
           </p>
         </div>
         <div className="page-actions">
-          <button className="secondary" onClick={() => window.print()}>
+          <button
+            className="secondary"
+            disabled={
+              mode === "actual"
+                ? !actual
+                : mode === "elastic"
+                  ? !elastic
+                  : false
+            }
+            onClick={() =>
+              printElement(
+                mode === "actual"
+                  ? "cutting-actual-print"
+                  : mode === "elastic"
+                    ? "elastic-requirement-print"
+                    : "department-report-print",
+              )
+            }
+          >
             <Printer />
             Print
           </button>
           <button
             className="secondary"
-            onClick={() => exportCsv(mode + ".csv", rows)}
+            disabled={
+              mode === "actual"
+                ? !actual
+                : mode === "elastic"
+                  ? !elastic
+                  : !rows.length
+            }
+            onClick={() => exportCsv(mode + ".csv", exportRows())}
           >
             <Download />
             Excel
           </button>
-          <button className="secondary" onClick={downloadPdf}>
+          <button
+            className="secondary"
+            disabled={
+              mode === "actual"
+                ? !actual
+                : mode === "elastic"
+                  ? !elastic
+                  : !rows.length
+            }
+            onClick={downloadPdf}
+          >
             <Download />
             PDF
           </button>
@@ -584,76 +652,44 @@ export default function FabricCuttingPage({ mode, notify }) {
       )}
 
       {["actual", "elastic"].includes(mode) && (
-        <div className="card lookup-bar">
-          <input
-            placeholder="Enter Plan No or DC No"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button onClick={mode === "actual" ? findPlan : findElastic}>
-            <Search />
-            View
-          </button>
+        <div className="card professional-lookup-card">
+          <label>
+            <span>Plan No / DC No</span>
+            <div className="input-action">
+              <input
+                placeholder="Enter 4-digit Plan No or DC No"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  (mode === "actual" ? findPlan() : findElastic())
+                }
+              />
+              <button
+                className="primary"
+                onClick={mode === "actual" ? findPlan : findElastic}
+              >
+                <Search /> Load {mode === "actual" ? "Plan" : "Requirement"}
+              </button>
+            </div>
+          </label>
         </div>
       )}
 
       {mode === "actual" && actual && (
-        <form className="card table-wrap print-document actual-print-document" onSubmit={saveActual}>
-          <PlanHeader plan={currentPlan} />
-          <table>
-            <thead>
-              <tr>
-                <th>Colour</th>
-                <th>Size</th>
-                <th>Planned PCS</th>
-                <th>Actual PCS</th>
-                <th>Bundle Count</th>
-                <th>Bundle Weight KG</th>
-              </tr>
-            </thead>
-            <tbody>
-              {actual.lines.map((line, index) => (
-                <tr key={line.colour + line.size}>
-                  <td>{line.colour}</td>
-                  <td>{line.size}</td>
-                  <td>{line.plannedPcs}</td>
-                  {["actualPcs", "bundleCount", "bundleWeightKg"].map((key) => (
-                    <td key={key}>
-                      <input
-                        type="number"
-                        min="0"
-                        step={key === "bundleWeightKg" ? "0.001" : "1"}
-                        required
-                        value={line[key]}
-                        onChange={(e) =>
-                          setActual({
-                            ...actual,
-                            lines: actual.lines.map((item, i) =>
-                              i === index
-                                ? { ...item, [key]: e.target.value }
-                                : item,
-                            ),
-                          })
-                        }
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p>
-            <b>Waste = Issued Weight − Total Bundle Weight.</b>
-          </p>
-          <button>
-            <Save />
-            Complete Cutting
-          </button>
-        </form>
+        <CuttingActualMatrix
+          plan={currentPlan}
+          actual={actual}
+          setActual={setActual}
+          submit={saveActual}
+        />
       )}
 
       {mode === "elastic" && elastic && (
-        <div className="card print-document">
+        <div
+          id="elastic-requirement-print"
+          className="card print-document professional-document"
+        >
           <PlanHeader plan={elastic} />
           <table>
             <thead>
@@ -690,7 +726,9 @@ export default function FabricCuttingPage({ mode, notify }) {
         </div>
       )}
 
-      {!["actual", "elastic"].includes(mode) && (
+      {mode === "waste" && <WasteReport rows={rows} loading={loading} />}
+
+      {!["actual", "elastic", "waste"].includes(mode) && (
         <DataList
           rows={rows}
           loading={loading}
@@ -834,9 +872,106 @@ function SizeRows({ rows, setRows }) {
   );
 }
 
+function WasteReport({ rows, loading }) {
+  const lines = rows.flatMap((row) =>
+    row.lines?.length
+      ? row.lines.map((line) => ({ ...line, ...row, ...line }))
+      : [row],
+  );
+
+  return (
+    <div
+      id="department-report-print"
+      className="card print-document report-print-document"
+    >
+      <div className="print-report-header">
+        <small>ACCESSORIES FLOW · CUTTING</small>
+        <h2>Fabric Waste Warehouse Report</h2>
+        <p>Generated {new Date().toLocaleDateString()}</p>
+      </div>
+      {loading ? (
+        <div className="loader-card">Loading waste data...</div>
+      ) : (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Plan No</th>
+                <th>DC No</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>Dia</th>
+                <th>Actual PCS</th>
+                <th>Actual WT</th>
+                <th>Bundle WT</th>
+                <th>Waste WT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((line, index) => (
+                <tr key={`${line._id || line.wasteNo}-${index}`}>
+                  <td>{index + 1}</td>
+                  <td>{line.planNo || "-"}</td>
+                  <td>{line.dcNo || "-"}</td>
+                  <td>{line.colour || "-"}</td>
+                  <td>{line.size || "-"}</td>
+                  <td>{line.dia || "-"}</td>
+                  <td>{line.actualPcs ?? "-"}</td>
+                  <td>{Number(line.actualWeightKg || 0).toFixed(3)} KG</td>
+                  <td>{Number(line.bundleWeightKg || 0).toFixed(3)} KG</td>
+                  <td>{Number(line.wasteWeightKg || 0).toFixed(3)} KG</td>
+                </tr>
+              ))}
+            </tbody>
+            {!!lines.length && (
+              <tfoot>
+                <tr>
+                  <td colSpan="7">Total</td>
+                  <td>
+                    {lines
+                      .reduce(
+                        (sum, line) => sum + Number(line.actualWeightKg || 0),
+                        0,
+                      )
+                      .toFixed(3)}{" "}
+                    KG
+                  </td>
+                  <td>
+                    {lines
+                      .reduce(
+                        (sum, line) => sum + Number(line.bundleWeightKg || 0),
+                        0,
+                      )
+                      .toFixed(3)}{" "}
+                    KG
+                  </td>
+                  <td>
+                    {lines
+                      .reduce(
+                        (sum, line) => sum + Number(line.wasteWeightKg || 0),
+                        0,
+                      )
+                      .toFixed(3)}{" "}
+                    KG
+                  </td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+          {!lines.length && <p className="empty">No waste records found.</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DataList({ rows, loading, search, setSearch, load }) {
   return (
-    <div className="card print-document report-print-document">
+    <div
+      id="department-report-print"
+      className="card print-document report-print-document"
+    >
       <div className="print-report-header">
         <small>ACCESSORIES FLOW</small>
         <h2>Department Report</h2>

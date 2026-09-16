@@ -3,10 +3,15 @@ const line = new mongoose.Schema(
   {
     colour: { type: String, uppercase: true },
     size: { type: String, uppercase: true },
+    dia: { type: String, uppercase: true },
     plannedPcs: Number,
     actualPcs: Number,
+    pieceWeightKg: Number,
+    plannedWeightKg: Number,
+    actualWeightKg: Number,
     bundleCount: Number,
     bundleWeightKg: Number,
+    wasteWeightKg: Number,
   },
   { _id: true },
 );
@@ -23,7 +28,9 @@ const schema = new mongoose.Schema(
     totalActualPcs: Number,
     totalBundleCount: Number,
     totalBundleWeightKg: Number,
+    totalActualWeightKg: Number,
     wasteWeightKg: Number,
+    efficiencyPercent: Number,
     status: {
       type: String,
       enum: ["PARTIAL", "COMPLETED", "HOLD"],

@@ -15,7 +15,7 @@ export default function FabricStockPage({ notify }) {
       .catch((error) => notify?.(error.message));
   }, []);
   const filtered = rows.filter((row) =>
-    `${row.fabricGroup} ${row.colour} ${row.fabricCodes.join(" ")}`
+    `${row.fabricGroup} ${row.colour} ${row.dia} ${row.fabricCodes.join(" ")}`
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
@@ -70,6 +70,7 @@ export default function FabricStockPage({ notify }) {
               <th>Fabric Group</th>
               <th>Fabric Code</th>
               <th>Colour</th>
+              <th>Dia</th>
               <th>Gross KG</th>
               <th>Reserved KG</th>
               <th>Available KG</th>
@@ -77,11 +78,12 @@ export default function FabricStockPage({ notify }) {
           </thead>
           <tbody>
             {filtered.map((row, index) => (
-              <tr key={`${row.fabricGroup}-${row.colour}`}>
+              <tr key={`${row.fabricGroup}-${row.colour}-${row.dia}`}>
                 <td>{index + 1}</td>
                 <td>{row.fabricGroup}</td>
                 <td>{row.fabricCodes.join(", ")}</td>
                 <td>{row.colour}</td>
+                <td>{row.dia}</td>
                 <td>{row.grossWeightKg}</td>
                 <td>{row.reservedWeightKg}</td>
                 <td>{row.availableWeightKg}</td>

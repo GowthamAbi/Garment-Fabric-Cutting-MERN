@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   calculateElasticMtr,
   calculateWantedWeight,
+  resolveActualAvailableWeight,
   calculateWaste,
   distributePieces,
   allocatePiecesByStock,
@@ -20,6 +21,11 @@ test("fabric and elastic calculations keep three decimal precision", () => {
   assert.equal(calculateWantedWeight(100, 0.084), 8.4);
   assert.equal(calculateElasticMtr(111, 0.749), 83.139);
   assert.equal(calculateWaste(100, 92.555), 7.445);
+});
+
+test("cutting actual uses required weight when physical issue is not recorded", () => {
+  assert.equal(resolveActualAvailableWeight(0, 47.17), 47.17);
+  assert.equal(resolveActualAvailableWeight(50, 47.17), 50);
 });
 
 test("invalid distribution input is rejected", () => {

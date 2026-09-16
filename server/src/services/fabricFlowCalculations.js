@@ -27,6 +27,12 @@ export function calculateElasticMtr(actualPcs, measurementMtr) {
   return Number((Number(actualPcs) * Number(measurementMtr)).toFixed(3));
 }
 
+export function resolveActualAvailableWeight(issuedWeightKg, requiredWeightKg) {
+  const issued = Number(issuedWeightKg || 0);
+  const required = Number(requiredWeightKg || 0);
+  return Number((issued > 0 ? issued : required).toFixed(3));
+}
+
 export function allocatePiecesByStock(totalPcs, perPieceKg, stockByColour) {
   const pcs = Number(totalPcs);
   const weight = Number(perPieceKg);

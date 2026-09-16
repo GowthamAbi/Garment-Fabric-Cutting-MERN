@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 const size = new mongoose.Schema(
   {
     size: String,
+    dia: String,
     plannedPcs: Number,
     cuttingWeightPerPieceKg: Number,
     wantedWeightKg: Number,

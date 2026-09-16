@@ -31,7 +31,7 @@ export default function ProductionPlanEntryPage({ notify }) {
     api
       .planSetup(row.itemCode, row._id)
       .then((data) => {
-        setStock(data.stockColours);
+        setStock(groupStockByColour(data.stockColours));
         setForm({
           _id: row._id,
           planNo: row.planNo,
@@ -64,7 +64,7 @@ export default function ProductionPlanEntryPage({ notify }) {
     setBusy(true);
     try {
       const data = await api.planSetup(form.itemCode, form._id);
-      setStock(data.stockColours);
+      setStock(groupStockByColour(data.stockColours));
       setForm({
         ...form,
         itemCode: data.item.itemCode,
@@ -76,6 +76,7 @@ export default function ProductionPlanEntryPage({ notify }) {
           pcs: "",
           cuttingPieceWeightKg: row.cuttingPieceWeightKg,
           foldingPieceWeightKg: row.foldingPieceWeightKg,
+          dia: row.dia,
         })),
       });
       notify?.("Approved Item Master and available fabric loaded");
@@ -212,6 +213,11 @@ export default function ProductionPlanEntryPage({ notify }) {
               >
                 <b>{row.colour}</b>
                 <span>{row.availableWeightKg} KG available</span>
+                <small>
+                  {row.dias
+                    .map((dia) => `Dia ${dia.dia}: ${dia.availableWeightKg} KG`)
+                    .join(" · ")}
+                </small>
               </button>
             ))
           ) : (
@@ -285,4 +291,26 @@ export default function ProductionPlanEntryPage({ notify }) {
       {saved && <ProductionPlanDocument plan={saved} />}
     </section>
   );
+}
+
+function groupStockByColour(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    const current = groups.get(row.colour) || {
+      colour: row.colour,
+      availableWeightKg: 0,
+      dias: [],
+    };
+    current.availableWeightKg = Number(
+      (current.availableWeightKg + Number(row.availableWeightKg || 0)).toFixed(
+        3,
+      ),
+    );
+    current.dias.push({
+      dia: row.dia,
+      availableWeightKg: row.availableWeightKg,
+    });
+    groups.set(row.colour, current);
+  }
+  return [...groups.values()];
 }
