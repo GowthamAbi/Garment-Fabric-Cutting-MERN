@@ -2282,3 +2282,21 @@ td {
 @media(max-width:900px){.professional-flow>.page-title,.cutting-sheet-header{align-items:stretch;flex-direction:column}.cutting-kpi-grid{grid-template-columns:repeat(2,1fr)}.cutting-sheet-meta{grid-template-columns:1fr 1fr}.professional-lookup-card .input-action{grid-template-columns:1fr}.professional-lookup-card button{width:100%}}
 @media(max-width:560px){.cutting-kpi-grid,.cutting-sheet-meta,.cutting-signatures{grid-template-columns:1fr}.cutting-actual-sheet{padding:12px}.professional-flow>.page-title{padding:16px}}
 @media print{@page{size:A4 landscape;margin:7mm}body.scoped-print-mode .cutting-actual-sheet{width:283mm!important;padding:4mm!important;margin:0!important;border:0!important;box-shadow:none!important}.cutting-actual-sheet .actual-submit,.cutting-actual-sheet textarea{display:none!important}.cutting-actual-sheet .actual-matrix-wrap{overflow:visible;border:0}.cutting-actual-sheet .actual-matrix{font-size:7px;transform-origin:top left}.cutting-actual-sheet .actual-matrix th,.cutting-actual-sheet .actual-matrix td{min-width:0;padding:3px}.cutting-actual-sheet .actual-matrix input{width:34px;min-height:20px;padding:1px;border:0;font-size:7px}.cutting-kpi-grid{grid-template-columns:repeat(5,1fr);gap:4px}.cutting-kpi-grid span{padding:5px}.cutting-sheet-header{display:flex;flex-direction:row}.cutting-signatures{margin-top:25px}}
+.department-nav { margin: 10px 8px 16px; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; overflow: hidden; }
+.department-nav-title { padding: 11px 13px; background: rgba(255,255,255,.1); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.department-nav .nav-group > button { width: 100%; }
+.department-nav .nav-submenu { padding-left: 18px; }
+.department-nav .nav-submenu button { font-size: 12px; min-height: 36px; }
+.excel-plan-document { background:#fff; color:#111; padding:18px; font-size:12px; }
+.excel-plan-document header { text-align:center; border:2px solid #111; padding:10px; }
+.excel-plan-document header h1 { margin:3px 0; font-size:22px; }
+.excel-plan-meta { display:grid; grid-template-columns:repeat(5,1fr); border:1px solid #111; border-top:0; }
+.excel-plan-meta span { padding:8px; border-right:1px solid #111; }
+.excel-plan-meta small,.excel-matrix small { display:block; font-size:9px; }
+.excel-plan-document h3 { margin:14px 0 5px; }
+.excel-plan-document table { width:100%; border-collapse:collapse; }
+.excel-plan-document th,.excel-plan-document td { border:1px solid #111; padding:6px; text-align:center; }
+.excel-plan-document thead,.excel-plan-document tfoot { background:#eef2f6; font-weight:800; }
+.excel-signatures { display:grid; grid-template-columns:repeat(5,1fr); gap:18px; margin-top:35px; }
+.excel-signatures span { border-top:1px solid #111; padding-top:5px; text-align:center; }
+@media print { .excel-plan-document { padding:0; } }

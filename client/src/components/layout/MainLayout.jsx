@@ -318,6 +318,26 @@ const navigation = [
   ["SaaS Companies", Building2, ["saas_super_admin"]],
 ];
 
+const departmentNavigation = {
+  FABRIC: [
+    { label: "Fabric Master", icon: Boxes, page: "Fabric Master" },
+    { label: "Fabric Inward", icon: ArrowDownToLine, items: ["Fabric Inward Entry", "Fabric Inward Print", "Fabric Inward History"] },
+    { label: "Production Plan", icon: ClipboardList, items: ["Fabric to Cutting Entry", "Folding Entry", "Folding Print", "Fabric Plan History"] },
+    { label: "Stock", icon: Boxes, items: ["Fabric Stock Inward", "Fabric Stock Balance", "Fabric Stock Waste"] },
+  ],
+  CUTTING: [
+    { label: "Cutting Master", icon: Settings2, items: ["Machine Detail Entry & QR Print"] },
+    { label: "Production Plan", icon: ClipboardList, items: ["Planning Machine Wise", "Cutting Actual Entry", "Cutting Plan Print", "Cutting Plan History"] },
+    { label: "Stock", icon: Boxes, items: ["Cutting Pending", "Cutting Stock", "Cutting Waste"] },
+    { label: "Time Status", icon: Clock3, items: ["Separator Timeline", "Cutter Timeline", "Cutting Reports", "Cutting Time History"] },
+  ],
+};
+
+const legacyDepartmentPages = new Set([
+  "Fabric Master", "Fabric Inward", "Production Plan", "Cutting Actual Entry",
+  "Fabric Waste", "Department History", "Department Print", "Fabric Stock",
+]);
+
 export default function MainLayout({ page, onPageChange, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mastersOpen, setMastersOpen] = useState(
@@ -349,6 +369,15 @@ export default function MainLayout({ page, onPageChange, children }) {
       "Production Plan History",
     ].includes(page),
   );
+  const [departmentOpen, setDepartmentOpen] = useState({
+    "FABRIC-Fabric Inward": true,
+    "FABRIC-Production Plan": true,
+    "FABRIC-Stock": true,
+    "CUTTING-Cutting Master": true,
+    "CUTTING-Production Plan": true,
+    "CUTTING-Stock": true,
+    "CUTTING-Time Status": true,
+  });
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
   const departmentPage =
@@ -411,9 +440,35 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
+          {Object.entries(departmentNavigation)
+            .filter(([department]) =>
+              ["saas_super_admin", "company_admin", "admin"].includes(user?.role) || user?.department === department,
+            )
+            .map(([department, groups]) => (
+              <section className="department-nav" key={department}>
+                <div className="department-nav-title">{department === "FABRIC" ? "Fabric Department" : "Cutting Department"}</div>
+                {groups.map(({ label, icon: Icon, page: directPage, items }) => {
+                  const key = `${department}-${label}`;
+                  const active = directPage === page || items?.includes(page);
+                  return items ? (
+                    <div className="nav-group" key={key}>
+                      <button className={active ? "group-active" : ""} onClick={() => setDepartmentOpen((old) => ({ ...old, [key]: !old[key] }))}>
+                        <Icon /><span>{label}</span><ChevronDown className={departmentOpen[key] ? "chevron open" : "chevron"} />
+                      </button>
+                      {departmentOpen[key] && <div className="nav-submenu">
+                        {items.map((item) => <button key={item} className={page === item ? "active" : ""} onClick={() => selectPage(item)}>{item.replace("Fabric ", "").replace("Cutting ", "")}</button>)}
+                      </div>}
+                    </div>
+                  ) : (
+                    <button key={key} className={active ? "active" : ""} onClick={() => selectPage(directPage)}><Icon />{label}</button>
+                  );
+                })}
+              </section>
+            ))}
           {navigation
             .filter(
               ([name, , roles]) =>
+                !legacyDepartmentPages.has(name) &&
                 (roles.includes(user?.role) ||
                   (["department_incharge", "department_entry"].includes(
                     user?.role,
