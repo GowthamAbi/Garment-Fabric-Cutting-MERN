@@ -26,6 +26,7 @@ const productionPlanSchema = new mongoose.Schema({
   plannedMachine: { type: String, default: "", uppercase: true },
   cutterMachine: { type: String, default: "", uppercase: true },
   spreaderMachine: { type: String, default: "", uppercase: true },
+  breakdownReason: { type: String, default: "" },
   colours: { type: [colourLineSchema], default: [] },
   status: { type: String, enum: ["Draft", "Planned", "Running", "Partial", "Completed", "On Hold", "Cancelled"], default: "Planned" },
   createdBy: { type: String, default: "Planner" },

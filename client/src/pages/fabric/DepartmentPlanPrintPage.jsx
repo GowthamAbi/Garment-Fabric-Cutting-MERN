@@ -16,6 +16,7 @@ const fixed = (value, digits = 3) => Number(n(value).toFixed(digits));
 export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
   const [number, setNumber] = useState("");
   const [plan, setPlan] = useState(null);
+  const [actual, setActual] = useState(null);
   const [busy, setBusy] = useState(false);
   const ref = useRef(null);
   const [department, title] = TITLES[type] || TITLES.cutting;
@@ -25,7 +26,9 @@ export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
     setBusy(true);
     try {
       const result = type === "elastic" ? await api.elastic(number.trim()) : await api.plan(number.trim());
-      setPlan(result?.plan || result);
+      const loadedPlan = result?.plan || result;
+      setPlan(loadedPlan);
+      if (type === "cutting") setActual((await api.actuals({ planNo: loadedPlan.planNo }))[0] || null);
     } catch (error) {
       setPlan(null);
       notify?.(error.message);
@@ -64,10 +67,28 @@ export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
         </div>}
       </div>
       <div id="department-plan-print">
-        {plan && <ExcelPlanDocument plan={plan} type={type} documentRef={ref} />}
+        {plan && (type === "cutting" ? <CuttingGrnDocument plan={plan} actual={actual} documentRef={ref} /> : <ExcelPlanDocument plan={plan} type={type} documentRef={ref} />)}
       </div>
     </section>
   );
+}
+
+function CuttingGrnDocument({ plan, actual, documentRef }) {
+  const planLines = (plan.colours || []).flatMap((colour) => (colour.sizes || []).map((row) => ({ ...row, colour: colour.colour })));
+  const actualLines = actual?.lines || [];
+  const sizes = [...new Set(planLines.map((row) => row.size))];
+  const colours = [...new Set(planLines.map((row) => row.colour))];
+  const lineFor = (colour, size) => actualLines.find((row) => row.colour === colour && row.size === size) || planLines.find((row) => row.colour === colour && row.size === size) || {};
+  const totals = actual || { issuedWeightKg: plan.totalWantedWeightKg, totalActualWeightKg: 0, totalBundleWeightKg: 0, wasteWeightKg: plan.totalWantedWeightKg, efficiencyPercent: 0 };
+  return <article className="cutting-grn-document print-document" ref={documentRef}>
+    <header><small>CUTTING ACTUAL / PLAN TRACEABILITY</small><h1>{plan.itemName}</h1><p>Plan {plan.planNo} · DC {plan.dcNo}</p></header>
+    <div className="cutting-grn-meta"><span>Date <b>{new Date(actual?.createdAt || plan.createdAt).toLocaleDateString()}</b></span><span>Order No <b>{plan.orderNo}</b></span><span>Style <b>{plan.style || "—"}</b></span><span>Fabric Group <b>{plan.fabricGroup}</b></span></div>
+    <div className="cutting-grn-kpis"><span>Received Weight <b>{fixed(totals.issuedWeightKg || plan.totalWantedWeightKg)} KG</b></span><span>Actual Weight <b>{fixed(totals.totalActualWeightKg)} KG</b></span><span>Cut Bundle Weight <b>{fixed(totals.totalBundleWeightKg)} KG</b></span><span>Waste Weight <b>{fixed(totals.wasteWeightKg)} KG</b></span><span>Efficiency <b>{n(totals.efficiencyPercent).toFixed(2)}%</b></span></div>
+    <table><thead><tr><th>S.No</th><th>Colour</th>{sizes.map((size) => <th key={size}>{size}</th>)}<th>Total PCS</th></tr></thead><tbody>{colours.map((colour, index) => <tr key={colour}><td>{index + 1}</td><td>{colour}</td>{sizes.map((size) => <td key={size}>{n(lineFor(colour, size).actualPcs || lineFor(colour, size).plannedPcs) || ""}</td>)}<td>{sizes.reduce((sum, size) => sum + n(lineFor(colour, size).actualPcs || lineFor(colour, size).plannedPcs), 0)}</td></tr>)}</tbody><tfoot><tr><td colSpan="2">TOTAL</td>{sizes.map((size) => <td key={size}>{colours.reduce((sum, colour) => sum + n(lineFor(colour, size).actualPcs || lineFor(colour, size).plannedPcs), 0)}</td>)}<td>{actual?.totalActualPcs || plan.totalPlannedPcs}</td></tr></tfoot></table>
+    <h3>Size-wise Cutting Summary</h3>
+    <table><thead><tr><th>Size</th><th>Dia</th><th>Bundle</th><th>PCS</th><th>Fabric Lot WT</th><th>Cut Bundle WT</th><th>Waste WT</th></tr></thead><tbody>{sizes.map((size) => { const rows = colours.map((colour) => lineFor(colour, size)); const pcs = rows.reduce((sum,row) => sum + n(row.actualPcs || row.plannedPcs),0); const fabric = rows.reduce((sum,row) => sum + n(row.actualWeightKg || row.wantedWeightKg),0); const bundle = rows.reduce((sum,row) => sum + n(row.bundleWeightKg),0); return <tr key={size}><td>{size}</td><td>{rows.find((row) => row.dia)?.dia || "—"}</td><td>{rows.reduce((sum,row) => sum + n(row.bundleCount),0)}</td><td>{pcs}</td><td>{fixed(fabric)}</td><td>{fixed(bundle)}</td><td>{fixed(fabric - bundle)}</td></tr>; })}</tbody></table>
+    <div className="document-notes"><small>REMARKS</small><p>{actual?.remarks || ""}</p></div><div className="cutting-grn-signatures"><span>GRN No: ______________</span><span>Prepared By</span><span>Checked By</span></div>
+  </article>;
 }
 
 function ExcelPlanDocument({ plan, type, documentRef }) {

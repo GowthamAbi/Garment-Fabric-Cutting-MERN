@@ -181,6 +181,7 @@ export async function saveInward(req, res) {
   const inwardNo = upper(req.body.inwardNo) || generateReferenceNo("FIN");
   const data = {
     inwardNo,
+    sampleInwardNo: upper(req.body.sampleInwardNo),
     inwardType: upper(req.body.inwardType || "LOT"),
     fabricCode: master.fabricCode,
     fabricName: master.fabricName,
@@ -418,6 +419,7 @@ async function buildPlanData(req, excludePlanId = null) {
   const input = (req.body.sizes || []).map((x) => ({
     size: upper(x.size),
     pcs: num(x.pcs),
+    dia: upper(x.dia),
   }));
   if (!input.length) throw new ApiError(400, "Add size and PCS");
   if (input.some((x) => !x.size || !Number.isInteger(x.pcs) || x.pcs <= 0))
@@ -451,7 +453,8 @@ async function buildPlanData(req, excludePlanId = null) {
         400,
         `Item Master measurement missing for size ${line.size}`,
       );
-    const dia = upper(measurement.dia);
+    const candidateDias = [...new Set(stockRows.filter((row) => selectedColours.includes(row.colour)).map((row) => upper(row.dia)).filter(Boolean))];
+    const dia = upper(measurement.dia) || line.dia || (candidateDias.length === 1 ? candidateDias[0] : "");
     if (!dia)
       throw new ApiError(
         409,
@@ -687,6 +690,9 @@ export async function saveFoldingEntry(req, res) {
 export async function saveActual(req, res) {
   const plan = await FabricCutPlan.findOne({ planNo: upper(req.body.planNo) });
   if (!plan) throw new ApiError(404, "Plan not found");
+  const existingActual = await FabricCutActual.findOne({ planNo: plan.planNo });
+  if (existingActual && !["saas_super_admin", "company_admin", "admin"].includes(req.user.role))
+    throw new ApiError(403, "Only Company Admin can edit a saved Cutting Actual entry");
   const lines = (req.body.lines || []).map((x) => {
     const colour = upper(x.colour);
     const size = upper(x.size);
@@ -698,7 +704,7 @@ export async function saveActual(req, res) {
     const actualPcs = num(x.actualPcs);
     const bundleWeightKg = num(x.bundleWeightKg);
     const pieceWeightKg = num(planLine.cuttingWeightPerPieceKg);
-    const actualWeightKg = calculateWantedWeight(actualPcs, pieceWeightKg);
+    const actualWeightKg = num(planLine.wantedWeightKg);
     const lineWaste = calculateWaste(actualWeightKg, bundleWeightKg);
     if (lineWaste < -0.0001)
       throw new ApiError(

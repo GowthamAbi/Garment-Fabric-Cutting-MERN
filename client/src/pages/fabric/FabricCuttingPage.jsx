@@ -104,7 +104,11 @@ export default function FabricCuttingPage({ mode, notify }) {
         dcNo: row.dcNo,
         colours: row.colours.map((item) => ({
           colour: item.colour,
-          details: [emptyDetail()],
+          details: item.details.map((detail) => ({
+            dia: detail.dia,
+            rollCount: detail.totalRolls || detail.sampleRolls || detail.lotRolls || "",
+            weightKg: detail.totalWeightKg || detail.sampleWeightKg || detail.lotWeightKg || "",
+          })),
         })),
       }));
       notify?.("Sample inward details loaded");
@@ -143,7 +147,8 @@ export default function FabricCuttingPage({ mode, notify }) {
     try {
       const row = await api.plan(search);
       setCurrentPlan(row);
-      setActual({
+      const existing = (await api.actuals({ planNo: row.planNo }))[0];
+      setActual(existing || {
         planNo: row.planNo,
         status: "COMPLETED",
         remarks: "",
@@ -416,16 +421,6 @@ export default function FabricCuttingPage({ mode, notify }) {
               <input
                 value={inward.dcNo}
                 onChange={(e) => setInward({ ...inward, dcNo: e.target.value })}
-              />
-            </label>
-            <label>
-              Lot No
-              <input
-                required
-                value={inward.lotNo}
-                onChange={(e) =>
-                  setInward({ ...inward, lotNo: e.target.value })
-                }
               />
             </label>
             <label>

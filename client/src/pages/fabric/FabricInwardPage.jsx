@@ -24,6 +24,7 @@ const detail = () => ({
 const colour = () => ({ colour: "", details: [detail()] });
 const blank = () => ({
   inwardNo: "",
+  sampleInwardNo: "",
   inwardType: "LOT",
   fabricCode: "",
   fabricName: "",
@@ -81,6 +82,36 @@ export default function FabricInwardPage({ notify }) {
       fabricGroup: row.fabricGroup,
     });
     notify?.("Fabric Group loaded");
+  }
+  async function lookupSampleInward() {
+    try {
+      const row = await api.inward(form.sampleInwardNo);
+      setForm({
+        ...blank(),
+        sampleInwardNo: row.inwardNo,
+        inwardType: "LOT",
+        fabricCode: row.fabricCode,
+        fabricName: row.fabricName,
+        fabricGroup: row.fabricGroup,
+        dcNo: row.dcNo || "",
+        lotDcNo: row.lotDcNo || "",
+        compactingCode: row.compactingCode || "",
+        compactingName: row.compactingName || "",
+        dyeingCode: row.dyeingCode || "",
+        dyeingName: row.dyeingName || "",
+        colours: row.colours.map((item) => ({
+          colour: item.colour,
+          details: item.details.map((line) => ({
+            dia: line.dia,
+            sampleRolls: line.sampleRolls || "",
+            sampleWeightKg: line.sampleWeightKg || "",
+            lotRolls: line.lotRolls || "",
+            lotWeightKg: line.lotWeightKg || "",
+          })),
+        })),
+      });
+      notify?.("Sample inward data loaded. You can edit, add colour, dia or rows before saving.");
+    } catch (error) { notify?.(error.message); }
   }
   async function lookupProcess(type) {
     const code = type === "COMPACTING" ? form.compactingCode : form.dyeingCode;
@@ -152,6 +183,12 @@ export default function FabricInwardPage({ notify }) {
                 <option>BOTH</option>
               </select>
             </label>
+            <Lookup
+              label="Saved Sample Inward No"
+              value={form.sampleInwardNo}
+              change={(value) => setForm({ ...form, sampleInwardNo: value })}
+              lookup={lookupSampleInward}
+            />
             <Lookup
               label="Fabric Code"
               value={form.fabricCode}

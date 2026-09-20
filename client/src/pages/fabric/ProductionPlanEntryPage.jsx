@@ -230,6 +230,7 @@ export default function ProductionPlanEntryPage({ notify }) {
             <thead>
               <tr>
                 <th>Size</th>
+                <th>Dia</th>
                 <th>Cutting KG/PCS</th>
                 <th>Folding KG/PCS</th>
                 <th>Required PCS</th>
@@ -239,6 +240,7 @@ export default function ProductionPlanEntryPage({ notify }) {
               {form.sizes.map((row, index) => (
                 <tr key={row.size}>
                   <td>{row.size}</td>
+                  <td><input value={row.dia || ""} placeholder="Required if BOM Dia missing" onChange={(e) => setForm({ ...form, sizes: form.sizes.map((x, i) => i === index ? { ...x, dia: e.target.value } : x) })} /></td>
                   <td>{row.cuttingPieceWeightKg}</td>
                   <td>{row.foldingPieceWeightKg}</td>
                   <td>

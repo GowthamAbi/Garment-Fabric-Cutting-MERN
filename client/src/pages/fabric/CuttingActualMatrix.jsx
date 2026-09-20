@@ -1,4 +1,5 @@
 import { Save } from "lucide-react";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const number = (value) => Number(value || 0);
 const fixed = (value) => Number(number(value).toFixed(3));
@@ -9,12 +10,12 @@ export default function CuttingActualMatrix({
   setActual,
   submit,
 }) {
+  const { user } = useAuth();
+  const locked = Boolean(actual._id) && !["saas_super_admin", "company_admin", "admin"].includes(user?.role);
   const sizes = [...new Set(actual.lines.map((line) => line.size))];
   const colours = [...new Set(actual.lines.map((line) => line.colour))];
   const calculatedLines = actual.lines.map((line) => {
-    const actualWeightKg = fixed(
-      number(line.actualPcs) * number(line.pieceWeightKg),
-    );
+    const actualWeightKg = fixed(line.plannedWeightKg);
     const wasteWeightKg = fixed(actualWeightKg - number(line.bundleWeightKg));
     return { ...line, actualWeightKg, wasteWeightKg };
   });
@@ -171,6 +172,7 @@ export default function CuttingActualMatrix({
                       </td>,
                       <td key={`${colour}-${size}-actual`}>
                         <NumberInput
+                          disabled={locked}
                           value={line.actualPcs}
                           change={(value) =>
                             update(colour, size, "actualPcs", value)
@@ -182,6 +184,7 @@ export default function CuttingActualMatrix({
                       </td>,
                       <td key={`${colour}-${size}-bundle`}>
                         <NumberInput
+                          disabled={locked}
                           value={line.bundleCount}
                           change={(value) =>
                             update(colour, size, "bundleCount", value)
@@ -190,6 +193,7 @@ export default function CuttingActualMatrix({
                       </td>,
                       <td key={`${colour}-${size}-bundle-wt`}>
                         <NumberInput
+                          disabled={locked}
                           decimal
                           value={line.bundleWeightKg}
                           change={(value) =>
@@ -269,6 +273,7 @@ export default function CuttingActualMatrix({
       <label className="actual-remarks">
         <span>Remarks</span>
         <textarea
+          disabled={locked}
           value={actual.remarks || ""}
           onChange={(event) =>
             setActual({ ...actual, remarks: event.target.value })
@@ -280,20 +285,21 @@ export default function CuttingActualMatrix({
         <span>Prepared By</span>
         <span>Checked By</span>
       </div>
-      <button className="primary actual-submit">
-        <Save /> Complete Cutting
+      <button className="primary actual-submit" disabled={locked}>
+        <Save /> {locked ? "Saved · Company Admin Edit Only" : actual._id ? "Update Cutting Actual" : "Complete Cutting"}
       </button>
     </form>
   );
 }
 
-function NumberInput({ value, change, decimal = false }) {
+function NumberInput({ value, change, decimal = false, disabled = false }) {
   return (
     <input
       type="number"
       min="0"
       step={decimal ? "0.001" : "1"}
       required
+      disabled={disabled}
       value={value}
       onChange={(event) => change(event.target.value)}
     />

@@ -2300,3 +2300,14 @@ td {
 .excel-signatures { display:grid; grid-template-columns:repeat(5,1fr); gap:18px; margin-top:35px; }
 .excel-signatures span { border-top:1px solid #111; padding-top:5px; text-align:center; }
 @media print { .excel-plan-document { padding:0; } }
+.production-plan-document .sample-col { width: 10%; min-width: 72px; }
+#department-record-print .production-plan-document { width: 100%; max-width: 100%; }
+.cutting-grn-document { background:#fff; color:#111; padding:18px; }
+.cutting-grn-document header { text-align:center; border:2px solid #111; padding:10px; }
+.cutting-grn-meta,.cutting-grn-kpis { display:grid; grid-template-columns:repeat(4,1fr); border:1px solid #111; border-top:0; }
+.cutting-grn-kpis { grid-template-columns:repeat(5,1fr); }
+.cutting-grn-meta span,.cutting-grn-kpis span { padding:8px; border-right:1px solid #111; }
+.cutting-grn-meta b,.cutting-grn-kpis b { display:block; }
+.cutting-grn-document table { width:100%; border-collapse:collapse; margin-top:12px; }
+.cutting-grn-document th,.cutting-grn-document td { border:1px solid #111; padding:6px; text-align:center; }
+.cutting-grn-signatures { display:grid; grid-template-columns:2fr 1fr 1fr; gap:30px; margin-top:35px; }

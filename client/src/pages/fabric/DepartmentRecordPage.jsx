@@ -4,6 +4,8 @@ import { jsPDF } from "jspdf";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 import ProductionPlanDocument from "./ProductionPlanDocument.jsx";
+import { exportCsv } from "../../api.js";
+import { printElement } from "../../services/printService.js";
 
 export default function DepartmentRecordPage({ mode, notify, departmentType }) {
   const { user } = useAuth();
@@ -69,6 +71,7 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
             <h2>History</h2>
             <p>Date range and unique reference records.</p>
           </div>
+          <div className="page-actions"><button onClick={() => exportCsv(`${department.toLowerCase()}-history.csv`, displayRows)}><Download /> Download History</button></div>
         </div>
         <div className="classic-card">
           <div className="filter-panel">
@@ -148,7 +151,7 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
         </label>
         {record && (
           <div className="form-actions">
-            <button onClick={() => window.print()}>
+            <button onClick={() => printElement("department-record-print")}>
               <Printer /> Print
             </button>
             <button onClick={pdf}>
@@ -157,12 +160,12 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
           </div>
         )}
       </div>
-      {record &&
+      <div id="department-record-print">{record &&
         (department === "CUTTING" ? (
           <ProductionPlanDocument plan={record} documentRef={ref} />
         ) : (
           <FabricRecord record={record} documentRef={ref} />
-        ))}
+        ))}</div>
     </section>
   );
 }
@@ -210,8 +213,8 @@ function FabricRecord({ record, documentRef }) {
             <th>S.No</th>
             <th>Colour</th>
             <th>Dia</th>
-            <th>Sample Rolls</th>
-            <th>Sample KG</th>
+            <th className="sample-col">Sample Rolls</th>
+            <th className="sample-col">Sample KG</th>
             <th>Lot Rolls</th>
             <th>Lot KG</th>
           </tr>
