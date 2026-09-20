@@ -121,33 +121,6 @@ export default function ProductionPlanDocument({ plan, documentRef }) {
           </tr>
         </tfoot>
       </table>
-      <h3 className="document-section-title">
-        Size / Dia / Colour Requirement
-      </h3>
-      <table className="measurement-detail-table">
-        <thead>
-          <tr>
-            <th>Size</th>
-            <th>Dia</th>
-            <th>Colour</th>
-            <th>PCS WT</th>
-            <th>PCS</th>
-            <th>Wanted Weight</th>
-          </tr>
-        </thead>
-        <tbody>
-          {lines.map((line) => (
-            <tr key={`${line.colour}-${line.size}`}>
-              <td>{line.size}</td>
-              <td>{line.dia || "—"}</td>
-              <td>{line.colour}</td>
-              <td>{line.cuttingWeightPerPieceKg}</td>
-              <td>{line.plannedPcs}</td>
-              <td>{line.wantedWeightKg} KG</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
       {plan.notes && (
         <section className="document-notes">
           <small>NOTES</small>

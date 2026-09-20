@@ -30,7 +30,6 @@ const blank = () => ({
   fabricGroup: "",
   dcNo: "",
   lotDcNo: "",
-  lotNo: "",
   compactingCode: "",
   compactingName: "",
   dyeingCode: "",
@@ -177,13 +176,6 @@ export default function FabricInwardPage({ notify }) {
                 required
                 value={form.lotDcNo}
                 onChange={(e) => setForm({ ...form, lotDcNo: e.target.value })}
-              />
-            </label>
-            <label>
-              <span>Lot No</span>
-              <input
-                value={form.lotNo}
-                onChange={(e) => setForm({ ...form, lotNo: e.target.value })}
               />
             </label>
             <Lookup

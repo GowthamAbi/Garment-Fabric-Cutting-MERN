@@ -366,6 +366,14 @@ export async function listFabricStock(req, res) {
   res.json(result);
 }
 
+export async function listFabricBalance(req, res) {
+  const rows = await FabricBundleStock.aggregate([
+    { $group: { _id: { inwardNo: "$inwardNo", fabricName: "$fabricName", fabricGroup: "$fabricGroup", colour: "$colour", dia: "$dia" }, rolls: { $sum: 1 }, inwardWeightKg: { $sum: "$originalWeightKg" }, balanceWeightKg: { $sum: "$balanceWeightKg" }, inwardDate: { $min: "$createdAt" } } },
+    { $sort: { inwardDate: -1 } },
+  ]);
+  res.json(rows.map((row) => ({ ...row._id, rolls: row.rolls, inwardWeightKg: Number(row.inwardWeightKg.toFixed(3)), balanceWeightKg: Number(row.balanceWeightKg.toFixed(3)), inwardDate: row.inwardDate })));
+}
+
 export async function getPlanSetup(req, res) {
   const itemCode = upper(req.params.itemCode);
   const item = await GarmentItemMaster.findOne({ itemCode });
@@ -626,6 +634,53 @@ export async function issueFabric(req, res) {
   plan.issuedWeightKg = Number((plan.issuedWeightKg + weight).toFixed(3));
   plan.status =
     plan.issuedWeightKg >= plan.totalWantedWeightKg ? "READY" : "PART_ISSUED";
+  await plan.save();
+  res.json(plan);
+}
+
+export async function saveFoldingEntry(req, res) {
+  const plan = await FabricCutPlan.findOne({
+    $or: [{ planNo: upper(req.params.no) }, { dcNo: upper(req.params.no) }],
+  });
+  if (!plan) throw new ApiError(404, "Plan / DC not found");
+  if (plan.foldingBatches?.length)
+    throw new ApiError(409, "Folding entry already saved for this plan");
+  const batches = (req.body.batches || [])
+    .map((row) => ({
+      colour: upper(row.colour),
+      dia: upper(row.dia),
+      bundleNo: upper(row.bundleNo),
+      weightKg: num(row.weightKg),
+    }))
+    .filter((row) => row.colour || row.bundleNo || row.weightKg);
+  if (!batches.length || batches.some((row) => !row.colour || !row.dia || !row.bundleNo || row.weightKg <= 0))
+    throw new ApiError(400, "Every folding batch needs Colour, Dia, Batch No and Weight");
+  const duplicate = new Set();
+  for (const row of batches) {
+    if (duplicate.has(row.bundleNo)) throw new ApiError(400, `Duplicate Batch No ${row.bundleNo}`);
+    duplicate.add(row.bundleNo);
+    const stock = await FabricBundleStock.findOne({ bundleNo: row.bundleNo });
+    if (!stock) throw new ApiError(404, `Batch ${row.bundleNo} not found`);
+    if (upper(stock.colour) !== row.colour || upper(stock.dia) !== row.dia)
+      throw new ApiError(409, `${row.bundleNo} does not match ${row.colour} / Dia ${row.dia}`);
+    if (stock.balanceWeightKg + 0.0001 < row.weightKg)
+      throw new ApiError(409, `${row.bundleNo} balance is only ${stock.balanceWeightKg} KG`);
+  }
+  for (const row of batches) {
+    const stock = await FabricBundleStock.findOne({ bundleNo: row.bundleNo });
+    stock.balanceWeightKg = Number((stock.balanceWeightKg - row.weightKg).toFixed(3));
+    stock.status = stock.balanceWeightKg <= 0 ? "CONSUMED" : "PARTIAL";
+    await stock.save();
+    const inward = await FabricInwardLot.findOne({ inwardNo: stock.inwardNo });
+    const colour = inward?.colours.find((line) => upper(line.colour) === row.colour);
+    if (colour) {
+      colour.balanceWeightKg = Number(Math.max(0, colour.balanceWeightKg - row.weightKg).toFixed(3));
+      inward.status = inward.colours.every((line) => line.balanceWeightKg <= 0) ? "CLOSED" : "PARTIAL";
+      await inward.save();
+    }
+  }
+  plan.foldingBatches = batches;
+  plan.foldingWeightKg = Number(batches.reduce((sum, row) => sum + row.weightKg, 0).toFixed(3));
   await plan.save();
   res.json(plan);
 }

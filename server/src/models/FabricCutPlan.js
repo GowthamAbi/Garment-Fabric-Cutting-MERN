@@ -29,6 +29,15 @@ const allocation = new mongoose.Schema(
   },
   { _id: true },
 );
+const foldingBatch = new mongoose.Schema(
+  {
+    colour: { type: String, uppercase: true },
+    dia: String,
+    bundleNo: { type: String, uppercase: true },
+    weightKg: { type: Number, min: 0 },
+  },
+  { _id: true },
+);
 const schema = new mongoose.Schema(
   {
     planNo: { type: String, required: true, uppercase: true },
@@ -48,6 +57,8 @@ const schema = new mongoose.Schema(
     numberOfColours: { type: Number, required: true, min: 1 },
     colours: [colour],
     allocations: [allocation],
+    foldingBatches: { type: [foldingBatch], default: [] },
+    foldingWeightKg: { type: Number, default: 0 },
     totalPlannedPcs: Number,
     totalWantedWeightKg: Number,
     issuedWeightKg: { type: Number, default: 0 },

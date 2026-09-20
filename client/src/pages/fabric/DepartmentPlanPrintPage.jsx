@@ -104,6 +104,16 @@ function ExcelPlanDocument({ plan, type, documentRef }) {
       <tbody>{colourRows.map((colour, index) => <tr key={colour.colour}><td>{index + 1}</td><td>{colour.batchNo || ""}</td><td>{colour.colour}</td>{sizes.map((size) => { const row = (colour.sizes || []).find((x) => x.size === size) || {}; const pcs = n(row.plannedPcs || row.pcs); return <td key={size}>{pcs}<small>{fixed(pcs * pieceWeight(row))}</small></td>; })}<td>{colour.totalPcs || 0}</td><td>{colour.wantedWeightKg || fixed((colour.sizes || []).reduce((sum, row) => sum + n(row.plannedPcs || row.pcs) * pieceWeight(row), 0))}</td></tr>)}</tbody>
       <tfoot><tr><td colSpan={3 + sizes.length}>TOTAL</td><td>{totalPcs}</td><td>{totalWanted}</td></tr></tfoot>
     </table>
+    {type === "folding" && plan.foldingBatches?.length > 0 && <>
+      <h3>Colour / Batch Fabric Entry</h3>
+      <table><thead><tr><th>S.No</th><th>Colour</th><th>Dia</th><th>Batch No</th><th>Fabric WT</th></tr></thead><tbody>
+        {plan.foldingBatches.map((row, index, all) => {
+          const first = index === 0 || all[index - 1].colour !== row.colour;
+          const span = first ? all.filter((x) => x.colour === row.colour).length : 0;
+          return <tr key={`${row.bundleNo}-${index}`}><td>{index + 1}</td>{first && <td rowSpan={span}>{row.colour}</td>}<td>{row.dia}</td><td>{row.bundleNo}</td><td>{row.weightKg} KG</td></tr>;
+        })}
+      </tbody><tfoot><tr><td colSpan="4">TOTAL</td><td>{plan.foldingWeightKg} KG</td></tr></tfoot></table>
+    </>}
     <div className="excel-signatures"><span>GRN No</span><span>Prepared By</span><span>Checked By</span><span>Verified By</span><span>Authorized By</span></div>
   </article>;
 }

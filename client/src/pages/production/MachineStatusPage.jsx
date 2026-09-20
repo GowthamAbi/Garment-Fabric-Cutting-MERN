@@ -78,7 +78,7 @@ function hours(value) {
   return `${Number(value || 0).toFixed(2)} h`;
 }
 
-export default function MachineStatusPage() {
+export default function MachineStatusPage({ timelineType = "" }) {
   const [data, setData] = useState(null);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const todayStart = useMemo(() => startOfDay(new Date()), []);
@@ -90,7 +90,11 @@ export default function MachineStatusPage() {
 
   if (!data) return <div className="loading-state"><Activity className="spin" /> Loading machine status...</div>;
 
-  const selected = data.machines.find((machine) => machine.machineCode === selectedMachine);
+  const visibleMachines = data.machines.filter((machine) =>
+    timelineType === "Separator Timeline" ? machine.machineType === "Spreader" :
+      timelineType === "Cutter Timeline" ? machine.machineType === "Cutter" : true,
+  );
+  const selected = visibleMachines.find((machine) => machine.machineCode === selectedMachine);
   const weekRows = selected ? Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - index));
@@ -98,12 +102,12 @@ export default function MachineStatusPage() {
   }) : [];
 
   return <>
-    <PageTitle title="Status" subtitle="24-hour machine production and stopping timeline" />
+    <PageTitle title={timelineType || "Status"} subtitle="24-hour status with one-week machine details" />
     <Card title="Today · 24 Hours">
       <div className="gantt-legend"><span><i className="production" /> Production</span><span><i className="stopped" /> Stopped</span><small>Click a machine row to view its one-week report</small></div>
       <div className="machine-gantt">
         <div className="gantt-hours"><b>Machine</b><div>{Array.from({ length: 24 }, (_, hour) => <span key={hour}>{String(hour).padStart(2, "0")}</span>)}</div><b>Status</b></div>
-        {data.machines.map((machine) => {
+        {visibleMachines.map((machine) => {
           const segments = data.jobs.filter((job) => job.machineCode === machine.machineCode).flatMap((job) => jobSegments(job, todayStart, todayEnd));
           return <button type="button" className={`gantt-machine-row ${selectedMachine === machine.machineCode ? "selected" : ""}`} key={machine._id} onClick={() => setSelectedMachine((current) => current === machine.machineCode ? null : machine.machineCode)}>
             <span className="gantt-machine-name"><b>{machine.machineCode}</b><small>{machine.machineName}</small></span>

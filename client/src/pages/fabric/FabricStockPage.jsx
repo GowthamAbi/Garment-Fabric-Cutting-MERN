@@ -4,18 +4,18 @@ import { jsPDF } from "jspdf";
 import { exportCsv } from "../../api.js";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 
-export default function FabricStockPage({ notify }) {
+export default function FabricStockPage({ notify, mode = "summary" }) {
   const [rows, setRows] = useState([]);
   const [search, setSearch] = useState("");
   const ref = useRef(null);
   useEffect(() => {
     api
-      .fabricStock()
+      [mode === "balance" ? "fabricBalance" : "fabricStock"]()
       .then(setRows)
       .catch((error) => notify?.(error.message));
   }, []);
   const filtered = rows.filter((row) =>
-    `${row.fabricGroup} ${row.colour} ${row.dia} ${row.fabricCodes.join(" ")}`
+    `${row.fabricGroup} ${row.fabricName || ""} ${row.inwardNo || ""} ${row.colour} ${row.dia} ${(row.fabricCodes || []).join(" ")}`
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
@@ -35,8 +35,8 @@ export default function FabricStockPage({ notify }) {
       <div className="classic-title">
         <div>
           <small>FABRIC DEPARTMENT</small>
-          <h2>Fabric Stock</h2>
-          <p>Inward balance minus open Production Plan reservations.</p>
+          <h2>{mode === "balance" ? "Fabric Balance Stock" : "Fabric Stock"}</h2>
+          <p>Inward minus Production Plan and Folding batch consumption.</p>
         </div>
         <div className="page-actions">
           <button onClick={() => exportCsv("fabric-stock.csv", filtered)}>
@@ -68,12 +68,10 @@ export default function FabricStockPage({ notify }) {
             <tr>
               <th>S.No</th>
               <th>Fabric Group</th>
-              <th>Fabric Code</th>
+              {mode === "balance" ? <><th>Fabric Name</th><th>Inward No</th></> : <th>Fabric Code</th>}
               <th>Colour</th>
               <th>Dia</th>
-              <th>Gross KG</th>
-              <th>Reserved KG</th>
-              <th>Available KG</th>
+              <th>Roll</th><th>Inward KG</th><th>Balance KG</th><th>Aging</th>
             </tr>
           </thead>
           <tbody>
@@ -81,12 +79,10 @@ export default function FabricStockPage({ notify }) {
               <tr key={`${row.fabricGroup}-${row.colour}-${row.dia}`}>
                 <td>{index + 1}</td>
                 <td>{row.fabricGroup}</td>
-                <td>{row.fabricCodes.join(", ")}</td>
+                {mode === "balance" ? <><td>{row.fabricName}</td><td>{row.inwardNo}</td></> : <td>{(row.fabricCodes || []).join(", ")}</td>}
                 <td>{row.colour}</td>
                 <td>{row.dia}</td>
-                <td>{row.grossWeightKg}</td>
-                <td>{row.reservedWeightKg}</td>
-                <td>{row.availableWeightKg}</td>
+                <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td><td>{row.balanceWeightKg ?? row.availableWeightKg}</td><td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
               </tr>
             ))}
           </tbody>

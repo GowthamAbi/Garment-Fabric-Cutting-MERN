@@ -24,6 +24,8 @@ const productionPlanSchema = new mongoose.Schema({
   priority: { type: String, enum: ["Low", "Normal", "High", "Urgent"], default: "Normal" },
   requiredDate: Date,
   plannedMachine: { type: String, default: "", uppercase: true },
+  cutterMachine: { type: String, default: "", uppercase: true },
+  spreaderMachine: { type: String, default: "", uppercase: true },
   colours: { type: [colourLineSchema], default: [] },
   status: { type: String, enum: ["Draft", "Planned", "Running", "Partial", "Completed", "On Hold", "Cancelled"], default: "Planned" },
   createdBy: { type: String, default: "Planner" },
