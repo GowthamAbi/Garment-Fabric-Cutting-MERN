@@ -91,6 +91,7 @@ export const fabricCuttingApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+  foldingSetup: (number) => api("/fabric-cutting/plans/" + encodeURIComponent(number) + "/folding"),
   actuals: (params) => api("/fabric-cutting/actuals" + query(params)),
   saveActual: (data) =>
     api("/fabric-cutting/actuals", {

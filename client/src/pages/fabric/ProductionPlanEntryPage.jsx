@@ -14,6 +14,8 @@ const blank = () => ({
   style: "",
   dcType: "FRESH_LOT",
   selectedColours: [],
+  colourBatches: {},
+  colourRemarks: {},
   sizes: [],
   notes: "",
 });
@@ -43,6 +45,8 @@ export default function ProductionPlanEntryPage({ notify }) {
           style: row.style || "",
           dcType: row.dcType,
           selectedColours: row.colours.map((colour) => colour.colour),
+          colourBatches: Object.fromEntries(row.colours.map((colour) => [colour.colour, colour.batchNumbers || []])),
+          colourRemarks: Object.fromEntries(row.colours.map((colour) => [colour.colour, colour.remarks || ""])),
           sizes: data.item.sizes.map((size) => ({
             ...size,
             pcs: row.colours.reduce(
@@ -71,6 +75,8 @@ export default function ProductionPlanEntryPage({ notify }) {
         itemName: data.item.itemName,
         fabricGroup: data.item.fabricGroup,
         selectedColours: [],
+        colourBatches: {},
+        colourRemarks: {},
         sizes: data.item.sizes.map((row) => ({
           size: row.size,
           pcs: "",
@@ -224,6 +230,7 @@ export default function ProductionPlanEntryPage({ notify }) {
             <p>Enter Item Code and click search.</p>
           )}
         </div>
+        {form.selectedColours.length > 0 && <div className="table-wrap"><table><thead><tr><th>Colour</th><th>Batch Numbers</th><th>Remarks</th></tr></thead><tbody>{form.selectedColours.map((colour) => <tr key={colour}><td>{colour}</td><td><input placeholder="BATCH-1, BATCH-2" value={(form.colourBatches[colour] || []).join(", ")} onChange={(e) => setForm({ ...form, colourBatches: { ...form.colourBatches, [colour]: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) } })} /></td><td><input value={form.colourRemarks[colour] || ""} onChange={(e) => setForm({ ...form, colourRemarks: { ...form.colourRemarks, [colour]: e.target.value } })} /></td></tr>)}</tbody></table></div>}
         <h3>Size-wise Required PCS</h3>
         <div className="table-wrap">
           <table>

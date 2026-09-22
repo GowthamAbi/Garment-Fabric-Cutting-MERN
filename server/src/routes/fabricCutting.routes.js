@@ -37,6 +37,7 @@ const r = Router(),
   fabricEntry = allowDepartment(
     "FABRIC",
     "saas_super_admin",
+    "company_admin",
     "admin",
     "fabric_admin",
     "fabric_entry",
@@ -89,6 +90,7 @@ r.get("/stock", fabricRead, asyncHandler(c.listFabricStock));
 r.get("/stock/balance", fabricRead, asyncHandler(c.listFabricBalance));
 r.get("/plans", cuttingRead, asyncHandler(c.listPlans));
 r.get("/plans/setup/:itemCode", cuttingRead, asyncHandler(c.getPlanSetup));
+r.get("/plans/:no/folding", fabricRead, asyncHandler(c.getFoldingSetup));
 r.get("/plans/:no", cuttingRead, asyncHandler(c.getPlan));
 r.post("/plans", cutting, asyncHandler(c.createPlan));
 r.put("/plans/:id", cutting, asyncHandler(c.updatePlan));

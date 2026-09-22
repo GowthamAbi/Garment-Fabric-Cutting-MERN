@@ -16,6 +16,8 @@ const colour = new mongoose.Schema(
     totalPcs: Number,
     wantedWeightKg: Number,
     availableWeightBeforeKg: Number,
+    batchNumbers: { type: [String], default: [] },
+    remarks: { type: String, default: "" },
   },
   { _id: true },
 );
@@ -35,6 +37,14 @@ const foldingBatch = new mongoose.Schema(
     dia: String,
     bundleNo: { type: String, uppercase: true },
     weightKg: { type: Number, min: 0 },
+  },
+  { _id: true },
+);
+const foldingLine = new mongoose.Schema(
+  {
+    colour: { type: String, uppercase: true }, size: { type: String, uppercase: true }, dia: String,
+    actualCuttingPcs: Number, foldingWeightPerPieceKg: Number,
+    wantedWeightKg: Number, actualWeightKg: Number,
   },
   { _id: true },
 );
@@ -58,6 +68,9 @@ const schema = new mongoose.Schema(
     colours: [colour],
     allocations: [allocation],
     foldingBatches: { type: [foldingBatch], default: [] },
+    foldingLines: { type: [foldingLine], default: [] },
+    foldingQuality: { type: String, default: "" },
+    foldingSavedAt: Date,
     foldingWeightKg: { type: Number, default: 0 },
     totalPlannedPcs: Number,
     totalWantedWeightKg: Number,

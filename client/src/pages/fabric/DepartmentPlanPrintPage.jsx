@@ -3,11 +3,14 @@ import { Download, Printer, Search } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 import { printElement } from "../../services/printService.js";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { FoldingDocument } from "./FoldingEntryPage.jsx";
 
 const TITLES = {
   cutting: ["CUTTING DEPARTMENT", "Cutting Plan / Actual Print"],
   folding: ["FABRIC DEPARTMENT", "Folding Plan Print"],
   elastic: ["ELASTIC DEPARTMENT", "Elastic Plan Print"],
+  fabric: ["FABRIC DEPARTMENT", "Fabric Production Plan Print"],
 };
 
 const n = (value) => Number(value || 0);
@@ -15,6 +18,7 @@ const fixed = (value, digits = 3) => Number(n(value).toFixed(digits));
 
 export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
   const [number, setNumber] = useState("");
+  const { user } = useAuth();
   const [plan, setPlan] = useState(null);
   const [actual, setActual] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -25,8 +29,9 @@ export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
     if (!number.trim()) return notify?.("Enter Plan Number");
     setBusy(true);
     try {
-      const result = type === "elastic" ? await api.elastic(number.trim()) : await api.plan(number.trim());
+      const result = type === "elastic" ? await api.elastic(number.trim()) : type === "folding" ? await api.foldingSetup(number.trim()) : await api.plan(number.trim());
       const loadedPlan = result?.plan || result;
+      if (type === "folding" && !loadedPlan.foldingLines?.length) throw new Error("Saved Folding Entry not found for this Plan Number");
       setPlan(loadedPlan);
       if (type === "cutting") setActual((await api.actuals({ planNo: loadedPlan.planNo }))[0] || null);
     } catch (error) {
@@ -67,10 +72,20 @@ export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
         </div>}
       </div>
       <div id="department-plan-print">
-        {plan && (type === "cutting" ? <CuttingGrnDocument plan={plan} actual={actual} documentRef={ref} /> : <ExcelPlanDocument plan={plan} type={type} documentRef={ref} />)}
+        {plan && (type === "cutting" ? <CuttingGrnDocument plan={plan} actual={actual} documentRef={ref} /> : type === "fabric" ? <FabricPlanDocument plan={plan} companyName={user?.companyName} documentRef={ref} /> : type === "folding" ? <div ref={ref}><FoldingDocument plan={plan} lines={plan.foldingLines} batches={plan.foldingBatches} quality={plan.foldingQuality} companyName={user?.companyName}/></div> : <ExcelPlanDocument plan={plan} type={type} documentRef={ref} />)}
       </div>
     </section>
   );
+}
+
+function FabricPlanDocument({ plan, companyName, documentRef }) {
+  const lines = (plan.colours || []).flatMap((colour) => (colour.sizes || []).map((row) => ({ ...row, colour: colour.colour })));
+  const sizes = [...new Set(lines.map((row) => row.size))];
+  return <article className="fabric-plan-print print-document" ref={documentRef}><header><h1>{companyName || "Company Name"}</h1><h2>FABRIC DEPARTMENT</h2></header>
+    <div className="fabric-print-meta"><span>Date <b>{new Date(plan.createdAt).toLocaleDateString()}</b></span><span>Item Name <b>{plan.itemName}</b></span><span>Style <b>{plan.style || "—"}</b></span><span>Order No <b>{plan.orderNo}</b></span><span>Plan No <b>{plan.planNo}</b></span><span>Dia <b>{[...new Set(lines.map((x) => x.dia))].join(", ")}</b></span><span>DC Type <b>{plan.dcType === "FOLDING_LOT" ? "Folding Lot" : "First Lot"}</b></span></div>
+    <h3>Size Summary</h3><table><thead><tr><th>Size</th><th>Dia</th><th>PCS</th><th>Total Weight</th></tr></thead><tbody>{sizes.map((size) => { const rows = lines.filter((x) => x.size === size); return <tr key={size}><td>{size}</td><td>{rows[0]?.dia}</td><td>{rows.reduce((s,x)=>s+n(x.plannedPcs),0)}</td><td>{fixed(rows.reduce((s,x)=>s+n(x.wantedWeightKg),0))} KG</td></tr>; })}</tbody><tfoot><tr><td colSpan="2">TOTAL</td><td>{plan.totalPlannedPcs}</td><td>{plan.totalWantedWeightKg} KG</td></tr></tfoot></table>
+    <h3>Colour / Batch Requirement</h3><table><thead><tr><th>S.No</th><th>Colour</th><th>Batch Number</th><th>PCS</th><th>Wanted Weight</th><th>Remarks</th></tr></thead><tbody>{(plan.colours || []).flatMap((colour, colourIndex) => { const batches = colour.batchNumbers?.length ? colour.batchNumbers : ["—"]; return batches.map((batch,index) => <tr key={`${colour.colour}-${batch}-${index}`}><td>{index===0 ? colourIndex+1 : ""}</td>{index===0 && <td rowSpan={batches.length}>{colour.colour}</td>}<td>{batch}</td>{index===0 && <><td rowSpan={batches.length}>{colour.totalPcs}</td><td rowSpan={batches.length}>{colour.wantedWeightKg} KG</td><td rowSpan={batches.length}>{colour.remarks || ""}</td></>}</tr>); })}</tbody><tfoot><tr><td colSpan="3">TOTAL</td><td>{plan.totalPlannedPcs}</td><td>{plan.totalWantedWeightKg} KG</td><td /></tr></tfoot></table><div className="excel-signatures"><span>Prepared By</span><span>Checked By</span><span>Approved By</span></div>
+  </article>;
 }
 
 function CuttingGrnDocument({ plan, actual, documentRef }) {

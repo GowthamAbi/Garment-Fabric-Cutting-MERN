@@ -321,13 +321,14 @@ const navigation = [
 const departmentNavigation = {
   FABRIC: [
     { label: "Fabric Master", icon: Boxes, page: "Fabric Master" },
-    { label: "Fabric Inward", icon: ArrowDownToLine, items: ["Fabric Inward Entry", "Fabric Inward Print", "Fabric Inward History"] },
+    { label: "Fabric Inward", icon: ArrowDownToLine, items: ["Fabric Inward Entry", "Fabric Roll QR Print", "Fabric Inward Print", "Fabric Inward History"] },
     { label: "Production Plan", icon: ClipboardList, items: ["Fabric to Cutting Entry", "Folding Entry", "Folding Print", "Fabric Plan History"] },
     { label: "Stock", icon: Boxes, items: ["Fabric Stock Inward", "Fabric Stock Balance", "Fabric Stock Waste"] },
   ],
   CUTTING: [
     { label: "Cutting Master", icon: Settings2, items: ["Machine Detail Entry & QR Print"] },
     { label: "Production Plan", icon: ClipboardList, items: ["Planning Machine Wise", "Cutting Actual Entry", "Cutting Plan Print", "Cutting Plan History"] },
+    { label: "Selection Plan", icon: ClipboardList, items: ["Machine Plan", "Plan Number Status", "Cutter Status"] },
     { label: "Stock", icon: Boxes, items: ["Cutting Pending", "Cutting Stock", "Cutting Waste"] },
     { label: "Time Status", icon: Clock3, items: ["Separator Timeline", "Cutter Timeline", "Cutting Reports", "Cutting Time History"] },
   ],
@@ -375,6 +376,7 @@ export default function MainLayout({ page, onPageChange, children }) {
     "FABRIC-Stock": true,
     "CUTTING-Cutting Master": true,
     "CUTTING-Production Plan": true,
+    "CUTTING-Selection Plan": true,
     "CUTTING-Stock": true,
     "CUTTING-Time Status": true,
   });

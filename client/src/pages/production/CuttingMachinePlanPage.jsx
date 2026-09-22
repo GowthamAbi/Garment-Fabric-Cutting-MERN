@@ -1,0 +1,41 @@
+import { useEffect, useMemo, useState } from "react";
+import { Download, Play, RefreshCw, Save } from "lucide-react";
+import { exportCsv } from "../../api.js";
+import { getCuttingMachinePlans, getCuttingMachineStatus, saveCuttingMachinePlan, cuttingMachineAction, transferCuttingMachinePlan } from "../../api/productionApi.js";
+
+const blank = { machineType: "SPREADER", machineCode: "", planNo: "", colour: "", size: "ALL", pcs: "", priority: 1 };
+const allowedActions = (row) => {
+  if (["COMPLETED","PUBLISHED"].includes(row.status)) return [];
+  if (row.status === "BREAKDOWN") return ["RESUME"];
+  if (["PAUSED","CHANGE"].includes(row.status)) return ["RESUME","BREAKDOWN"];
+  if (["QUEUED","READY"].includes(row.status)) return ["START","CHANGE","BREAKDOWN"];
+  return row.machineType === "SPREADER" ? ["PUBLISH","CHANGE","BREAKDOWN","BREAK"] : ["COMPLETE","CHANGE","BREAKDOWN","BREAK"];
+};
+
+export default function CuttingMachinePlanPage({ notify, mode = "plan" }) {
+  const [form, setForm] = useState(blank);
+  const [rows, setRows] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const [search, setSearch] = useState("");
+  async function load() { const [plans, status] = await Promise.all([getCuttingMachinePlans(), getCuttingMachineStatus()]); setRows(plans); setMachines(status); }
+  useEffect(() => { load().catch((e) => notify?.(e.message)); }, []);
+  const availableMachines = machines.filter((m) => m.machineType.toUpperCase() === (form.machineType === "SPREADER" ? "SPREADER" : "CUTTER") && m.status !== "Breakdown");
+  const filtered = useMemo(() => rows.filter((r) => `${r.planNo} ${r.dcNo} ${r.machineCode} ${r.colour} ${r.status}`.toLowerCase().includes(search.toLowerCase())), [rows, search]);
+  async function submit(e) { e.preventDefault(); try { await saveCuttingMachinePlan(form); setForm(blank); await load(); notify?.("Machine plan assigned / queued"); } catch (error) { notify?.(error.message); } }
+  async function act(row, action) { const reason = ["CHANGE", "BREAKDOWN", "BREAK"].includes(action) ? window.prompt(`${action} reason`) || "" : ""; try { await cuttingMachineAction(row._id, action, reason); await load(); notify?.(`${row.planNo}: ${action}`); } catch (error) { notify?.(error.message); } }
+  async function transfer(row) { const machineCode = window.prompt("Target machine code"); if (!machineCode) return; try { await transferCuttingMachinePlan(row._id, machineCode, "Operator transfer"); await load(); } catch (error) { notify?.(error.message); } }
+  if (mode === "status") return <StatusView machines={machines} rows={filtered} search={search} setSearch={setSearch} />;
+  if (mode === "plan-status") return <HistoryView rows={filtered} search={search} setSearch={setSearch} />;
+  return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT · SELECTION PLAN</small><h2>Machine Plan</h2><p>Assign Spreader/Cutter work, control live status and maintain machine queues.</p></div></div>
+    <form className="classic-card machine-plan-form" onSubmit={submit}><div className="form-grid">
+      <label><span>Machine Type</span><select value={form.machineType} onChange={(e) => setForm({ ...form, machineType: e.target.value, machineCode: "" })}><option>SPREADER</option><option>CUTTER</option></select></label>
+      <label><span>Machine</span><select required value={form.machineCode} onChange={(e) => setForm({ ...form, machineCode: e.target.value })}><option value="">Select</option>{availableMachines.map((m) => <option key={m.machineCode}>{m.machineCode}</option>)}</select></label>
+      {['planNo','colour','size','pcs','priority'].map((key) => <label key={key}><span>{key}</span><input required={key !== 'size'} type={['pcs','priority'].includes(key) ? 'number' : 'text'} min="1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>)}
+    </div><button className="primary"><Save /> Assign / Add Queue</button></form>
+    <div className="classic-card"><div className="table-toolbar"><h3>Live & Queue Plans</h3><button onClick={load}><RefreshCw /> Refresh</button></div><div className="table-wrap"><table><thead><tr><th>Machine</th><th>Type</th><th>Plan / DC</th><th>Colour</th><th>Size</th><th>PCS</th><th>Queue</th><th>Status</th><th>Action</th></tr></thead><tbody>{rows.map((row) => <tr key={row._id}><td>{row.machineCode}</td><td>{row.machineType}</td><td>{row.planNo}<small>{row.dcNo}</small></td><td>{row.colour}</td><td>{row.size}</td><td>{row.pcs}</td><td>{row.queuePosition === 0 ? 'LIVE' : row.queuePosition}</td><td><b className={`status-pill status-${row.status.toLowerCase()}`}>{row.status === 'COMPLETED' ? '👍 COMPLETED' : row.status}</b></td><td><div className="machine-actions">{allowedActions(row).map((a) => <button type="button" key={a} onClick={() => act(row,a)}><Play />{a}</button>)}{!['COMPLETED','PUBLISHED'].includes(row.status)&&<button type="button" onClick={() => transfer(row)}>Transfer</button>}</div></td></tr>)}</tbody></table></div></div>
+  </section>;
+}
+
+function HistoryView({ rows, search, setSearch }) { return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT</small><h2>Plan Number Status</h2><p>Full Spreader/Cutter stage, queue and action history.</p></div><button onClick={() => exportCsv("plan-number-status.csv", rows)}><Download /> Excel</button></div><div className="classic-card"><input placeholder="Plan / DC / Machine" value={search} onChange={(e) => setSearch(e.target.value)} /><div className="table-wrap"><table><thead><tr><th>Plan</th><th>DC</th><th>Machine</th><th>Stage</th><th>Colour</th><th>Size</th><th>PCS</th><th>Queue</th><th>Status</th><th>History</th></tr></thead><tbody>{rows.map((r) => <tr key={r._id}><td>{r.planNo}</td><td>{r.dcNo}</td><td>{r.machineCode}</td><td>{r.machineType}</td><td>{r.colour}</td><td>{r.size}</td><td>{r.pcs}</td><td>{r.queuePosition}</td><td>{r.status}</td><td>{(r.events||[]).map((e) => `${e.action} ${new Date(e.at).toLocaleString()}`).join(' · ')}</td></tr>)}</tbody></table></div></div></section>; }
+
+function StatusView({ machines, rows, search, setSearch }) { return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT</small><h2>Cutter / Spreader Status</h2><p>Current work, completed plans and next queue.</p></div><button onClick={() => exportCsv("cutter-machine-status.csv", rows)}><Download /> Excel</button></div><div className="classic-card"><input placeholder="Machine / Plan" value={search} onChange={(e) => setSearch(e.target.value)} /><div className="machine-status-cards">{machines.map((m) => { const list = m.assignments || []; const live = list.find((r) => r.status === 'RUNNING'); const queue = list.filter((r) => ['QUEUED','READY'].includes(r.status)); return <article key={m._id}><h3>{m.machineCode}</h3><b>{m.machineType} · {m.status}</b><p>Live: {live ? `${live.planNo} / ${live.dcNo}` : 'No live plan'}</p><p>Queue: {queue.map((r) => `${r.queuePosition}. ${r.planNo}`).join(', ') || 'Empty'}</p><p>Completed: {list.filter((r) => ['COMPLETED','PUBLISHED'].includes(r.status)).length}</p></article>; })}</div></div></section>; }

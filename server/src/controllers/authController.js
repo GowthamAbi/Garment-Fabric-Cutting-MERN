@@ -21,7 +21,7 @@ function createToken(user) {
   );
 }
 
-function createAuthResponse(user) {
+function createAuthResponse(user, companyName = "Accessories Flow") {
   return {
     token: createToken(user),
     user: {
@@ -33,6 +33,7 @@ function createAuthResponse(user) {
       factoryId: user.factoryId,
       permissions: user.permissions || [],
       department: user.department || "",
+      companyName,
     },
   };
 }
@@ -87,7 +88,7 @@ export async function register(request, response) {
     factoryId: company.factories[0]._id,
   });
 
-  response.status(201).json(createAuthResponse(user));
+  response.status(201).json(createAuthResponse(user, company.companyName));
 }
 
 export async function getUsers(_request, response) {
@@ -236,15 +237,15 @@ export async function login(request, response) {
 
   if (!validPassword) throw new ApiError(401, "Incorrect email or password");
   if (!user.active) throw new ApiError(403, "This user account is disabled");
+  const company = await Company.findById(user.companyId).lean();
   if (user.role !== "saas_super_admin") {
-    const company = await Company.findById(user.companyId).lean();
     const expired =
       company?.subscriptionEndsAt &&
       new Date(company.subscriptionEndsAt) < new Date();
     if (!company?.active || company?.subscriptionStatus !== "Active" || expired)
       throw new ApiError(402, "Company subscription is inactive or expired");
   }
-  response.json(createAuthResponse(user));
+  response.json(createAuthResponse(user, company?.companyName));
 }
 
 export async function getProfile(request, response) {

@@ -13,6 +13,9 @@ export const allowRoles =
         "/garments/boms",
         "/auth/users",
         "/saas/subscription",
+        "/fabric-cutting/actuals",
+        "/fabric-cutting/plans/",
+        "/production/cutting-machine-plans",
       ].some((path) => req.originalUrl.includes(path));
       if (!allowedManagementMutation)
         return next(
