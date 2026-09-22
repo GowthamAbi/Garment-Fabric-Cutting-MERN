@@ -8,6 +8,11 @@ export const saveMachine = (data, id) => request(`/production/machines${id ? `/$
 export const getEmployees = () => request("/production/employees");
 export const saveEmployee = (data, id) => request(`/production/employees${id ? `/${id}` : ""}`, { method: id ? "PUT" : "POST", body: JSON.stringify(data) });
 export const getJobs = () => request("/production/jobs");
+export const getCuttingMachinePlans = (params = {}) => request(`/production/cutting-machine-plans?${new URLSearchParams(params)}`);
+export const getCuttingMachineStatus = () => request("/production/cutting-machine-status");
+export const saveCuttingMachinePlan = (data) => request("/production/cutting-machine-plans", { method: "POST", body: JSON.stringify(data) });
+export const cuttingMachineAction = (id, action, reason = "") => request(`/production/cutting-machine-plans/${id}/action`, { method: "PATCH", body: JSON.stringify({ action, reason }) });
+export const transferCuttingMachinePlan = (id, machineCode, reason = "") => request(`/production/cutting-machine-plans/${id}/transfer`, { method: "PATCH", body: JSON.stringify({ machineCode, reason }) });
 export const getProductionDc = (dcNo) => request(`/production/dc/${encodeURIComponent(dcNo)}`);
 export const startProductionJob = (data) => request("/production/jobs/start", { method: "POST", body: JSON.stringify(data) });
 export const stopProductionJob = (id, data) => request(`/production/jobs/${id}/stop`, { method: "PATCH", body: JSON.stringify(data) });

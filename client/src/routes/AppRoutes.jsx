@@ -41,6 +41,8 @@ import FabricStockPage from "../pages/fabric/FabricStockPage.jsx";
 import DepartmentPlanPrintPage from "../pages/fabric/DepartmentPlanPrintPage.jsx";
 import FoldingEntryPage from "../pages/fabric/FoldingEntryPage.jsx";
 import CuttingStockPage from "../pages/fabric/CuttingStockPage.jsx";
+import FabricQrPrintPage from "../pages/fabric/FabricQrPrintPage.jsx";
+import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
@@ -49,15 +51,27 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
       return <DepartmentRecordPage mode="print" departmentType="FABRIC" notify={notify} />;
+    case "Fabric Roll QR Print":
+      return <FabricQrPrintPage notify={notify} />;
     case "Fabric Inward History":
       return <DepartmentRecordPage mode="history" departmentType="FABRIC" notify={notify} />;
+    case "Fabric Entry":
     case "Fabric to Cutting Entry":
       return <ProductionPlanEntryPage notify={notify} />;
     case "Planning Machine Wise":
       return <ProductionPlanningPage notify={notify} />;
+    case "Machine Plan Entry":
+    case "Machine Plan":
+      return <CuttingMachinePlanPage mode="plan" notify={notify} />;
+    case "Plan Number Status":
+      return <CuttingMachinePlanPage mode="plan-status" notify={notify} />;
+    case "Cutter Status":
+      return <CuttingMachinePlanPage mode="status" notify={notify} />;
     case "Folding Entry":
       return <FoldingEntryPage notify={notify} />;
+    case "Plan Print":
     case "Fabric Plan Print":
+      return <DepartmentPlanPrintPage type="fabric" notify={notify} />;
     case "Folding Print":
       return <DepartmentPlanPrintPage type="folding" notify={notify} />;
     case "Cutting Plan Print":
@@ -67,8 +81,9 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Fabric Plan History":
     case "Cutting Plan History":
       return <ProductionPlanHistoryPage notify={notify} onPageChange={onPageChange} />;
+    case "Inward Stock":
     case "Fabric Stock Inward":
-      return <DepartmentRecordPage mode="history" departmentType="FABRIC" notify={notify} />;
+      return <FabricStockPage mode="inward" notify={notify} />;
     case "Fabric Stock Balance":
       return <FabricStockPage mode="balance" notify={notify} />;
     case "Fabric Stock Waste":
@@ -81,13 +96,14 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <CuttingStockPage mode="stock" notify={notify} />;
     case "Cutting Waste":
       return <CuttingStockPage mode="waste" notify={notify} />;
+    case "Spreader Timeline":
+      return <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />;
     case "Separator Timeline":
+      return <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />;
     case "Cutter Timeline":
-      return <MachineStatusPage timelineType={page} />;
-    case "Cutting Reports":
-      return <ReportsPage notify={notify} />;
+      return <CuttingMachinePlanPage mode="timeline-cutter" notify={notify} />;
     case "Cutting Time History":
-      return <DepartmentRecordPage mode="history" departmentType="CUTTING" notify={notify} />;
+      return <CuttingMachinePlanPage mode="time-history" notify={notify} />;
     case "Fabric Master":
       return <FabricMasterPage notify={notify} />;
     case "Fabric Inward":

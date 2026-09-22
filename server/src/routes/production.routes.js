@@ -30,6 +30,7 @@ import {
   getMeasurements,
   saveCuttingDc,
 } from "../controllers/cuttingDcController.js";
+import { assignmentAction, createAssignment, listAssignments, machinePlanStatus, transferAssignment } from "../controllers/cuttingMachinePlanController.js";
 
 const router = Router();
 const productionAccess = allowDepartment(
@@ -46,6 +47,8 @@ const productionAccess = allowDepartment(
   "sewing_coordinator",
   "management",
   "view_only",
+  "cutting_admin",
+  "cutting_entry",
 );
 const productionPlanningWrite = allowDepartment(
   "ELASTIC",
@@ -53,6 +56,8 @@ const productionPlanningWrite = allowDepartment(
   "admin",
   "production_planner",
   "production",
+  "cutting_admin",
+  "cutting_entry",
 );
 
 router.use(productionAccess);
@@ -71,6 +76,11 @@ router.get("/employees", asyncHandler(getEmployees));
 router.post("/employees", asyncHandler(saveEmployee));
 router.put("/employees/:id", asyncHandler(saveEmployee));
 router.get("/jobs", asyncHandler(getJobs));
+router.get("/cutting-machine-plans", asyncHandler(listAssignments));
+router.get("/cutting-machine-status", asyncHandler(machinePlanStatus));
+router.post("/cutting-machine-plans", asyncHandler(createAssignment));
+router.patch("/cutting-machine-plans/:id/action", asyncHandler(assignmentAction));
+router.patch("/cutting-machine-plans/:id/transfer", asyncHandler(transferAssignment));
 router.get("/dc/:dcNo", asyncHandler(getDcPlan));
 router.post("/jobs/start", asyncHandler(startJob));
 router.patch("/jobs/:id/stop", asyncHandler(stopJob));

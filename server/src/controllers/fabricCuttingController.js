@@ -142,6 +142,8 @@ export async function getInward(req, res) {
   res.json(row);
 }
 export async function saveInward(req, res) {
+  if (req.params.id && !["saas_super_admin", "company_admin", "admin"].includes(req.user.role))
+    throw new ApiError(403, "Saved Inward Stock is locked. Company Admin approval is required to edit it");
   const master = await FabricMaster.findOne({
     fabricCode: upper(req.body.fabricCode),
   });
@@ -367,12 +369,40 @@ export async function listFabricStock(req, res) {
   res.json(result);
 }
 
+export async function listOriginalInwardStock(req, res) {
+  const inwards = await FabricInwardLot.find().sort({ inwardDate: -1 }).lean();
+  res.json(inwards.flatMap((inward) => (inward.colours || []).flatMap((colour) =>
+    (colour.details || []).map((detail) => ({
+      inwardNo: inward.inwardNo, fabricName: inward.fabricName, fabricGroup: inward.fabricGroup,
+      colour: colour.colour, dia: detail.dia, rolls: detail.totalRolls,
+      inwardWeightKg: detail.totalWeightKg, inwardDate: inward.inwardDate,
+    })),
+  )));
+}
+
 export async function listFabricBalance(req, res) {
   const rows = await FabricBundleStock.aggregate([
     { $group: { _id: { inwardNo: "$inwardNo", fabricName: "$fabricName", fabricGroup: "$fabricGroup", colour: "$colour", dia: "$dia" }, rolls: { $sum: 1 }, inwardWeightKg: { $sum: "$originalWeightKg" }, balanceWeightKg: { $sum: "$balanceWeightKg" }, inwardDate: { $min: "$createdAt" } } },
     { $sort: { inwardDate: -1 } },
   ]);
-  res.json(rows.map((row) => ({ ...row._id, rolls: row.rolls, inwardWeightKg: Number(row.inwardWeightKg.toFixed(3)), balanceWeightKg: Number(row.balanceWeightKg.toFixed(3)), inwardDate: row.inwardDate })));
+  const plans = await FabricCutPlan.find({ status: { $nin: ["CANCELLED"] } }).lean();
+  const reserved = new Map();
+  for (const plan of plans) for (const colour of plan.colours || []) {
+    let issued = (plan.allocations || []).filter(x => upper(x.colour) === upper(colour.colour)).reduce((s,x)=>s+num(x.weightKg),0);
+    for (const size of colour.sizes || []) {
+      const used = Math.min(issued, num(size.wantedWeightKg)); issued = Number((issued-used).toFixed(3));
+      const key = `${upper(plan.fabricGroup)}|${upper(colour.colour)}|${upper(size.dia)}`;
+      reserved.set(key, num(reserved.get(key)) + Math.max(0, num(size.wantedWeightKg)-used));
+    }
+  }
+  const sorted = rows.sort((a,b)=>new Date(a.inwardDate)-new Date(b.inwardDate));
+  const result = sorted.map(row => {
+    const key = `${upper(row._id.fabricGroup)}|${upper(row._id.colour)}|${upper(row._id.dia)}`;
+    const deduction = Math.min(num(reserved.get(key)), num(row.balanceWeightKg));
+    reserved.set(key, Math.max(0, num(reserved.get(key))-deduction));
+    return { ...row._id, rolls: row.rolls, inwardWeightKg: Number(row.inwardWeightKg.toFixed(3)), balanceWeightKg: Number(Math.max(0,row.balanceWeightKg-deduction).toFixed(3)), inwardDate: row.inwardDate };
+  });
+  res.json(result.sort((a,b)=>new Date(b.inwardDate)-new Date(a.inwardDate)));
 }
 
 export async function getPlanSetup(req, res) {
@@ -437,6 +467,8 @@ async function buildPlanData(req, excludePlanId = null) {
       colour,
       {
         colour,
+        batchNumbers: (req.body.colourBatches?.[colour] || []).map(upper).filter(Boolean),
+        remarks: String(req.body.colourRemarks?.[colour] || "").trim(),
         sizes: [],
         totalPcs: 0,
         wantedWeightKg: 0,
@@ -648,6 +680,19 @@ export async function saveFoldingEntry(req, res) {
   if (!plan) throw new ApiError(404, "Plan / DC not found");
   if (plan.foldingBatches?.length)
     throw new ApiError(409, "Folding entry already saved for this plan");
+  const actual = await FabricCutActual.findOne({ planNo: plan.planNo });
+  if (!actual) throw new ApiError(409, "Cutting Actual must be saved before Folding Entry");
+  const item = await GarmentItemMaster.findOne({ itemCode: plan.itemCode });
+  const lines = (req.body.lines || []).map((row) => {
+    const colour = upper(row.colour), size = upper(row.size);
+    const cut = actual.lines.find((x) => upper(x.colour) === colour && upper(x.size) === size);
+    const bom = item?.sizes?.find((x) => upper(x.size) === size);
+    if (!cut) throw new ApiError(400, `${colour} / ${size} is not in Cutting Actual`);
+    const perPiece = num(bom?.foldingPieceWeightKg);
+    return { colour, size, dia: upper(cut.dia || bom?.dia), actualCuttingPcs: num(cut.actualPcs), foldingWeightPerPieceKg: perPiece,
+      wantedWeightKg: Number((num(cut.actualPcs) * perPiece).toFixed(3)), actualWeightKg: num(row.actualWeightKg) };
+  });
+  if (!lines.length) throw new ApiError(400, "Enter size-wise folding actual weight");
   const batches = (req.body.batches || [])
     .map((row) => ({
       colour: upper(row.colour),
@@ -658,6 +703,11 @@ export async function saveFoldingEntry(req, res) {
     .filter((row) => row.colour || row.bundleNo || row.weightKg);
   if (!batches.length || batches.some((row) => !row.colour || !row.dia || !row.bundleNo || row.weightKg <= 0))
     throw new ApiError(400, "Every folding batch needs Colour, Dia, Batch No and Weight");
+  for (const colour of new Set(lines.map((x) => x.colour))) {
+    const lineWeight = lines.filter((x) => x.colour === colour).reduce((s, x) => s + x.actualWeightKg, 0);
+    const batchWeight = batches.filter((x) => x.colour === colour).reduce((s, x) => s + x.weightKg, 0);
+    if (Math.abs(lineWeight - batchWeight) > 0.011) throw new ApiError(400, `${colour}: Batch weight must equal Actual Weight ${lineWeight.toFixed(3)} KG`);
+  }
   const duplicate = new Set();
   for (const row of batches) {
     if (duplicate.has(row.bundleNo)) throw new ApiError(400, `Duplicate Batch No ${row.bundleNo}`);
@@ -683,9 +733,20 @@ export async function saveFoldingEntry(req, res) {
     }
   }
   plan.foldingBatches = batches;
+  plan.foldingLines = lines;
+  plan.foldingQuality = String(req.body.foldingQuality || "").trim();
+  plan.foldingSavedAt = new Date();
   plan.foldingWeightKg = Number(batches.reduce((sum, row) => sum + row.weightKg, 0).toFixed(3));
   await plan.save();
   res.json(plan);
+}
+
+export async function getFoldingSetup(req, res) {
+  const plan = await FabricCutPlan.findOne({ $or: [{ planNo: upper(req.params.no) }, { dcNo: upper(req.params.no) }] });
+  if (!plan) throw new ApiError(404, "Plan / DC not found");
+  const actual = await FabricCutActual.findOne({ planNo: plan.planNo });
+  const item = await GarmentItemMaster.findOne({ itemCode: plan.itemCode });
+  res.json({ plan, actual, item });
 }
 export async function saveActual(req, res) {
   const plan = await FabricCutPlan.findOne({ planNo: upper(req.body.planNo) });

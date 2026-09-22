@@ -1,41 +1,21 @@
 import { useState } from "react";
-import { Plus, Save, Search, Trash2 } from "lucide-react";
+import { Plus, Printer, Save, Search, Trash2 } from "lucide-react";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 
-const emptyBatch = (colour = "", dia = "") => ({ colour, dia, bundleNo: "", weightKg: "" });
-
+const blankBatch = (colour="",dia="") => ({ colour, dia, bundleNo:"", weightKg:"" });
+export function FoldingDocument({ plan, lines, batches, quality, companyName="Accessories Flow" }) {
+  const colours=[...new Set(lines.map(x=>x.colour))];
+  const sizes=[...new Set(lines.map(x=>x.size))];
+  const sizeLine=(colour,size)=>lines.find(x=>x.colour===colour&&x.size===size);
+  return <div className="production-plan-document folding-document scoped-print-target"><header><h1>{companyName}</h1><b>FABRIC DEPARTMENT · FOLDING ENTRY</b></header>
+    <div className="plan-document-meta"><span><small>Item</small><b>{plan.itemName}</b></span><span><small>Plan No</small><b>{plan.planNo}</b></span><span><small>Order No</small><b>{plan.orderNo}</b></span><span><small>DC No</small><b>{plan.dcNo}</b></span><span><small>Folding Quality</small><b>{quality||"—"}</b></span></div>
+    <h3>Size-wise Folding Requirement</h3><table className="folding-size-matrix"><thead><tr><th rowSpan="2">S.No</th><th rowSpan="2">Colour</th>{sizes.map(size=>{const row=lines.find(x=>x.size===size);return <th className="size-group" colSpan="3" key={size}>Size {size}<small>Dia {row?.dia||"—"}</small></th>})}</tr><tr>{sizes.flatMap(size=>[<th className="metric-head" key={`${size}-pcs`}>PCS</th>,<th className="metric-head" key={`${size}-wanted`}>Wanted WT</th>,<th className="metric-head" key={`${size}-actual`}>Actual WT</th>])}</tr></thead><tbody>{colours.map((colour,i)=><tr key={colour}><td>{i+1}</td><td>{colour}</td>{sizes.flatMap(size=>{const x=sizeLine(colour,size)||{};return [<td key={`${size}-pcs`}>{x.actualCuttingPcs||""}</td>,<td key={`${size}-wanted`}>{x.wantedWeightKg!=null?Number(x.wantedWeightKg).toFixed(3):""}</td>,<td key={`${size}-actual`}>{x.actualWeightKg||""}</td>]})}</tr>)}</tbody><tfoot><tr><th colSpan="2">TOTAL</th>{sizes.flatMap(size=>{const rows=lines.filter(x=>x.size===size);return [<th key={`${size}-pcs`}>{rows.reduce((s,x)=>s+Number(x.actualCuttingPcs||0),0)}</th>,<th key={`${size}-wanted`}>{rows.reduce((s,x)=>s+Number(x.wantedWeightKg||0),0).toFixed(3)}</th>,<th key={`${size}-actual`}>{rows.reduce((s,x)=>s+Number(x.actualWeightKg||0),0).toFixed(3)}</th>]})}</tr></tfoot></table>
+    <h3>Colour / Batch Summary</h3><table><thead><tr><th>S.No</th><th>Colour</th><th>Batch Number</th><th>PCS</th><th>Wanted WT</th><th>Actual WT</th></tr></thead><tbody>{batches.map((b,i)=>{const first=i===0||batches[i-1].colour!==b.colour;const span=batches.filter(x=>x.colour===b.colour).length;const cl=lines.filter(x=>x.colour===b.colour);return <tr key={i}>{first&&<><td rowSpan={span}>{colours.indexOf(b.colour)+1}</td><td rowSpan={span}>{b.colour}</td></>}<td>{b.bundleNo||""}</td>{first&&<><td rowSpan={span}>{cl.reduce((s,x)=>s+Number(x.actualCuttingPcs||0),0)}</td><td rowSpan={span}>{cl.reduce((s,x)=>s+Number(x.wantedWeightKg||0),0).toFixed(3)}</td><td rowSpan={span}>{cl.reduce((s,x)=>s+Number(x.actualWeightKg||0),0).toFixed(3)}</td></>}</tr>})}</tbody><tfoot><tr><th colSpan="3">TOTAL</th><th>{lines.reduce((s,x)=>s+Number(x.actualCuttingPcs||0),0)}</th><th>{lines.reduce((s,x)=>s+Number(x.wantedWeightKg||0),0).toFixed(3)}</th><th>{lines.reduce((s,x)=>s+Number(x.actualWeightKg||0),0).toFixed(3)}</th></tr></tfoot></table><div className="cutting-signatures"><span>Prepared By</span><span>Checked By</span><span>Approved By</span></div></div>;
+}
 export default function FoldingEntryPage({ notify }) {
-  const [number, setNumber] = useState("");
-  const [plan, setPlan] = useState(null);
-  const [batches, setBatches] = useState([]);
-  const [busy, setBusy] = useState(false);
-  async function find() {
-    setBusy(true);
-    try {
-      const row = await api.plan(number);
-      setPlan(row);
-      const seed = row.colours.flatMap((colour) => {
-        const dias = [...new Set(colour.sizes.map((line) => line.dia).filter(Boolean))];
-        return (dias.length ? dias : [""]).map((dia) => emptyBatch(colour.colour, dia));
-      });
-      setBatches(row.foldingBatches?.length ? row.foldingBatches : seed);
-    } catch (error) { setPlan(null); notify?.(error.message); }
-    finally { setBusy(false); }
-  }
-  function update(index, key, value) { setBatches(batches.map((row, i) => i === index ? { ...row, [key]: value } : row)); }
-  function addAfter(index) { const row = batches[index]; setBatches([...batches.slice(0, index + 1), emptyBatch(row.colour, row.dia), ...batches.slice(index + 1)]); }
-  async function save() {
-    setBusy(true);
-    try { const saved = await api.saveFolding(plan.planNo, { batches }); setPlan(saved); notify?.("Folding entry saved and fabric stock reduced colour/dia/batch-wise"); }
-    catch (error) { notify?.(error.message); }
-    finally { setBusy(false); }
-  }
-  return <section className="classic-page">
-    <div className="classic-title"><div><small>FABRIC DEPARTMENT</small><h2>Folding Entry</h2><p>Load Plan/DC, enter one or more batches per colour and save stock consumption.</p></div></div>
-    <div className="classic-card print-search"><label><span>Plan No / DC No</span><div className="input-action"><input value={number} onChange={(e) => setNumber(e.target.value)} onKeyDown={(e) => e.key === "Enter" && find()} /><button onClick={find} disabled={busy}><Search /></button></div></label></div>
-    {plan && <div className="classic-card"><div className="folding-plan-summary"><b>{plan.itemName}</b><span>Plan: {plan.planNo}</span><span>DC: {plan.dcNo}</span><span>PCS: {plan.totalPlannedPcs}</span></div>
-      <div className="table-wrap"><table><thead><tr><th>S.No</th><th>Colour</th><th>Dia</th><th>Batch No</th><th>Fabric WT (KG)</th><th>Add Multiple Batch</th></tr></thead><tbody>{batches.map((row, index) => <tr key={`${row.colour}-${index}`}><td>{index + 1}</td><td>{row.colour}</td><td><input value={row.dia} onChange={(e) => update(index, "dia", e.target.value)} /></td><td><input value={row.bundleNo} onChange={(e) => update(index, "bundleNo", e.target.value)} /></td><td><input type="number" min="0.001" step="0.001" value={row.weightKg} onChange={(e) => update(index, "weightKg", e.target.value)} /></td><td><div className="row-actions"><button type="button" onClick={() => addAfter(index)}><Plus /> Add Batch</button>{batches.length > 1 && <button type="button" className="danger" onClick={() => setBatches(batches.filter((_, i) => i !== index))}><Trash2 /></button>}</div></td></tr>)}</tbody></table></div>
-      <div className="form-actions"><button className="primary" onClick={save} disabled={busy || plan.foldingBatches?.length}><Save /> {plan.foldingBatches?.length ? "Folding Entry Saved" : "Save & Reduce Stock"}</button></div>
-    </div>}
-  </section>;
+  const [number,setNumber]=useState(""),[plan,setPlan]=useState(null),[lines,setLines]=useState([]),[batches,setBatches]=useState([]),[quality,setQuality]=useState(""),[busy,setBusy]=useState(false);
+  async function find(){setBusy(true);try{const {plan:p,actual,item}=await api.foldingSetup(number);if(!actual)throw new Error("Cutting Actual must be saved before Folding Entry");setPlan(p);setQuality(p.foldingQuality||"");setLines(p.foldingLines?.length?p.foldingLines:actual.lines.map(x=>{const bom=item?.sizes?.find(s=>String(s.size).toUpperCase()===String(x.size).toUpperCase());const per=Number(bom?.foldingPieceWeightKg||0);return {colour:x.colour,size:x.size,dia:x.dia,actualCuttingPcs:x.actualPcs,foldingWeightPerPieceKg:per,wantedWeightKg:Number((x.actualPcs*per).toFixed(3)),actualWeightKg:""}}));setBatches(p.foldingBatches?.length?p.foldingBatches:[...new Map(actual.lines.map(x=>[`${x.colour}|${x.dia}`,blankBatch(x.colour,x.dia)])).values()]);}catch(e){setPlan(null);notify?.(e.message)}finally{setBusy(false)}}
+  const updLine=(i,v)=>setLines(lines.map((x,j)=>j===i?{...x,actualWeightKg:v}:x)); const updBatch=(i,k,v)=>setBatches(batches.map((x,j)=>j===i?{...x,[k]:v}:x));
+  async function save(){setBusy(true);try{const saved=await api.saveFolding(plan.planNo,{foldingQuality:quality,lines,batches});setPlan(saved);notify?.("Folding entry saved; actual weight reduced from fabric stock")}catch(e){notify?.(e.message)}finally{setBusy(false)}}
+  return <section className="classic-page"><div className="classic-title"><div><small>FABRIC DEPARTMENT</small><h2>Folding Entry</h2><p>Cutting actual PCS + BOM folding weight, physical actual-weight entry and batch-wise stock reduction.</p></div></div><div className="classic-card print-search"><label><span>Plan No / DC No</span><div className="input-action"><input value={number} onChange={e=>setNumber(e.target.value)} onKeyDown={e=>e.key==='Enter'&&find()}/><button onClick={find}><Search/></button></div></label></div>{plan&&<><div className="classic-card"><label>Folding Quality<input value={quality} onChange={e=>setQuality(e.target.value)}/></label><div className="table-wrap"><table><thead><tr><th>Colour</th><th>Size</th><th>Dia</th><th>Cutting PCS</th><th>WT/PCS</th><th>Wanted WT</th><th>Actual WT</th></tr></thead><tbody>{lines.map((x,i)=><tr key={`${x.colour}-${x.size}`}><td>{x.colour}</td><td>{x.size}</td><td>{x.dia}</td><td>{x.actualCuttingPcs}</td><td>{x.foldingWeightPerPieceKg}</td><td>{x.wantedWeightKg}</td><td><input type="number" step=".001" value={x.actualWeightKg} onChange={e=>updLine(i,e.target.value)}/></td></tr>)}</tbody></table></div><h3>Batch allocation (must equal colour Actual WT)</h3><div className="table-wrap"><table><thead><tr><th>Colour</th><th>Dia</th><th>Batch No</th><th>Actual WT</th><th>Action</th></tr></thead><tbody>{batches.map((b,i)=><tr key={i}><td>{b.colour}</td><td><input value={b.dia} onChange={e=>updBatch(i,"dia",e.target.value)}/></td><td><input value={b.bundleNo} onChange={e=>updBatch(i,"bundleNo",e.target.value)}/></td><td><input type="number" step=".001" value={b.weightKg} onChange={e=>updBatch(i,"weightKg",e.target.value)}/></td><td><button onClick={()=>setBatches([...batches.slice(0,i+1),blankBatch(b.colour,b.dia),...batches.slice(i+1)])}><Plus/> Batch</button>{batches.length>1&&<button className="danger" onClick={()=>setBatches(batches.filter((_,j)=>j!==i))}><Trash2/></button>}</td></tr>)}</tbody></table></div><div className="form-actions"><button onClick={()=>window.print()}><Printer/> Blank / Filled Print</button><button className="primary" disabled={busy||plan.foldingLines?.length} onClick={save}><Save/> {plan.foldingLines?.length?"Folding Entry Saved":"Save Changes"}</button></div></div><FoldingDocument plan={plan} lines={lines} batches={batches} quality={quality}/></>}</section>;
 }

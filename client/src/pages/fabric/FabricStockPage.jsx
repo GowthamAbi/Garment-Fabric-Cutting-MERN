@@ -10,7 +10,7 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
   const ref = useRef(null);
   useEffect(() => {
     api
-      [mode === "balance" ? "fabricBalance" : "fabricStock"]()
+      [mode === "inward" ? "fabricInwardStock" : mode === "balance" ? "fabricBalance" : "fabricStock"]()
       .then(setRows)
       .catch((error) => notify?.(error.message));
   }, []);
@@ -35,8 +35,8 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
       <div className="classic-title">
         <div>
           <small>FABRIC DEPARTMENT</small>
-          <h2>{mode === "balance" ? "Fabric Balance Stock" : "Fabric Stock"}</h2>
-          <p>Inward minus Production Plan and Folding batch consumption.</p>
+          <h2>{mode === "balance" ? "Fabric Balance Stock" : mode === "inward" ? "Fabric Inward Stock" : "Fabric Stock"}</h2>
+          <p>{mode === "inward" ? "Original inward quantity — locked after save and never reduced by production." : "Inward minus Production Plan reservations and Folding batch consumption."}</p>
         </div>
         <div className="page-actions">
           <button onClick={() => exportCsv("fabric-stock.csv", filtered)}>
@@ -60,7 +60,7 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
       <article className="production-plan-document print-document" ref={ref}>
         <header>
           <small>FABRIC STOCK REPORT</small>
-          <h1>Available Fabric Stock</h1>
+          <h1>{mode === "inward" ? "Original Fabric Inward Stock" : "Available Fabric Stock"}</h1>
           <p>{new Date().toLocaleDateString()}</p>
         </header>
         <table>
@@ -68,10 +68,10 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
             <tr>
               <th>S.No</th>
               <th>Fabric Group</th>
-              {mode === "balance" ? <><th>Fabric Name</th><th>Inward No</th></> : <th>Fabric Code</th>}
+              {mode === "balance" || mode === "inward" ? <><th>Fabric Name</th><th>Inward No</th></> : <th>Fabric Code</th>}
               <th>Colour</th>
               <th>Dia</th>
-              <th>Roll</th><th>Inward KG</th><th>Balance KG</th><th>Aging</th>
+              <th>Roll</th><th>Inward KG</th>{mode !== "inward" && <th>Balance KG</th>}<th>Aging</th>
             </tr>
           </thead>
           <tbody>
@@ -79,10 +79,10 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
               <tr key={`${row.fabricGroup}-${row.colour}-${row.dia}`}>
                 <td>{index + 1}</td>
                 <td>{row.fabricGroup}</td>
-                {mode === "balance" ? <><td>{row.fabricName}</td><td>{row.inwardNo}</td></> : <td>{(row.fabricCodes || []).join(", ")}</td>}
+                {mode === "balance" || mode === "inward" ? <><td>{row.fabricName}</td><td>{row.inwardNo}</td></> : <td>{(row.fabricCodes || []).join(", ")}</td>}
                 <td>{row.colour}</td>
                 <td>{row.dia}</td>
-                <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td><td>{row.balanceWeightKg ?? row.availableWeightKg}</td><td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
+                <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td>{mode !== "inward" && <td>{row.balanceWeightKg ?? row.availableWeightKg}</td>}<td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
               </tr>
             ))}
           </tbody>
