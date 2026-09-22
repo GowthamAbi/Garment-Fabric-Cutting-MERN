@@ -1,6 +1,6 @@
 import { tokenService } from "../services/tokenService.js";
 
-const API_URL = "https://garment-fabric-cutting-mern.onrender.com/api" || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export async function request(path, options = {}) {
   window.dispatchEvent(new Event("accessories-api-start"));

@@ -10,10 +10,7 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
   const ref = useRef(null);
   useEffect(() => {
     api
-
       [mode === "inward" ? "fabricInwardStock" : mode === "balance" ? "fabricBalance" : "fabricStock"]()
-      [mode === "balance" || mode === "inward" ? "fabricBalance" : "fabricStock"]()
-
       .then(setRows)
       .catch((error) => notify?.(error.message));
   }, []);
