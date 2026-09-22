@@ -60,6 +60,13 @@ export async function assignmentAction(req, res) {
   const fromStatus = row.status;
   const machine = await Machine.findOne({ machineCode: row.machineCode });
   if (!machine) throw new ApiError(404, "Machine not found");
+  let cutterTarget = null;
+  if (["COMPLETE", "PUBLISH", "FINISH"].includes(action) && row.machineType === "SPREADER") {
+    const cutterMachines = await Machine.find({ machineType: { $regex: /^cutter$/i }, status: { $ne: "Breakdown" }, active: { $ne: false } });
+    if (!cutterMachines.length) throw new ApiError(409, "No available Cutter machine. Create or resume a Cutter first");
+    const loads = await Promise.all(cutterMachines.map(async (item) => ({ item, count: await CuttingMachinePlan.countDocuments({ machineCode: item.machineCode, status: { $in: active } }) })));
+    cutterTarget = loads.sort((a, b) => a.count - b.count)[0];
+  }
   if (["START", "RESUME"].includes(action)) {
     const running = await CuttingMachinePlan.exists({ _id: { $ne: row._id }, machineCode: row.machineCode, status: "RUNNING" });
     if (running) throw new ApiError(409, "Another plan is already running on this machine");
@@ -74,6 +81,19 @@ export async function assignmentAction(req, res) {
   } else throw new ApiError(400, "Unsupported action");
   row.events.push({ action, fromStatus, toStatus: row.status, machineCode: row.machineCode, reason: req.body.reason || "", user: req.user.name });
   await row.save(); await machine.save(); await resequence(row.machineCode);
+  if (cutterTarget && !(await CuttingMachinePlan.exists({ upstreamAssignmentId: row._id }))) {
+    const running = await CuttingMachinePlan.exists({ machineCode: cutterTarget.item.machineCode, status: "RUNNING" });
+    const cutterStatus = running ? "QUEUED" : "RUNNING";
+    const cutterRow = await CuttingMachinePlan.create({
+      machineType: "CUTTER", machineCode: cutterTarget.item.machineCode, planNo: row.planNo, dcNo: row.dcNo,
+      colour: row.colour, size: row.size, pcs: row.pcs, priority: cutterTarget.count + 1,
+      queuePosition: running ? cutterTarget.count + 1 : 0, status: cutterStatus,
+      upstreamAssignmentId: row._id, startedAt: running ? undefined : new Date(), createdBy: req.user.name,
+      events: [{ action: "FROM_SPREADER", fromStatus: "PUBLISHED", toStatus: cutterStatus, machineCode: cutterTarget.item.machineCode, user: req.user.name }],
+    });
+    if (!running) { cutterTarget.item.status = "Running"; await cutterTarget.item.save(); }
+    await resequence(cutterRow.machineCode);
+  }
   const next = await CuttingMachinePlan.findOne({ machineCode: row.machineCode, status: "QUEUED" }).sort({ queuePosition: 1, createdAt: 1 });
   if (next && ["PUBLISHED", "COMPLETED", "CHANGE", "PAUSED"].includes(row.status)) { next.status = "READY"; next.events.push({ action: "QUEUE_READY", fromStatus: "QUEUED", toStatus: "READY", machineCode: next.machineCode, user: req.user.name }); await next.save(); }
   res.json(row);

@@ -55,10 +55,12 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <FabricQrPrintPage notify={notify} />;
     case "Fabric Inward History":
       return <DepartmentRecordPage mode="history" departmentType="FABRIC" notify={notify} />;
+    case "Fabric Entry":
     case "Fabric to Cutting Entry":
       return <ProductionPlanEntryPage notify={notify} />;
     case "Planning Machine Wise":
       return <ProductionPlanningPage notify={notify} />;
+    case "Machine Plan Entry":
     case "Machine Plan":
       return <CuttingMachinePlanPage mode="plan" notify={notify} />;
     case "Plan Number Status":
@@ -78,6 +80,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Fabric Plan History":
     case "Cutting Plan History":
       return <ProductionPlanHistoryPage notify={notify} onPageChange={onPageChange} />;
+    case "Inward Stock":
     case "Fabric Stock Inward":
       return <DepartmentRecordPage mode="history" departmentType="FABRIC" notify={notify} />;
     case "Fabric Stock Balance":
