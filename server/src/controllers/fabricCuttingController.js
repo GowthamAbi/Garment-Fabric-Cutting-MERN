@@ -142,6 +142,8 @@ export async function getInward(req, res) {
   res.json(row);
 }
 export async function saveInward(req, res) {
+  if (req.params.id && !["saas_super_admin", "company_admin", "admin"].includes(req.user.role))
+    throw new ApiError(403, "Saved Inward Stock is locked. Company Admin approval is required to edit it");
   const master = await FabricMaster.findOne({
     fabricCode: upper(req.body.fabricCode),
   });
@@ -372,7 +374,24 @@ export async function listFabricBalance(req, res) {
     { $group: { _id: { inwardNo: "$inwardNo", fabricName: "$fabricName", fabricGroup: "$fabricGroup", colour: "$colour", dia: "$dia" }, rolls: { $sum: 1 }, inwardWeightKg: { $sum: "$originalWeightKg" }, balanceWeightKg: { $sum: "$balanceWeightKg" }, inwardDate: { $min: "$createdAt" } } },
     { $sort: { inwardDate: -1 } },
   ]);
-  res.json(rows.map((row) => ({ ...row._id, rolls: row.rolls, inwardWeightKg: Number(row.inwardWeightKg.toFixed(3)), balanceWeightKg: Number(row.balanceWeightKg.toFixed(3)), inwardDate: row.inwardDate })));
+  const plans = await FabricCutPlan.find({ status: { $nin: ["CANCELLED"] } }).lean();
+  const reserved = new Map();
+  for (const plan of plans) for (const colour of plan.colours || []) {
+    let issued = (plan.allocations || []).filter(x => upper(x.colour) === upper(colour.colour)).reduce((s,x)=>s+num(x.weightKg),0);
+    for (const size of colour.sizes || []) {
+      const used = Math.min(issued, num(size.wantedWeightKg)); issued = Number((issued-used).toFixed(3));
+      const key = `${upper(plan.fabricGroup)}|${upper(colour.colour)}|${upper(size.dia)}`;
+      reserved.set(key, num(reserved.get(key)) + Math.max(0, num(size.wantedWeightKg)-used));
+    }
+  }
+  const sorted = rows.sort((a,b)=>new Date(a.inwardDate)-new Date(b.inwardDate));
+  const result = sorted.map(row => {
+    const key = `${upper(row._id.fabricGroup)}|${upper(row._id.colour)}|${upper(row._id.dia)}`;
+    const deduction = Math.min(num(reserved.get(key)), num(row.balanceWeightKg));
+    reserved.set(key, Math.max(0, num(reserved.get(key))-deduction));
+    return { ...row._id, rolls: row.rolls, inwardWeightKg: Number(row.inwardWeightKg.toFixed(3)), balanceWeightKg: Number(Math.max(0,row.balanceWeightKg-deduction).toFixed(3)), inwardDate: row.inwardDate };
+  });
+  res.json(result.sort((a,b)=>new Date(b.inwardDate)-new Date(a.inwardDate)));
 }
 
 export async function getPlanSetup(req, res) {

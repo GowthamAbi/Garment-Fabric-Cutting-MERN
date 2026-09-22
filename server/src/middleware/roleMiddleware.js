@@ -14,6 +14,7 @@ export const allowRoles =
         "/auth/users",
         "/saas/subscription",
         "/fabric-cutting/actuals",
+        "/fabric-cutting/inwards",
         "/fabric-cutting/plans/",
         "/production/cutting-machine-plans",
       ].some((path) => req.originalUrl.includes(path));

@@ -49,7 +49,7 @@ export async function createAssignment(req, res) {
     machineType, machineCode, planNo: plan.planNo, dcNo: plan.dcNo,
     colour: upper(req.body.colour), size: upper(req.body.size || "ALL"), pcs: Number(req.body.pcs),
     priority: Number(req.body.priority || queueCount + 1), queuePosition: running ? queueCount + 1 : 0,
-    status, upstreamAssignmentId: upstream?._id, createdBy: req.user.name,
+    status, startedAt: running ? undefined : new Date(), upstreamAssignmentId: upstream?._id, createdBy: req.user.name,
     events: [{ action: "ASSIGN", fromStatus: "", toStatus: status, machineCode, user: req.user.name }],
   });
   if (!running) { machine.status = "Running"; await machine.save(); }
