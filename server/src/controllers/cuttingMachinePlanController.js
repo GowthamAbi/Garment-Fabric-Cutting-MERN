@@ -34,9 +34,13 @@ export async function createAssignment(req, res) {
   if (machine.status === "Breakdown") throw new ApiError(409, "Breakdown machine cannot receive a plan");
   const plan = await FabricCutPlan.findOne({ $or: [{ planNo }, { dcNo: planNo }] });
   if (!plan) throw new ApiError(404, "Plan / DC not found");
+  let upstream = null;
   if (machineType === "CUTTER") {
-    const published = await CuttingMachinePlan.exists({ planNo: plan.planNo, machineType: "SPREADER", status: "PUBLISHED" });
+    upstream = await CuttingMachinePlan.findOne({ planNo: plan.planNo, machineType: "SPREADER", status: "PUBLISHED", colour: upper(req.body.colour), size: upper(req.body.size || "ALL") }).sort({ completedAt: -1 });
+    const published = upstream || await CuttingMachinePlan.findOne({ planNo: plan.planNo, machineType: "SPREADER", status: "PUBLISHED" }).sort({ completedAt: -1 });
     if (!published) throw new ApiError(409, "Spreader must Publish this plan before Cutter assignment");
+    upstream = published;
+    if (await CuttingMachinePlan.exists({ upstreamAssignmentId: upstream._id })) throw new ApiError(409, "This Spreader work is already assigned to a Cutter");
   }
   const running = await CuttingMachinePlan.exists({ machineCode, status: "RUNNING" });
   const queueCount = await CuttingMachinePlan.countDocuments({ machineCode, status: { $in: active } });
@@ -45,7 +49,7 @@ export async function createAssignment(req, res) {
     machineType, machineCode, planNo: plan.planNo, dcNo: plan.dcNo,
     colour: upper(req.body.colour), size: upper(req.body.size || "ALL"), pcs: Number(req.body.pcs),
     priority: Number(req.body.priority || queueCount + 1), queuePosition: running ? queueCount + 1 : 0,
-    status, createdBy: req.user.name,
+    status, upstreamAssignmentId: upstream?._id, createdBy: req.user.name,
     events: [{ action: "ASSIGN", fromStatus: "", toStatus: status, machineCode, user: req.user.name }],
   });
   if (!running) { machine.status = "Running"; await machine.save(); }
@@ -63,9 +67,10 @@ export async function assignmentAction(req, res) {
   let cutterTarget = null;
   if (["COMPLETE", "PUBLISH", "FINISH"].includes(action) && row.machineType === "SPREADER") {
     const cutterMachines = await Machine.find({ machineType: { $regex: /^cutter$/i }, status: { $ne: "Breakdown" }, active: { $ne: false } });
-    if (!cutterMachines.length) throw new ApiError(409, "No available Cutter machine. Create or resume a Cutter first");
-    const loads = await Promise.all(cutterMachines.map(async (item) => ({ item, count: await CuttingMachinePlan.countDocuments({ machineCode: item.machineCode, status: { $in: active } }) })));
-    cutterTarget = loads.sort((a, b) => a.count - b.count)[0];
+    if (cutterMachines.length) {
+      const loads = await Promise.all(cutterMachines.map(async (item) => ({ item, count: await CuttingMachinePlan.countDocuments({ machineCode: item.machineCode, status: { $in: active } }) })));
+      cutterTarget = loads.sort((a, b) => a.count - b.count)[0];
+    }
   }
   if (["START", "RESUME"].includes(action)) {
     const running = await CuttingMachinePlan.exists({ _id: { $ne: row._id }, machineCode: row.machineCode, status: "RUNNING" });
