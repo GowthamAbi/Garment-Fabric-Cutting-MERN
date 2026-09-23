@@ -102,6 +102,8 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />;
     case "Cutter Timeline":
       return <CuttingMachinePlanPage mode="timeline-cutter" notify={notify} />;
+    case "Machine Reports":
+      return <CuttingMachinePlanPage mode="machine-reports" notify={notify} />;
     case "Cutting Time History":
       return <CuttingMachinePlanPage mode="time-history" notify={notify} />;
     case "Fabric Master":

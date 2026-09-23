@@ -42,6 +42,9 @@ export default function CuttingActualMatrix({
   const efficiency = totals.actualWeightKg
     ? (totals.bundleWeightKg / totals.actualWeightKg) * 100
     : 0;
+  const pieceEfficiency = totals.plannedPcs
+    ? (totals.actualPcs / totals.plannedPcs) * 100
+    : 0;
 
   function lineFor(colour, size) {
     return calculatedLines.find(
@@ -112,7 +115,8 @@ export default function CuttingActualMatrix({
           value={`${fixed(totals.wasteWeightKg)} KG`}
           tone={totals.wasteWeightKg < 0 ? "danger" : ""}
         />
-        <Kpi label="Efficiency" value={`${efficiency.toFixed(2)}%`} />
+        <Kpi label="Weight Efficiency" value={`${efficiency.toFixed(2)}%`} />
+        <Kpi label="Piece Efficiency" value={`${pieceEfficiency.toFixed(2)}%`} />
       </section>
 
       <div className="actual-matrix-wrap">

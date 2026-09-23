@@ -31,6 +31,7 @@ const blank = () => ({
   fabricGroup: "",
   dcNo: "",
   lotDcNo: "",
+  setNo: "",
   compactingCode: "",
   compactingName: "",
   dyeingCode: "",
@@ -95,6 +96,7 @@ export default function FabricInwardPage({ notify }) {
         fabricGroup: row.fabricGroup,
         dcNo: row.dcNo || "",
         lotDcNo: row.lotDcNo || "",
+        setNo: row.setNo || "",
         compactingCode: row.compactingCode || "",
         compactingName: row.compactingName || "",
         dyeingCode: row.dyeingCode || "",
@@ -213,6 +215,15 @@ export default function FabricInwardPage({ notify }) {
                 required
                 value={form.lotDcNo}
                 onChange={(e) => setForm({ ...form, lotDcNo: e.target.value })}
+              />
+            </label>
+            <label>
+              <span>Set No</span>
+              <input
+                required
+                placeholder="Example: SET-01"
+                value={form.setNo}
+                onChange={(e) => setForm({ ...form, setNo: e.target.value })}
               />
             </label>
             <Lookup
@@ -583,6 +594,10 @@ function Receipt({ inward, bundles, receiptRef }) {
             <b>{inward.lotDcNo || "—"}</b>
           </span>
           <span>
+            <small>Set No</small>
+            <b>{inward.setNo || "—"}</b>
+          </span>
+          <span>
             <small>Date</small>
             <b>{new Date(inward.inwardDate).toLocaleDateString()}</b>
           </span>
@@ -643,6 +658,8 @@ function Receipt({ inward, bundles, receiptRef }) {
             </small>
             <QRGenerator value={bundle.qrToken} size={112} />
             <b>{bundle.bundleNo}</b>
+            <span>Batch: {bundle.batchNo || "Legacy"}</span>
+            <span>Set No: {bundle.setNo || "—"}</span>
             <span>
               {bundle.fabricGroup} · {bundle.colour}
             </span>

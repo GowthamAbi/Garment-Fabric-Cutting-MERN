@@ -61,6 +61,9 @@ export async function assignmentAction(req, res) {
   const row = await CuttingMachinePlan.findById(req.params.id);
   if (!row) throw new ApiError(404, "Machine plan not found");
   const action = upper(req.body.action);
+  const reason = String(req.body.reason || "").trim();
+  if (["CHANGE", "BREAKDOWN", "BREAK"].includes(action) && !reason)
+    throw new ApiError(400, `${action} reason is required. Cancel does not save the action.`);
   const fromStatus = row.status;
   const machine = await Machine.findOne({ machineCode: row.machineCode });
   if (!machine) throw new ApiError(404, "Machine not found");
@@ -84,7 +87,7 @@ export async function assignmentAction(req, res) {
     row.status = row.machineType === "SPREADER" ? "PUBLISHED" : "COMPLETED";
     row.completedAt = new Date(); machine.status = "Available";
   } else throw new ApiError(400, "Unsupported action");
-  row.events.push({ action, fromStatus, toStatus: row.status, machineCode: row.machineCode, reason: req.body.reason || "", user: req.user.name });
+  row.events.push({ action, fromStatus, toStatus: row.status, machineCode: row.machineCode, reason, user: req.user.name });
   await row.save(); await machine.save(); await resequence(row.machineCode);
   if (cutterTarget && !(await CuttingMachinePlan.exists({ upstreamAssignmentId: row._id }))) {
     const running = await CuttingMachinePlan.exists({ machineCode: cutterTarget.item.machineCode, status: "RUNNING" });
@@ -105,12 +108,14 @@ export async function assignmentAction(req, res) {
 }
 
 export async function transferAssignment(req, res) {
+  const reason = String(req.body.reason || "").trim();
+  if (!reason) throw new ApiError(400, "Transfer reason is required. Cancel does not save the transfer.");
   const row = await CuttingMachinePlan.findById(req.params.id);
   const target = await Machine.findOne({ machineCode: upper(req.body.machineCode), status: { $ne: "Breakdown" } });
   if (!row || !target) throw new ApiError(404, "Assignment or target machine not found");
   if (upper(target.machineType) !== row.machineType) throw new ApiError(409, "Target machine type does not match");
   const oldMachine = row.machineCode, fromStatus = row.status; row.machineCode = target.machineCode; row.status = "QUEUED";
-  row.events.push({ action: "TRANSFER", fromStatus, toStatus: "QUEUED", machineCode: target.machineCode, reason: req.body.reason || "", user: req.user.name });
+  row.events.push({ action: "TRANSFER", fromStatus, toStatus: "QUEUED", machineCode: target.machineCode, reason, user: req.user.name });
   await row.save(); await resequence(oldMachine); await resequence(target.machineCode); res.json(row);
 }
 

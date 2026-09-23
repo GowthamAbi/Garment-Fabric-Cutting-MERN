@@ -65,10 +65,35 @@ async function createInwardBundles({
   compactingName,
   dyeingName,
   createdBy,
+  inwardDate,
+  dcNo,
+  setNo,
 }) {
+  await backfillLegacyBatchNumbers();
   let rollNo = 0;
+  const date = new Date(inwardDate || Date.now());
+  const startYear = date.getMonth() >= 3 ? date.getFullYear() : date.getFullYear() - 1;
+  const financialYear = `${String(startYear).slice(-2)}-${String(startYear + 1).slice(-2)}`;
+  const codePart = (value) => upper(value).replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
   for (const colour of colours) {
     for (const line of colour.details) {
+      const batchKey = {
+        fabricCode: master.fabricCode,
+        colour: colour.colour,
+        dcNo: upper(dcNo),
+        dia: String(line.dia),
+      };
+      const existingBatch = await FabricBundleStock.findOne(batchKey)
+        .select("batchNo")
+        .lean();
+      const previousBatches = await FabricBundleStock.distinct("batchNo", {
+        fabricCode: master.fabricCode,
+        colour: colour.colour,
+        dia: String(line.dia),
+        batchNo: { $ne: "LEGACY" },
+      });
+      const batchNo = existingBatch?.batchNo && existingBatch.batchNo !== "LEGACY" ? existingBatch.batchNo :
+        `${financialYear}/${codePart(master.fabricCode)}/${codePart(colour.colour)}/${codePart(dcNo || "NO-DC")}/${codePart(line.dia)}/${String(previousBatches.length + 1).padStart(3, "0")}`;
       for (const [inwardType, count, weight] of [
         ["SAMPLE", line.sampleRolls, line.sampleWeightKg],
         ["LOT", line.lotRolls, line.lotWeightKg],
@@ -93,18 +118,23 @@ async function createInwardBundles({
             colour: colour.colour,
             dyeingName,
             compactingName,
+            batchNo,
+            setNo,
           };
           await FabricBundleStock.create({
             bundleNo,
+            batchNo,
             qrToken: JSON.stringify(qrDetails),
             rollNo,
             inwardType,
             inwardNo,
+            dcNo: upper(dcNo),
             fabricCode: master.fabricCode,
             fabricName: master.fabricName,
             fabricGroup: master.fabricGroup,
             colour: colour.colour,
             dia: line.dia,
+            setNo,
             dyeingName,
             compactingName,
             averageWeightKg: rollWeight,
@@ -140,6 +170,34 @@ export async function getInward(req, res) {
   const row = await FabricInwardLot.findOne({ inwardNo: upper(req.params.no) });
   if (!row) throw new ApiError(404, "Fabric inward not found");
   res.json(row);
+}
+
+async function backfillLegacyBatchNumbers() {
+  const legacy = await FabricBundleStock.find({ $or: [{ batchNo: "LEGACY" }, { batchNo: "" }, { batchNo: { $exists: false } }] })
+    .sort({ createdAt: 1 })
+    .lean();
+  const groups = new Map();
+  for (const row of legacy) {
+    const key = `${row.inwardNo}|${row.fabricCode}|${row.colour}|${row.dcNo}|${row.dia}`;
+    if (!groups.has(key)) groups.set(key, row);
+  }
+  const sequenceByMaterial = new Map();
+  for (const row of groups.values()) {
+    const inward = await FabricInwardLot.findOne({ inwardNo: row.inwardNo }).select("inwardDate dcNo lotDcNo setNo").lean();
+    const date = new Date(inward?.inwardDate || row.createdAt || Date.now());
+    const startYear = date.getMonth() >= 3 ? date.getFullYear() : date.getFullYear() - 1;
+    const fy = `${String(startYear).slice(-2)}-${String(startYear + 1).slice(-2)}`;
+    const clean = (value) => upper(value).replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "") || "NA";
+    const dcNo = upper(row.dcNo || inward?.dcNo || inward?.lotDcNo || "NO-DC");
+    const materialKey = `${row.fabricCode}|${row.colour}|${row.dia}`;
+    const sequence = (sequenceByMaterial.get(materialKey) || 0) + 1;
+    sequenceByMaterial.set(materialKey, sequence);
+    const batchNo = `${fy}/${clean(row.fabricCode)}/${clean(row.colour)}/${clean(dcNo)}/${clean(row.dia)}/${String(sequence).padStart(3, "0")}`;
+    await FabricBundleStock.updateMany(
+      { inwardNo: row.inwardNo, fabricCode: row.fabricCode, colour: row.colour, dia: row.dia, $or: [{ batchNo: "LEGACY" }, { batchNo: "" }, { batchNo: { $exists: false } }] },
+      { $set: { batchNo, dcNo, setNo: upper(inward?.setNo || row.setNo) } },
+    );
+  }
 }
 export async function saveInward(req, res) {
   if (req.params.id && !["saas_super_admin", "company_admin", "admin"].includes(req.user.role))
@@ -181,6 +239,7 @@ export async function saveInward(req, res) {
   if (req.body.dyeingCode && !dyeing)
     throw new ApiError(404, "Dyeing code not found");
   const inwardNo = upper(req.body.inwardNo) || generateReferenceNo("FIN");
+  if (!upper(req.body.setNo)) throw new ApiError(400, "Set No is required for this DC");
   const data = {
     inwardNo,
     sampleInwardNo: upper(req.body.sampleInwardNo),
@@ -194,6 +253,7 @@ export async function saveInward(req, res) {
     dyeingName: dyeing?.name || "",
     dcNo: upper(req.body.dcNo),
     lotDcNo: upper(req.body.lotDcNo),
+    setNo: upper(req.body.setNo),
     lotNo: upper(req.body.lotNo || "NA"),
     inwardDate: req.body.inwardDate,
     colours,
@@ -264,10 +324,14 @@ export async function saveInward(req, res) {
     compactingName: data.compactingName,
     dyeingName: data.dyeingName,
     createdBy: req.user.name,
+    inwardDate: data.inwardDate,
+    dcNo: data.dcNo || data.lotDcNo,
+    setNo: data.setNo,
   });
   res.status(req.params.id ? 200 : 201).json(row);
 }
 export async function listInwardBundles(req, res) {
+  await backfillLegacyBatchNumbers();
   res.json(
     await FabricBundleStock.find({ inwardNo: upper(req.params.no) }).sort({
       colour: 1,
@@ -369,9 +433,36 @@ export async function listFabricStock(req, res) {
   res.json(result);
 }
 
+export async function listOriginalInwardStock(req, res) {
+  await backfillLegacyBatchNumbers();
+  const filter = {};
+  if (req.query.from || req.query.to) {
+    filter.inwardDate = {};
+    if (req.query.from) filter.inwardDate.$gte = new Date(req.query.from);
+    if (req.query.to) { const end = new Date(req.query.to); end.setHours(23, 59, 59, 999); filter.inwardDate.$lte = end; }
+  }
+  const inwards = await FabricInwardLot.find(filter).sort({ inwardDate: -1 }).lean();
+  const bundles = await FabricBundleStock.find()
+    .select("inwardNo colour dia setNo batchNo")
+    .lean();
+  const batchLookup = new Map(bundles.map((bundle) => [
+    `${bundle.inwardNo}|${bundle.colour}|${bundle.dia}|${bundle.setNo || ""}`,
+    bundle.batchNo,
+  ]));
+  res.json(inwards.flatMap((inward) => (inward.colours || []).flatMap((colour) =>
+    (colour.details || []).map((detail) => ({
+      inwardNo: inward.inwardNo, fabricName: inward.fabricName, fabricGroup: inward.fabricGroup,
+      colour: colour.colour, dia: detail.dia, setNo: inward.setNo || "", rolls: detail.totalRolls,
+      batchNo: batchLookup.get(`${inward.inwardNo}|${colour.colour}|${detail.dia}|${inward.setNo || ""}`) || "—",
+      inwardWeightKg: detail.totalWeightKg, inwardDate: inward.inwardDate,
+    })),
+  )));
+}
+
 export async function listFabricBalance(req, res) {
+  await backfillLegacyBatchNumbers();
   const rows = await FabricBundleStock.aggregate([
-    { $group: { _id: { inwardNo: "$inwardNo", fabricName: "$fabricName", fabricGroup: "$fabricGroup", colour: "$colour", dia: "$dia" }, rolls: { $sum: 1 }, inwardWeightKg: { $sum: "$originalWeightKg" }, balanceWeightKg: { $sum: "$balanceWeightKg" }, inwardDate: { $min: "$createdAt" } } },
+    { $group: { _id: { inwardNo: "$inwardNo", fabricName: "$fabricName", fabricGroup: "$fabricGroup", colour: "$colour", dia: "$dia", batchNo: "$batchNo", setNo: "$setNo" }, rolls: { $sum: 1 }, inwardWeightKg: { $sum: "$originalWeightKg" }, balanceWeightKg: { $sum: "$balanceWeightKg" }, inwardDate: { $min: "$createdAt" } } },
     { $sort: { inwardDate: -1 } },
   ]);
   const plans = await FabricCutPlan.find({ status: { $nin: ["CANCELLED"] } }).lean();
@@ -391,7 +482,9 @@ export async function listFabricBalance(req, res) {
     reserved.set(key, Math.max(0, num(reserved.get(key))-deduction));
     return { ...row._id, rolls: row.rolls, inwardWeightKg: Number(row.inwardWeightKg.toFixed(3)), balanceWeightKg: Number(Math.max(0,row.balanceWeightKg-deduction).toFixed(3)), inwardDate: row.inwardDate };
   });
-  res.json(result.sort((a,b)=>new Date(b.inwardDate)-new Date(a.inwardDate)));
+  const from = req.query.from ? new Date(req.query.from) : null;
+  const to = req.query.to ? new Date(`${req.query.to}T23:59:59.999`) : null;
+  res.json(result.filter((row) => row.balanceWeightKg > 0 && (!from || new Date(row.inwardDate) >= from) && (!to || new Date(row.inwardDate) <= to)).sort((a,b)=>new Date(b.inwardDate)-new Date(a.inwardDate)));
 }
 
 export async function getPlanSetup(req, res) {
@@ -701,19 +794,25 @@ export async function saveFoldingEntry(req, res) {
   for (const row of batches) {
     if (duplicate.has(row.bundleNo)) throw new ApiError(400, `Duplicate Batch No ${row.bundleNo}`);
     duplicate.add(row.bundleNo);
-    const stock = await FabricBundleStock.findOne({ bundleNo: row.bundleNo });
-    if (!stock) throw new ApiError(404, `Batch ${row.bundleNo} not found`);
-    if (upper(stock.colour) !== row.colour || upper(stock.dia) !== row.dia)
+    const stocks = await FabricBundleStock.find({ $or: [{ batchNo: row.bundleNo }, { bundleNo: row.bundleNo }] }).sort({ rollNo: 1 });
+    if (!stocks.length) throw new ApiError(404, `Batch ${row.bundleNo} not found`);
+    if (stocks.some((stock) => upper(stock.colour) !== row.colour || upper(stock.dia) !== row.dia))
       throw new ApiError(409, `${row.bundleNo} does not match ${row.colour} / Dia ${row.dia}`);
-    if (stock.balanceWeightKg + 0.0001 < row.weightKg)
-      throw new ApiError(409, `${row.bundleNo} balance is only ${stock.balanceWeightKg} KG`);
+    const balance = stocks.reduce((sum, stock) => sum + num(stock.balanceWeightKg), 0);
+    if (balance + 0.0001 < row.weightKg)
+      throw new ApiError(409, `${row.bundleNo} balance is only ${balance.toFixed(3)} KG`);
   }
   for (const row of batches) {
-    const stock = await FabricBundleStock.findOne({ bundleNo: row.bundleNo });
-    stock.balanceWeightKg = Number((stock.balanceWeightKg - row.weightKg).toFixed(3));
-    stock.status = stock.balanceWeightKg <= 0 ? "CONSUMED" : "PARTIAL";
-    await stock.save();
-    const inward = await FabricInwardLot.findOne({ inwardNo: stock.inwardNo });
+    const stocks = await FabricBundleStock.find({ $or: [{ batchNo: row.bundleNo }, { bundleNo: row.bundleNo }] }).sort({ rollNo: 1 });
+    let remaining = row.weightKg;
+    for (const stock of stocks) {
+      const used = Math.min(num(stock.balanceWeightKg), remaining);
+      stock.balanceWeightKg = Number((stock.balanceWeightKg - used).toFixed(3));
+      stock.status = stock.balanceWeightKg <= 0 ? "CONSUMED" : "PARTIAL";
+      await stock.save(); remaining = Number((remaining - used).toFixed(3));
+      if (remaining <= 0) break;
+    }
+    const inward = await FabricInwardLot.findOne({ inwardNo: stocks[0].inwardNo });
     const colour = inward?.colours.find((line) => upper(line.colour) === row.colour);
     if (colour) {
       colour.balanceWeightKg = Number(Math.max(0, colour.balanceWeightKg - row.weightKg).toFixed(3));

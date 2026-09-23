@@ -87,6 +87,7 @@ r.get("/inwards/:no", fabricRead, asyncHandler(c.getInward));
 r.post("/inwards", fabricEntry, asyncHandler(c.saveInward));
 r.put("/inwards/:id", fabricEntry, asyncHandler(c.saveInward));
 r.get("/stock", fabricRead, asyncHandler(c.listFabricStock));
+r.get("/stock/inward", fabricRead, asyncHandler(c.listOriginalInwardStock));
 r.get("/stock/balance", fabricRead, asyncHandler(c.listFabricBalance));
 r.get("/plans", cuttingRead, asyncHandler(c.listPlans));
 r.get("/plans/setup/:itemCode", cuttingRead, asyncHandler(c.getPlanSetup));
