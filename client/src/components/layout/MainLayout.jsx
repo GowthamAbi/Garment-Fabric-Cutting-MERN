@@ -44,7 +44,6 @@ const navigation = [
   ["Company Timeline", Clock3, ["company_admin"]],
   ["Company Stock", Boxes, ["company_admin"]],
   ["Company Approvals", ListChecks, ["company_admin"]],
-  ["Company Subscription", CreditCard, ["company_admin"]],
   [
     "Fabric Master",
     Boxes,
@@ -308,7 +307,6 @@ const navigation = [
     ],
   ],
   ["User Management", Users, ["saas_super_admin", "company_admin", "admin"]],
-  ["Subscription", ShieldCheck, ["saas_super_admin", "company_admin", "admin"]],
   [
     "Audit & Backup",
     DatabaseBackup,
@@ -395,6 +393,7 @@ groupedSidebarPages.add("Sewing Delivery");
   "Masters",
   "Warehouse",
   "Subscription",
+  "Company Subscription",
 ].forEach((page) => groupedSidebarPages.add(page));
 
 const departmentRoles = {

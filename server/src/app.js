@@ -19,18 +19,22 @@ app.use(securityHeaders);
 // CORS
 // ==========================================
 
-const allowedOrigins = [
+const normalizeOrigin = (url) => String(url || "").trim().replace(/\/$/, "");
+
+const allowedOrigins = new Set([
   "http://localhost:5173",
+  "https://store-inventory-app.netlify.app",
   "https://garmentsaas.netlify.app",
 
   ...(process.env.CLIENT_URL
     ? process.env.CLIENT_URL
         .split(",")
-        .map((url) => url.trim().replace(/\/$/, ""))
+        .map(normalizeOrigin)
+        .filter(Boolean)
     : []),
-];
+].map(normalizeOrigin));
 
-console.log("Allowed CORS origins:", allowedOrigins);
+console.log("Allowed CORS origins:", [...allowedOrigins]);
 
 app.use(
   cors({
@@ -41,11 +45,10 @@ app.use(
         return callback(null, true);
       }
 
-      const normalizedOrigin =
-        origin.replace(/\/$/, "");
+      const normalizedOrigin = normalizeOrigin(origin);
 
       if (
-        allowedOrigins.includes(
+        allowedOrigins.has(
           normalizedOrigin
         )
       ) {
