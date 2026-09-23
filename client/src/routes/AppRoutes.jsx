@@ -44,17 +44,23 @@ import CuttingStockPage from "../pages/fabric/CuttingStockPage.jsx";
 import FabricQrPrintPage from "../pages/fabric/FabricQrPrintPage.jsx";
 import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
 import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
+<<<<<<< HEAD
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
+=======
+>>>>>>> 8f3a48e38cb5569555e1f2a226d85efab6079c6f
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
+<<<<<<< HEAD
     case "Fabric Dashboard": return <DepartmentOverviewPage department="FABRIC" notify={notify} onPageChange={onPageChange} />;
     case "Cutting Dashboard": return <DepartmentOverviewPage department="CUTTING" notify={notify} onPageChange={onPageChange} />;
     case "Delivery Dashboard": return <DepartmentOverviewPage department="DELIVERY" notify={notify} onPageChange={onPageChange} />;
     case "Admin Dashboard": return <DepartmentOverviewPage department="ADMIN" notify={notify} onPageChange={onPageChange} />;
     case "Accessories Dashboard": return <DashboardPage />;
     case "Elastic Dashboard": return <ProductionDashboardPage />;
+=======
+>>>>>>> 8f3a48e38cb5569555e1f2a226d85efab6079c6f
     case "Vendor Registration": return <DeliveryDepartmentPage mode="vendors" notify={notify} />;
     case "Delivery Plan Details": return <DeliveryDepartmentPage mode="plans" notify={notify} onPageChange={onPageChange} />;
     case "Section Plan": return <DeliveryDepartmentPage mode="section" notify={notify} />;

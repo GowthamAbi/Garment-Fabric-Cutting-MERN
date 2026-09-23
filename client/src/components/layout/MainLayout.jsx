@@ -335,6 +335,7 @@ const departmentNavigation = {
     { label: "Time Status", icon: Clock3, items: ["Spreader Timeline", "Cutter Timeline", "Machine Reports", "Cutting Time History"] },
   ],
   DELIVERY: [
+<<<<<<< HEAD
     { label: "Dashboard", icon: LayoutDashboard, page: "Delivery Dashboard" },
     { label: "Vendor Master", icon: Users, items: ["Vendor Registration"] },
     { label: "Delivery Plan", icon: Truck, items: ["Delivery Plan Details", "Section Plan", "Section History"] },
@@ -380,6 +381,11 @@ const departmentNavigation = {
     { label: "Modules", icon: Sparkles, page: "Modules" },
     { label: "SaaS Companies", icon: Building2, page: "SaaS Companies" },
   ],
+=======
+    { label: "Vendor Master", icon: Users, items: ["Vendor Registration"] },
+    { label: "Delivery Plan", icon: Truck, items: ["Delivery Plan Details", "Section Plan", "Section History"] },
+  ],
+>>>>>>> 8f3a48e38cb5569555e1f2a226d85efab6079c6f
 };
 
 const groupedSidebarPages = new Set(Object.values(departmentNavigation).flatMap((groups) =>
@@ -446,9 +452,12 @@ export default function MainLayout({ page, onPageChange, children }) {
     "CUTTING-Time Status": true,
     "DELIVERY-Vendor Master": true,
     "DELIVERY-Delivery Plan": true,
+<<<<<<< HEAD
     "ELASTIC-Masters": true,
     "ELASTIC-Warehouse": true,
     "COMPANY_ADMIN-Company Subscription": true,
+=======
+>>>>>>> 8f3a48e38cb5569555e1f2a226d85efab6079c6f
   });
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
@@ -522,7 +531,11 @@ export default function MainLayout({ page, onPageChange, children }) {
             )
             .map(([department, groups]) => (
               <section className="department-nav" key={department}>
+<<<<<<< HEAD
                 <div className="department-nav-title">{departmentTitles[department]}</div>
+=======
+                <div className="department-nav-title">{department === "FABRIC" ? "Fabric Department" : department === "CUTTING" ? "Cutting Department" : "Delivery Department"}</div>
+>>>>>>> 8f3a48e38cb5569555e1f2a226d85efab6079c6f
                 {groups.map(({ label, icon: Icon, page: directPage, items }) => {
                   const key = `${department}-${label}`;
                   const active = directPage === page || items?.includes(page);
