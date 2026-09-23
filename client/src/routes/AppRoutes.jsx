@@ -137,6 +137,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Company Timeline":
     case "Company Stock":
     case "Company Approvals":
+    case "Department Approvals":
       return <CompanyInsightsPage mode={page} notify={notify} />;
     case "Subscription Plan":
     case "Subscription Purchase":

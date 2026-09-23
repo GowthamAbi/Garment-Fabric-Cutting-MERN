@@ -4,7 +4,7 @@ export default function ModuleSelectionPage({ onSelect }) {
   return (
     <section className="module-selection">
       <div className="module-selection-heading">
-        <span>ACCESSORIES FLOW</span>
+        <span>UG SAAS</span>
         <h1>Select Your Workspace</h1>
         <p>Open the Store or Elastic Production management module.</p>
       </div>

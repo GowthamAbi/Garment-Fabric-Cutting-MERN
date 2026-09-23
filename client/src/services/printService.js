@@ -41,7 +41,7 @@ export async function downloadTransactionPdf(record) {
     : new jsPDF();
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(isInward ? 17 : 20);
-  pdf.text("Accessories Flow", 14, 16);
+  pdf.text("UG SaaS", 14, 16);
   pdf.setFontSize(isInward ? 11 : 14);
   pdf.text(`${record.kind || "OUTWARD"} RECEIPT`, 14, 25);
   pdf.setDrawColor(24, 130, 103);
@@ -120,7 +120,7 @@ export async function downloadDcPdf(report) {
   pdf.setTextColor(18, 60, 51);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(19);
-  pdf.text("Accessories Flow", 14, 18);
+  pdf.text("UG SaaS", 14, 18);
   pdf.setFontSize(10);
   pdf.setTextColor(70, 91, 85);
   pdf.text("DC OUTWARD STATEMENT", 14, 27);
@@ -258,7 +258,7 @@ async function createMasterQrPdf(kind, record) {
   pdf.setTextColor(255, 255, 255);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
-  pdf.text("Accessories Flow", width / 2, 10, { align: "center" });
+  pdf.text("UG SaaS", width / 2, 10, { align: "center" });
   pdf.setFontSize(10);
   pdf.text(isMachine ? "MACHINE QR CARD" : "EMPLOYEE QR CARD", width / 2, 18, {
     align: "center",
@@ -329,7 +329,7 @@ export async function downloadSectionQrPdf(record) {
   pdf.setTextColor(255, 255, 255);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(18);
-  pdf.text("Accessories Flow", width / 2, 11, { align: "center" });
+  pdf.text("UG SaaS", width / 2, 11, { align: "center" });
   pdf.setFontSize(10);
   pdf.text("SECTION QR CARD", width / 2, 19, { align: "center" });
   pdf.addImage(qrData, "PNG", width / 2 - 43, 36, 86, 86);
@@ -377,7 +377,7 @@ export async function downloadCuttingDcPdf(record) {
   pdf.setTextColor(18, 60, 51);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(19);
-  pdf.text("Accessories Flow", 14, 19);
+  pdf.text("UG SaaS", 14, 19);
   pdf.setFontSize(11);
   pdf.text("ELASTIC CUTTING DC", 14, 28);
   pdf.setFontSize(10);

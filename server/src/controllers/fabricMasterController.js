@@ -9,7 +9,7 @@ const upper = (value) =>
     .toUpperCase();
 
 function companyAdmin(request) {
-  return ["saas_super_admin", "company_admin", "admin"].includes(
+  return ["saas_super_admin", "company_admin"].includes(
     request.user.role,
   );
 }
@@ -136,6 +136,11 @@ export async function saveItemMaster(request, response) {
     elasticRanges: request.body.elasticRanges || [],
     accessories: request.body.accessories || [],
     status: companyAdmin(request) ? "APPROVED" : "PENDING_APPROVAL",
+    approvalLevel: companyAdmin(request)
+      ? "NONE"
+      : request.user.role === "admin"
+        ? "COMPANY_ADMIN"
+        : "ADMIN",
     createdBy: request.user.name,
     ...(companyAdmin(request) && {
       approvedBy: request.user.name,
@@ -153,18 +158,40 @@ export async function saveItemMaster(request, response) {
 }
 
 export async function approveItemMaster(request, response) {
-  if (!companyAdmin(request))
-    throw new ApiError(403, "Company Admin approval required");
+  const isCompanyAdmin = companyAdmin(request);
+  const isAdmin = request.user.role === "admin";
+  if (!isCompanyAdmin && !isAdmin)
+    throw new ApiError(403, "Admin approval required");
+  const existing = await GarmentItemMaster.findById(request.params.id);
+  if (!existing) throw new ApiError(404, "Item master not found");
+  const rejected = request.body.status === "REJECTED";
+  if (isAdmin && !isCompanyAdmin && existing.approvalLevel !== "ADMIN")
+    throw new ApiError(403, "This request is waiting for Company Admin approval");
+  const update = isCompanyAdmin
+    ? {
+        status: rejected ? "REJECTED" : "APPROVED",
+        approvalLevel: "NONE",
+        approvedBy: request.user.name,
+        approvedAt: new Date(),
+      }
+    : rejected
+      ? {
+          status: "REJECTED",
+          approvalLevel: "NONE",
+          adminApprovedBy: request.user.name,
+          adminApprovedAt: new Date(),
+        }
+      : {
+          status: "PENDING_APPROVAL",
+          approvalLevel: "COMPANY_ADMIN",
+          adminApprovedBy: request.user.name,
+          adminApprovedAt: new Date(),
+        };
   const row = await GarmentItemMaster.findByIdAndUpdate(
     request.params.id,
-    {
-      status: request.body.status === "REJECTED" ? "REJECTED" : "APPROVED",
-      approvedBy: request.user.name,
-      approvedAt: new Date(),
-    },
+    update,
     { new: true },
   );
-  if (!row) throw new ApiError(404, "Item master not found");
   response.json(row);
 }
 

@@ -6,7 +6,7 @@ const n = (value) => Number(value || 0);
 const fixed = (value) => n(value).toFixed(3);
 const blankBatch = (colour = "", dia = "") => ({ colour, dia, bundleNo: "", weightKg: "" });
 
-export function FoldingDocument({ plan, lines = [], batches = [], quality, companyName = "Accessories Flow" }) {
+export function FoldingDocument({ plan, lines = [], batches = [], quality, companyName = "UG SaaS" }) {
   const colours = [...new Set(lines.map((row) => row.colour))];
   const sizes = [...new Set(lines.map((row) => row.size))];
   const sizeLine = (colour, size) => lines.find((row) => row.colour === colour && row.size === size);

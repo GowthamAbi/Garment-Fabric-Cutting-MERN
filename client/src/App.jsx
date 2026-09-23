@@ -83,7 +83,7 @@ function Application() {
     return (
       <div className="standalone-production-page">
         <div className="standalone-production-brand">
-          Accessories Flow <small>PRODUCTION</small>
+          UG SaaS <small>PRODUCTION</small>
         </div>
         <ProductionControlPage notify={notify} />
         {message && <div className="toast">{message}</div>}

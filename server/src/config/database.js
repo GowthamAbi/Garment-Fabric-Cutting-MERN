@@ -31,7 +31,7 @@ export async function connectDatabase() {
   let defaultCompany = await Company.findOne();
   if (!defaultCompany) {
     defaultCompany = await Company.create({
-      companyName: "Accessories Flow",
+      companyName: "UG SaaS",
       factories: [{ name: "Main Factory", code: "MAIN" }],
     });
   }

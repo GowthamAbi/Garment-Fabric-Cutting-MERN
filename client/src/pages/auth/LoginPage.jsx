@@ -94,7 +94,7 @@ export default function LoginPage({ initialMode = false }) {
         <div className="auth-logo">
           <Sparkles />
         </div>
-        <h1>Accessories Flow</h1>
+        <h1>UG SaaS</h1>
         <p>{registerMode ? "Create the SaaS Owner account · First setup only" : "Admin, Store and Production users sign in here"}</p>
 
         {registerMode && (

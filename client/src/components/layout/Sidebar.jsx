@@ -33,8 +33,8 @@ export default function Sidebar({ page, open, onSelect, onClose }) {
           <Sparkles />
         </span>
         <div className="brand-copy">
-          <b className="brand-title">Accessories Flow</b>
-          <small className="brand-subtitle">ACCESSORIES MANAGER</small>
+          <b className="brand-title">UG SaaS</b>
+          <small className="brand-subtitle">BUSINESS FLOW MANAGER</small>
         </div>
         <button className="brand-close" onClick={onClose}>
           <X />

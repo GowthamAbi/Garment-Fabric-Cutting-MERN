@@ -44,6 +44,12 @@ const r = Router(),
     "department_entry",
   ),
   masterWrite = allowRoles("saas_super_admin", "company_admin", "admin"),
+  itemMasterWrite = allowRoles(
+    "saas_super_admin", "company_admin", "admin", "department_incharge",
+    "department_entry", "fabric_admin", "fabric_entry", "cutting_admin",
+    "cutting_entry", "elastic_admin", "elastic_entry", "accessories_admin",
+    "accessories_entry", "delivery_admin", "delivery_entry",
+  ),
   cutting = allowDepartment(
     "CUTTING",
     "saas_super_admin",
@@ -73,8 +79,8 @@ r.post("/process-masters", masterWrite, asyncHandler(m.saveProcess));
 r.put("/process-masters/:id", masterWrite, asyncHandler(m.saveProcess));
 r.delete("/process-masters/:id", masterWrite, asyncHandler(m.deleteProcess));
 r.get("/item-masters", fabricRead, asyncHandler(m.listItemMasters));
-r.post("/item-masters", masterWrite, asyncHandler(m.saveItemMaster));
-r.put("/item-masters/:id", masterWrite, asyncHandler(m.saveItemMaster));
+r.post("/item-masters", itemMasterWrite, asyncHandler(m.saveItemMaster));
+r.put("/item-masters/:id", itemMasterWrite, asyncHandler(m.saveItemMaster));
 r.patch(
   "/item-masters/:id/approval",
   masterWrite,

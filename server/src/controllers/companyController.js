@@ -5,8 +5,10 @@ import ApiError from "../utils/ApiError.js";
 import AuditLog from "../models/AuditLog.js";
 import GarmentMovement from "../models/GarmentMovement.js";
 
-export async function getCompanies(_request, response) {
-  const companies = await Company.find().sort({ companyName: 1 }).lean();
+export async function getCompanies(request, response) {
+  const companies = await Company.find(
+    request.user.role === "saas_super_admin" ? {} : { _id: request.user.companyId },
+  ).sort({ companyName: 1 }).lean();
   const rows = await Promise.all(
     companies.map(async (company) => ({
       ...company,

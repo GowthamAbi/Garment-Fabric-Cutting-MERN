@@ -880,7 +880,7 @@ function WasteReport({ rows, loading }) {
       className="card print-document report-print-document"
     >
       <div className="print-report-header">
-        <small>ACCESSORIES FLOW · CUTTING</small>
+        <small>UG SAAS · CUTTING</small>
         <h2>Fabric Waste Warehouse Report</h2>
         <p>Generated {new Date().toLocaleDateString()}</p>
       </div>
@@ -968,7 +968,7 @@ function DataList({ rows, loading, search, setSearch, load }) {
       className="card print-document report-print-document"
     >
       <div className="print-report-header">
-        <small>ACCESSORIES FLOW</small>
+        <small>UG SAAS</small>
         <h2>Department Report</h2>
         <p>Generated {new Date().toLocaleDateString()}</p>
       </div>

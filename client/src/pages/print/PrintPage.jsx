@@ -36,7 +36,7 @@ function TransactionReceipt({ record }) {
   return (
     <section className={`card transaction-print ${record.kind === "INWARD" ? "inward-label" : ""}`}>
       <header>
-        <div><h2>Accessories Flow</h2><p>{record.kind} Receipt</p></div>
+        <div><h2>UG SaaS</h2><p>{record.kind} Receipt</p></div>
         <b>{record.referenceNo}</b>
       </header>
       <dl>
@@ -159,7 +159,7 @@ export default function PrintPage({ notify }) {
         <section className="card dc-print" id="dc-print">
           <header>
             <div>
-              <h2>Accessories Flow</h2>
+              <h2>UG SaaS</h2>
               <p>DC Outward Statement</p>
             </div>
             <div className="dc-header-main-qr">

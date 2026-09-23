@@ -54,7 +54,12 @@ export async function getCompanyAdminOverview(request, response) {
     FabricInwardLot.countDocuments(),
     FabricCutPlan.countDocuments(),
     FabricCutActual.countDocuments(),
-    GarmentItemMaster.countDocuments({ status: "PENDING_APPROVAL" }),
+    GarmentItemMaster.countDocuments({
+      status: "PENDING_APPROVAL",
+      ...(request.user.role === "admin"
+        ? { approvalLevel: "ADMIN" }
+        : { approvalLevel: { $in: ["COMPANY_ADMIN", null] } }),
+    }),
     Inward.countDocuments(),
     Outward.countDocuments(),
     ProductionJob.countDocuments(),
@@ -95,7 +100,12 @@ export async function getCompanyAdminOverview(request, response) {
       users: users.filter((user) => user.department === name).length,
       activity: activityFor(name),
     })),
-    approvals: await GarmentItemMaster.find({ status: "PENDING_APPROVAL" })
+    approvals: await GarmentItemMaster.find({
+      status: "PENDING_APPROVAL",
+      ...(request.user.role === "admin"
+        ? { approvalLevel: "ADMIN" }
+        : { approvalLevel: { $in: ["COMPANY_ADMIN", null] } }),
+    })
       .sort({ updatedAt: -1 })
       .limit(20)
       .lean(),

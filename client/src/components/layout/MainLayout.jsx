@@ -364,9 +364,9 @@ const departmentNavigation = {
   ],
   ADMIN: [
     { label: "Dashboard", icon: LayoutDashboard, page: "Admin Dashboard" },
+    { label: "Department Approvals", icon: ListChecks, page: "Department Approvals" },
     { label: "Item Master", icon: ClipboardList, page: "Item Master" },
     { label: "User Management", icon: Users, page: "User Management" },
-    { label: "Subscription", icon: ShieldCheck, page: "Subscription" },
     { label: "Audit & Backup", icon: DatabaseBackup, page: "Audit & Backup" },
     { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
   ],
@@ -394,6 +394,7 @@ groupedSidebarPages.add("Sewing Delivery");
   "Dashboard",
   "Masters",
   "Warehouse",
+  "Subscription",
 ].forEach((page) => groupedSidebarPages.add(page));
 
 const departmentRoles = {
@@ -513,8 +514,8 @@ export default function MainLayout({ page, onPageChange, children }) {
             <Sparkles />
           </span>
           <div className="brand-copy">
-            <b className="brand-title">Accessories Flow</b>
-            <small className="brand-subtitle">ACCESSORIES MANAGER</small>
+            <b className="brand-title">UG SaaS</b>
+            <small className="brand-subtitle">BUSINESS FLOW MANAGER</small>
           </div>
           <button className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />
@@ -798,7 +799,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <small>
               {user?.role?.includes("production")
                 ? "Elastic Production"
-                : "Accessories Flow SaaS"}
+                : "UG SaaS"}
             </small>
             <h1>{page === "Production Dashboard" ? "Dashboard" : page}</h1>
           </div>

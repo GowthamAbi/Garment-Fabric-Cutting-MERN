@@ -17,17 +17,24 @@ export default function CompanyInsightsPage({ mode, notify }) {
     "Company Timeline": "Company Timeline",
     "Company Stock": "Department Stock",
     "Company Approvals": "Master Approvals",
+    "Department Approvals": "Department Approvals",
   };
   const rows =
     mode === "Company Timeline"
       ? data.timeline
-      : mode === "Company Approvals"
+      : ["Company Approvals", "Department Approvals"].includes(mode)
         ? data.approvals
         : data.departments;
   async function decision(id, status) {
-    await fabricCuttingApi.approveItemMaster(id, status);
-    setData(await api("/dashboard/company-overview"));
-    notify?.(`Master ${status.toLowerCase()}`);
+    try {
+      await fabricCuttingApi.approveItemMaster(id, status);
+      setData(await api("/dashboard/company-overview"));
+      notify?.(mode === "Department Approvals" && status === "APPROVED"
+        ? "Admin approved; sent to Company Admin"
+        : `Master ${status.toLowerCase()}`);
+    } catch (error) {
+      notify?.(error.message);
+    }
   }
   return (
     <section className="classic-page">
@@ -57,12 +64,13 @@ export default function CompanyInsightsPage({ mode, notify }) {
                   <th>Entity</th>
                   <th>Status</th>
                 </>
-              ) : mode === "Company Approvals" ? (
+              ) : ["Company Approvals", "Department Approvals"].includes(mode) ? (
                 <>
                   <th>Item</th>
                   <th>Fabric Group</th>
                   <th>Updated</th>
                   <th>Status</th>
+                  <th>Approval Stage</th>
                   <th>Decision</th>
                 </>
               ) : (
@@ -88,7 +96,7 @@ export default function CompanyInsightsPage({ mode, notify }) {
                     <td>{row.statusCode}</td>
                   </tr>
                 ))
-              : mode === "Company Approvals"
+              : ["Company Approvals", "Department Approvals"].includes(mode)
                 ? rows.map((row) => (
                     <tr key={row._id}>
                       <td>
@@ -97,6 +105,7 @@ export default function CompanyInsightsPage({ mode, notify }) {
                       <td>{row.fabricGroup}</td>
                       <td>{new Date(row.updatedAt).toLocaleString()}</td>
                       <td>{row.status}</td>
+                      <td>{row.approvalLevel === "ADMIN" ? "Admin Review" : "Company Admin Review"}</td>
                       <td>
                         <div className="row-actions">
                           <button onClick={() => decision(row._id, "APPROVED")}>

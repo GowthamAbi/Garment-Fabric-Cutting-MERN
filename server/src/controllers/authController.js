@@ -21,7 +21,7 @@ function createToken(user) {
   );
 }
 
-function createAuthResponse(user, companyName = "Accessories Flow") {
+function createAuthResponse(user, companyName = "UG SaaS") {
   return {
     token: createToken(user),
     user: {
@@ -47,7 +47,7 @@ export async function register(request, response) {
     name,
     email,
     password,
-    companyName = "Accessories Flow",
+    companyName = "UG SaaS",
     factoryName = "Main Factory",
   } = request.body;
 
@@ -199,7 +199,7 @@ export async function forgotPassword(request, response) {
       body: JSON.stringify({
         from: process.env.EMAIL_FROM,
         to: [user.email],
-        subject: "Accessories Flow password reset",
+        subject: "UG SaaS password reset",
         html: `<p>Use this link within 30 minutes:</p><p><a href="${resetUrl}">Reset password</a></p>`,
       }),
     });

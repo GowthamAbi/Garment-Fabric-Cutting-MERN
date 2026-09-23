@@ -46,6 +46,13 @@ const schema = new mongoose.Schema(
       enum: ["DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED"],
       default: "APPROVED",
     },
+    approvalLevel: {
+      type: String,
+      enum: ["NONE", "ADMIN", "COMPANY_ADMIN"],
+      default: "NONE",
+    },
+    adminApprovedBy: { type: String, default: "" },
+    adminApprovedAt: Date,
     createdBy: { type: String, default: "System" },
     approvedBy: { type: String, default: "" },
     approvedAt: Date,

@@ -19,7 +19,7 @@ export default function SuperAdminLayout({ page, onPageChange, children }) {
   function signOut() { localStorage.removeItem("elastic_production_scan_draft"); window.history.replaceState({}, "", "/"); logout(); }
   return <div className="owner-shell">
     <aside className={menuOpen ? "open" : ""}>
-      <div className="owner-brand"><span><ShieldCheck/></span><div><b>Accessories Flow</b><small>SAAS OWNER CONSOLE</small></div><button onClick={()=>setMenuOpen(false)}><X/></button></div>
+      <div className="owner-brand"><span><ShieldCheck/></span><div><b>UG SaaS</b><small>SAAS OWNER CONSOLE</small></div><button onClick={()=>setMenuOpen(false)}><X/></button></div>
       <nav>{ownerNavigation.map(([name,Icon])=><button key={name} className={page===name?"active":""} onClick={()=>select(name)}><Icon/><span>{name}</span></button>)}</nav>
       <div className="owner-account">
         <button className="owner-profile-trigger" onClick={()=>setProfileOpen((open)=>!open)}><UserCircle/><span><b>{user?.name}</b><small>Super Administrator</small></span><ChevronDown className={profileOpen?"open":""}/></button>

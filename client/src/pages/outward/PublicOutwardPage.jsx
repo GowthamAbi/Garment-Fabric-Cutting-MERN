@@ -127,7 +127,7 @@ export default function PublicOutwardPage({ inwardNo }) {
           </span>
           <div>
             <h1>Outward Entry</h1>
-            <p>Accessories Flow · QR-linked stock issue</p>
+            <p>UG SaaS · QR-linked stock issue</p>
           </div>
         </header>
 

@@ -25,7 +25,7 @@ const definitions = {
     title: "Admin Department Dashboard",
     subtitle: "User access, setup, subscription and system-control overview",
     sources: ["/auth/users"],
-    actions: [["Item Master", "Item Master"], ["User Management", "User Management"], ["Subscription", "Subscription"], ["Audit & Backup", "Audit & Backup"]],
+    actions: [["Department Approvals", "Department Approvals"], ["Item Master", "Item Master"], ["User Management", "User Management"], ["Audit & Backup", "Audit & Backup"]],
   },
 };
 

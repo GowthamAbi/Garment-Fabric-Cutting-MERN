@@ -39,6 +39,19 @@ export async function approveSubscription(request, response) {
   response.json(payment);
 }
 
+export async function updateSubscriptionStatus(request, response) {
+  const action = String(request.body.action || "").toUpperCase();
+  const states = { ACTIVATE: "Active", PAUSE: "Suspended", REMOVE: "Expired" };
+  if (!states[action]) throw new ApiError(400, "Action must be ACTIVATE, PAUSE or REMOVE");
+  const company = await Company.findByIdAndUpdate(
+    request.user.companyId,
+    { subscriptionStatus: states[action], active: action !== "REMOVE" },
+    { new: true },
+  );
+  if (!company) throw new ApiError(404, "Company not found");
+  response.json(company);
+}
+
 export async function razorpayWebhook(request, response) {
   const signature = request.get("x-razorpay-signature") || "";
   const expected = crypto.createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET || "missing").update(request.rawBody || JSON.stringify(request.body)).digest("hex");
@@ -66,6 +79,6 @@ export async function downloadBackup(request, response) {
     data[collection.name] = await mongoose.connection.db.collection(collection.name).find({ companyId }).toArray();
   }
   const company = await Company.findById(companyId).lean();
-  response.setHeader("Content-Disposition", `attachment; filename=accessories-flow-backup-${new Date().toISOString().slice(0,10)}.json`);
+  response.setHeader("Content-Disposition", `attachment; filename=ug-saas-backup-${new Date().toISOString().slice(0,10)}.json`);
   response.json({ formatVersion: 1, exportedAt: new Date(), company, data });
 }

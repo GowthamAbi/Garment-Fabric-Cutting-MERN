@@ -24,7 +24,7 @@ import { allowDepartment, allowRoles } from "../middleware/roleMiddleware.js";
 const router = Router();
 
 router.get("/health", (_request, response) => {
-  response.json({ success: true, service: "Accessories Flow API" });
+  response.json({ success: true, service: "UG SaaS API" });
 });
 
 router.post("/webhooks/razorpay", asyncHandler(razorpayWebhook));

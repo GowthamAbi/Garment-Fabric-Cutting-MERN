@@ -1,4 +1,4 @@
-# Accessories Flow MVC Folder Structure
+# UG SaaS MVC Folder Structure
 
 ```text
 Store/
