@@ -124,6 +124,8 @@ export async function createUser(request, response) {
     "elastic_entry",
     "stitching_admin",
     "stitching_entry",
+    "delivery_admin",
+    "delivery_entry",
     "management",
     "view_only",
     "department_incharge",

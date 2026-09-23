@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 const detail = new mongoose.Schema(
   {
     dia: { type: String, required: true, trim: true },
-    setNo: { type: String, default: "", uppercase: true, trim: true },
     sampleRolls: { type: Number, default: 0, min: 0 },
     sampleWeightKg: { type: Number, default: 0, min: 0 },
     lotRolls: { type: Number, default: 0, min: 0 },
@@ -42,6 +41,7 @@ const schema = new mongoose.Schema(
     supplier: { type: String, default: "" },
     dcNo: { type: String, default: "", uppercase: true },
     lotDcNo: { type: String, default: "", uppercase: true, trim: true },
+    setNo: { type: String, default: "", uppercase: true, trim: true },
     lotNo: { type: String, default: "", uppercase: true, trim: true },
     colours: { type: [colour], default: [] },
     totalRolls: { type: Number, default: 0 },
