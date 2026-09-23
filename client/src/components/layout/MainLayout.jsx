@@ -386,6 +386,15 @@ const groupedSidebarPages = new Set(Object.values(departmentNavigation).flatMap(
   groups.flatMap(({ page, items = [] }) => [page, ...items].filter(Boolean)),
 ));
 groupedSidebarPages.add("Sewing Delivery");
+[
+  "Fabric Inward",
+  "Production Plan",
+  "Fabric Waste",
+  "Fabric Stock",
+  "Dashboard",
+  "Masters",
+  "Warehouse",
+].forEach((page) => groupedSidebarPages.add(page));
 
 const departmentRoles = {
   FABRIC: ["fabric_admin", "fabric_entry"],
