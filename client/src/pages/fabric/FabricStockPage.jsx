@@ -16,7 +16,14 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
     } catch (error) { notify?.(error.message); }
   }
   useEffect(() => {
+
     load();
+
+    api
+      [mode === "inward" ? "fabricInwardStock" : mode === "balance" ? "fabricBalance" : "fabricStock"]()
+      .then(setRows)
+      .catch((error) => notify?.(error.message));
+
   }, []);
   const filtered = rows.filter((row) =>
     `${row.fabricGroup} ${row.fabricName || ""} ${row.inwardNo || ""} ${row.colour} ${row.dia} ${row.batchNo || ""} ${row.setNo || ""} ${(row.fabricCodes || []).join(" ")}`
@@ -88,7 +95,11 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
                 {mode === "balance" || mode === "inward" ? <><td>{row.fabricName}</td><td>{row.inwardNo}</td></> : <td>{(row.fabricCodes || []).join(", ")}</td>}
                 <td>{row.colour}</td>
                 <td>{row.dia}</td>
+<<<<<<< HEAD
                 {(mode === "balance" || mode === "inward") && <><td>{row.batchNo || "—"}</td><td>{row.setNo || "—"}</td></>}
+=======
+                {(mode === "balance" || mode === "inward") && <><td>{row.batchNo || "LEGACY"}</td><td>{row.setNo || "—"}</td></>}
+>>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
                 <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td>{mode !== "inward" && <td>{row.balanceWeightKg ?? row.availableWeightKg}</td>}<td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
               </tr>
             ))}
