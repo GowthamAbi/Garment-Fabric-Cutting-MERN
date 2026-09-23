@@ -332,6 +332,10 @@ const departmentNavigation = {
     { label: "Stock", icon: Boxes, items: ["Cutting Pending", "Cutting Stock", "Cutting Waste"] },
     { label: "Time Status", icon: Clock3, items: ["Spreader Timeline", "Cutter Timeline", "Machine Reports", "Cutting Time History"] },
   ],
+  DELIVERY: [
+    { label: "Vendor Master", icon: Users, items: ["Vendor Registration"] },
+    { label: "Delivery Plan", icon: Truck, items: ["Delivery Plan Details", "Section Plan", "Section History"] },
+  ],
 };
 
 const legacyDepartmentPages = new Set([
@@ -379,6 +383,8 @@ export default function MainLayout({ page, onPageChange, children }) {
     "CUTTING-Machine Plan": true,
     "CUTTING-Stock": true,
     "CUTTING-Time Status": true,
+    "DELIVERY-Vendor Master": true,
+    "DELIVERY-Delivery Plan": true,
   });
   const { user, logout } = useAuth();
   const { language, setLanguage } = useLanguage();
@@ -412,6 +418,7 @@ export default function MainLayout({ page, onPageChange, children }) {
         "Pending & Issues",
         "Reports",
       ],
+      DELIVERY: ["Vendor Registration", "Delivery Plan Details", "Section Plan", "Section History"],
     }[user?.department] || [];
 
   function selectPage(pageName) {
@@ -448,7 +455,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             )
             .map(([department, groups]) => (
               <section className="department-nav" key={department}>
-                <div className="department-nav-title">{department === "FABRIC" ? "Fabric Department" : "Cutting Department"}</div>
+                <div className="department-nav-title">{department === "FABRIC" ? "Fabric Department" : department === "CUTTING" ? "Cutting Department" : "Delivery Department"}</div>
                 {groups.map(({ label, icon: Icon, page: directPage, items }) => {
                   const key = `${department}-${label}`;
                   const active = directPage === page || items?.includes(page);

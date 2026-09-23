@@ -28,6 +28,8 @@ const roles = [
   ["elastic_entry", "Elastic Data Entry"],
   ["stitching_admin", "Stitching Admin"],
   ["stitching_entry", "Stitching Data Entry"],
+  ["delivery_admin", "Delivery Admin"],
+  ["delivery_entry", "Delivery Data Entry"],
   ["department_incharge", "Department In-charge"],
   ["department_entry", "Department Data Entry"],
   ["maintenance", "Maintenance User"],
@@ -128,6 +130,7 @@ export default function UserManagementPage({ notify }) {
                   "FINISHING",
                   "PACKING",
                   "DISPATCH",
+                  "DELIVERY",
                 ].map((value) => (
                   <option key={value}>{value}</option>
                 ))}

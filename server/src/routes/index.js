@@ -13,6 +13,7 @@ import warehouseRoutes from "./warehouse.routes.js";
 import saasRoutes from "./saas.routes.js";
 import garmentRoutes from "./garment.routes.js";
 import fabricCuttingRoutes from "./fabricCutting.routes.js";
+import deliveryRoutes from "./delivery.routes.js";
 import { razorpayWebhook } from "../controllers/saasController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { requireActiveSubscription } from "../middleware/subscriptionMiddleware.js";
@@ -129,5 +130,6 @@ router.use(
 );
 router.use("/garments", requireAuth, garmentRoutes);
 router.use("/fabric-cutting", requireAuth, fabricCuttingRoutes);
+router.use("/delivery", requireAuth, deliveryRoutes);
 
 export default router;
