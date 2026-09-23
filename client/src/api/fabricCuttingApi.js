@@ -80,13 +80,8 @@ export const fabricCuttingApi = {
     }),
   deletePlan: (id) => api("/fabric-cutting/plans/" + id, { method: "DELETE" }),
   fabricStock: () => api("/fabric-cutting/stock"),
-
   fabricInwardStock: (params) => api("/fabric-cutting/stock/inward" + query(params)),
   fabricBalance: (params) => api("/fabric-cutting/stock/balance" + query(params)),
-
-  fabricInwardStock: () => api("/fabric-cutting/stock/inward"),
-  fabricBalance: () => api("/fabric-cutting/stock/balance"),
-
   issue: (number, data) =>
     api("/fabric-cutting/plans/" + encodeURIComponent(number) + "/issue", {
       method: "POST",

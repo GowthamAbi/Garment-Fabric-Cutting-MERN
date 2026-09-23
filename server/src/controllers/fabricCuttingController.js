@@ -28,7 +28,6 @@ function inwardTotals(colours) {
   return colours.map((c) => {
     const details = (c.details || []).map((d) => ({
       dia: String(d.dia || "").trim(),
-      setNo: upper(d.setNo),
       sampleRolls: num(d.sampleRolls),
       sampleWeightKg: num(d.sampleWeightKg),
       lotRolls: num(d.lotRolls),
@@ -68,9 +67,7 @@ async function createInwardBundles({
   createdBy,
   inwardDate,
   dcNo,
-
   setNo,
-
 }) {
   await backfillLegacyBatchNumbers();
   let rollNo = 0;
@@ -95,13 +92,8 @@ async function createInwardBundles({
         dia: String(line.dia),
         batchNo: { $ne: "LEGACY" },
       });
-<<<<<<< HEAD
       const batchNo = existingBatch?.batchNo && existingBatch.batchNo !== "LEGACY" ? existingBatch.batchNo :
         `${financialYear}/${codePart(master.fabricCode)}/${codePart(colour.colour)}/${codePart(dcNo || "NO-DC")}/${codePart(line.dia)}/${String(previousBatches.length + 1).padStart(3, "0")}`;
-=======
-      const batchNo = existingBatch?.batchNo ||
-        `${financialYear}/${codePart(master.fabricCode)}/${codePart(colour.colour)}/${codePart(dcNo || "NO-DC")}/${codePart(line.dia)}/${previousBatches.length + 1}`;
->>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
       for (const [inwardType, count, weight] of [
         ["SAMPLE", line.sampleRolls, line.sampleWeightKg],
         ["LOT", line.lotRolls, line.lotWeightKg],
@@ -127,11 +119,7 @@ async function createInwardBundles({
             dyeingName,
             compactingName,
             batchNo,
-<<<<<<< HEAD
             setNo,
-=======
-            setNo: line.setNo,
->>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
           };
           await FabricBundleStock.create({
             bundleNo,
@@ -146,11 +134,7 @@ async function createInwardBundles({
             fabricGroup: master.fabricGroup,
             colour: colour.colour,
             dia: line.dia,
-<<<<<<< HEAD
             setNo,
-=======
-            setNo: line.setNo,
->>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
             dyeingName,
             compactingName,
             averageWeightKg: rollWeight,
@@ -342,10 +326,7 @@ export async function saveInward(req, res) {
     createdBy: req.user.name,
     inwardDate: data.inwardDate,
     dcNo: data.dcNo || data.lotDcNo,
-<<<<<<< HEAD
     setNo: data.setNo,
-=======
->>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
   });
   res.status(req.params.id ? 200 : 201).json(row);
 }
@@ -453,7 +434,6 @@ export async function listFabricStock(req, res) {
 }
 
 export async function listOriginalInwardStock(req, res) {
-<<<<<<< HEAD
   await backfillLegacyBatchNumbers();
   const filter = {};
   if (req.query.from || req.query.to) {
@@ -462,9 +442,6 @@ export async function listOriginalInwardStock(req, res) {
     if (req.query.to) { const end = new Date(req.query.to); end.setHours(23, 59, 59, 999); filter.inwardDate.$lte = end; }
   }
   const inwards = await FabricInwardLot.find(filter).sort({ inwardDate: -1 }).lean();
-=======
-  const inwards = await FabricInwardLot.find().sort({ inwardDate: -1 }).lean();
->>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
   const bundles = await FabricBundleStock.find()
     .select("inwardNo colour dia setNo batchNo")
     .lean();
@@ -475,13 +452,8 @@ export async function listOriginalInwardStock(req, res) {
   res.json(inwards.flatMap((inward) => (inward.colours || []).flatMap((colour) =>
     (colour.details || []).map((detail) => ({
       inwardNo: inward.inwardNo, fabricName: inward.fabricName, fabricGroup: inward.fabricGroup,
-<<<<<<< HEAD
       colour: colour.colour, dia: detail.dia, setNo: inward.setNo || "", rolls: detail.totalRolls,
       batchNo: batchLookup.get(`${inward.inwardNo}|${colour.colour}|${detail.dia}|${inward.setNo || ""}`) || "—",
-=======
-      colour: colour.colour, dia: detail.dia, setNo: detail.setNo || "", rolls: detail.totalRolls,
-      batchNo: batchLookup.get(`${inward.inwardNo}|${colour.colour}|${detail.dia}|${detail.setNo || ""}`) || "LEGACY",
->>>>>>> 5c00f2f984b0dc0da334771ae7af43a2049fe963
       inwardWeightKg: detail.totalWeightKg, inwardDate: inward.inwardDate,
     })),
   )));
