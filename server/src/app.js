@@ -21,7 +21,7 @@ app.use(securityHeaders);
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://garmentsaas.netlify.app/",
+  "https://garmentsaas.netlify.app",
 
   ...(process.env.CLIENT_URL
     ? process.env.CLIENT_URL
