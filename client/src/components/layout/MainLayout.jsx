@@ -323,14 +323,14 @@ const departmentNavigation = {
     { label: "Fabric Master", icon: Boxes, page: "Fabric Master" },
     { label: "Fabric Inward", icon: ArrowDownToLine, items: ["Fabric Inward Entry", "Fabric Roll QR Print", "Fabric Inward Print", "Fabric Inward History"] },
     { label: "Production Plan", icon: ClipboardList, items: ["Fabric Entry", "Plan Print", "Folding Entry", "Folding Print", "Fabric Plan History"] },
-    { label: "Stock", icon: Boxes, items: ["Inward Stock", "Fabric Stock Balance", "Fabric Stock Waste"] },
+    { label: "Stock", icon: Boxes, items: ["Inward Stock", "Fabric Stock Balance"] },
   ],
   CUTTING: [
     { label: "Cutting Master", icon: Settings2, items: ["Machine Detail Entry & QR Print"] },
     { label: "Production Plan", icon: ClipboardList, items: ["Cutting Actual Entry", "Cutting Plan Print", "Cutting Plan History"] },
     { label: "Machine Plan", icon: ClipboardList, items: ["Machine Plan Entry", "Plan Number Status", "Cutter Status"] },
     { label: "Stock", icon: Boxes, items: ["Cutting Pending", "Cutting Stock", "Cutting Waste"] },
-    { label: "Time Status", icon: Clock3, items: ["Spreader Timeline", "Cutter Timeline", "Cutting Time History"] },
+    { label: "Time Status", icon: Clock3, items: ["Spreader Timeline", "Cutter Timeline", "Machine Reports", "Cutting Time History"] },
   ],
 };
 

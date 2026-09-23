@@ -16,6 +16,7 @@ import QRGenerator from "../../components/qr/QRGenerator.jsx";
 
 const detail = () => ({
   dia: "",
+  setNo: "",
   sampleRolls: "",
   sampleWeightKg: "",
   lotRolls: "",
@@ -103,6 +104,7 @@ export default function FabricInwardPage({ notify }) {
           colour: item.colour,
           details: item.details.map((line) => ({
             dia: line.dia,
+            setNo: line.setNo || "",
             sampleRolls: line.sampleRolls || "",
             sampleWeightKg: line.sampleWeightKg || "",
             lotRolls: line.lotRolls || "",
@@ -491,6 +493,7 @@ function DetailModal({ row, update, close }) {
             <thead>
               <tr>
                 <th>Dia</th>
+                <th>Set No</th>
                 <th>Sample Rolls</th>
                 <th>Sample KG</th>
                 <th>Lot Rolls</th>
@@ -504,7 +507,7 @@ function DetailModal({ row, update, close }) {
                   {Object.keys(detail()).map((key) => (
                     <td key={key}>
                       <input
-                        type={key === "dia" ? "text" : "number"}
+                        type={["dia", "setNo"].includes(key) ? "text" : "number"}
                         min="0"
                         step={key.includes("Weight") ? "0.001" : "1"}
                         value={line[key]}
@@ -593,6 +596,7 @@ function Receipt({ inward, bundles, receiptRef }) {
               <th>S.No</th>
               <th>Colour</th>
               <th>Dia</th>
+              <th>Set No</th>
               <th>Sample Rolls</th>
               <th>Sample KG</th>
               <th>Lot Rolls</th>
@@ -610,6 +614,7 @@ function Receipt({ inward, bundles, receiptRef }) {
                   <td>{index + 1}</td>
                   <td>{line.colour}</td>
                   <td>{line.dia}</td>
+                  <td>{line.setNo || "—"}</td>
                   <td>{line.sampleRolls}</td>
                   <td>{line.sampleWeightKg}</td>
                   <td>{line.lotRolls}</td>
@@ -620,7 +625,7 @@ function Receipt({ inward, bundles, receiptRef }) {
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan="3">Overall</td>
+              <td colSpan="4">Overall</td>
               <td>{inward.totalSampleRolls}</td>
               <td>{inward.totalSampleWeightKg}</td>
               <td>{inward.totalLotRolls}</td>
@@ -643,6 +648,8 @@ function Receipt({ inward, bundles, receiptRef }) {
             </small>
             <QRGenerator value={bundle.qrToken} size={112} />
             <b>{bundle.bundleNo}</b>
+            <span>Batch: {bundle.batchNo || "Legacy"}</span>
+            <span>Set No: {bundle.setNo || "—"}</span>
             <span>
               {bundle.fabricGroup} · {bundle.colour}
             </span>
