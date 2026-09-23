@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, Printer, RefreshCw, Search } from "lucide-react";
 import { jsPDF } from "jspdf";
-import { exportCsv } from "../../api.js";
+import { exportElementExcel } from "../../api.js";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 
 export default function FabricStockPage({ notify, mode = "summary" }) {
@@ -43,7 +43,7 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
           <p>{mode === "inward" ? "Original inward quantity — locked after save and never reduced by production." : "Inward minus Production Plan reservations and Folding batch consumption."}</p>
         </div>
         <div className="page-actions">
-          <button onClick={() => exportCsv("fabric-stock.csv", filtered)}>
+          <button onClick={() => exportElementExcel("fabric-stock.xls", "fabric-stock-excel")}>
             <Download /> Excel
           </button>
           <button onClick={() => window.print()}>
@@ -62,7 +62,7 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
           <button className="secondary" onClick={load}><RefreshCw /> Refresh</button>
         </div>
       </div>
-      <article className="production-plan-document print-document" ref={ref}>
+      <article id="fabric-stock-excel" className="production-plan-document print-document" ref={ref}>
         <header>
           <small>FABRIC STOCK REPORT</small>
           <h1>{mode === "inward" ? "Original Fabric Inward Stock" : "Available Fabric Stock"}</h1>
@@ -71,25 +71,21 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
         <table>
           <thead>
             <tr>
-              <th>S.No</th>
-              <th>Fabric Group</th>
-              {mode === "balance" || mode === "inward" ? <><th>Fabric Name</th><th>Inward No</th></> : <th>Fabric Code</th>}
+              {mode === "balance" || mode === "inward" ? <><th>Inward No</th><th>Fabric Name</th><th>Fabric Group</th></> : <><th>S.No</th><th>Fabric Group</th><th>Fabric Code</th></>}
               <th>Colour</th>
               <th>Dia</th>
               {(mode === "balance" || mode === "inward") && <><th>Batch No</th><th>Set No</th></>}
-              <th>Roll</th><th>Inward KG</th>{mode !== "inward" && <th>Balance KG</th>}<th>Aging</th>
+              <th>Rolls</th><th>Inward Weight KG</th><th>Balance Weight KG</th><th>Aging</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((row, index) => (
               <tr key={`${row.inwardNo || row.fabricGroup}-${row.colour}-${row.dia}-${row.batchNo || ""}-${row.setNo || ""}`}>
-                <td>{index + 1}</td>
-                <td>{row.fabricGroup}</td>
-                {mode === "balance" || mode === "inward" ? <><td>{row.fabricName}</td><td>{row.inwardNo}</td></> : <td>{(row.fabricCodes || []).join(", ")}</td>}
+                {mode === "balance" || mode === "inward" ? <><td>{row.inwardNo}</td><td>{row.fabricName}</td><td>{row.fabricGroup}</td></> : <><td>{index + 1}</td><td>{row.fabricGroup}</td><td>{(row.fabricCodes || []).join(", ")}</td></>}
                 <td>{row.colour}</td>
                 <td>{row.dia}</td>
                 {(mode === "balance" || mode === "inward") && <><td>{row.batchNo || "—"}</td><td>{row.setNo || "—"}</td></>}
-                <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td>{mode !== "inward" && <td>{row.balanceWeightKg ?? row.availableWeightKg}</td>}<td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
+                <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td><td>{mode === "inward" ? row.inwardWeightKg : row.balanceWeightKg ?? row.availableWeightKg}</td><td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
               </tr>
             ))}
           </tbody>

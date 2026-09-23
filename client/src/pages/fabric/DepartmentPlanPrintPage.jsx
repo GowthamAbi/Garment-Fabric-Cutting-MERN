@@ -3,6 +3,7 @@ import { Download, Printer, Search } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
 import { printElement } from "../../services/printService.js";
+import { exportElementExcel } from "../../api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { FoldingDocument } from "./FoldingEntryPage.jsx";
 
@@ -80,6 +81,7 @@ export default function DepartmentPlanPrintPage({ type = "cutting", notify }) {
         </div></label>
         {plan && <div className="form-actions">
           <button onClick={() => printElement("department-plan-print")}><Printer /> Print</button>
+          {type === "folding" && <button onClick={() => exportElementExcel(`${plan.planNo}-folding-plan.xls`, "department-plan-print")}><Download /> Excel</button>}
           <button onClick={pdf} disabled={busy}><Download /> PDF</button>
         </div>}
       </div>
