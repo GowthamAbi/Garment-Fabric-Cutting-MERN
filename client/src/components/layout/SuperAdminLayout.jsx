@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Building2, ChevronDown, CreditCard, DatabaseBackup, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, UserCircle, Users, X } from "lucide-react";
+import { BarChart3, Building2, ChevronDown, CreditCard, DatabaseBackup, LayoutDashboard, LogOut, Menu, Package, Settings, ShieldCheck, Target, UserCircle, Users, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 const ownerNavigation = [
   ["SaaS Owner Dashboard", LayoutDashboard],
   ["Companies", Building2],
+  ["Plans", Package],
+  ["Payments & Sales", BarChart3],
+  ["Lead CRM", Target],
   ["Subscriptions", CreditCard],
   ["Owner Users", Users],
   ["Audit & Backup", DatabaseBackup],

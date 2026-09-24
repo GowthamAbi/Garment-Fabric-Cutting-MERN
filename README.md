@@ -109,6 +109,20 @@ Do not create separate public login URLs for each role. One login form plus serv
 
 Set `MONGODB_URI`, a long random `JWT_SECRET`, exact HTTPS `CLIENT_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RESEND_API_KEY`, and `EMAIL_FROM` on Render. Never commit real secrets. Configure the Razorpay webhook URL as `/api/webhooks/razorpay`. Netlify and Render must both use HTTPS.
 
+## UG SaaS commercial console
+
+- Public showcase and pricing page: `/demo` (also available at `/pricing` and `/try-demo`).
+- Trial registration creates an isolated customer company and company-admin login. Access is automatically blocked when the configured Trial validity expires.
+- Owner-managed plans: Trial, Starter, Professional, Business, Enterprise, and Setup & Training. Price, internal cost, setup fee, tax, validity, users, departments, and modules can be edited without code changes.
+- Two payment methods are supported:
+  - **Manual Payment** creates a pending transaction. Only the SaaS Owner can approve it and activate the subscription.
+  - **Razorpay** creates an order and activates the subscription only after server-side signature verification or a verified webhook.
+- Owner analytics include companies, active users, trials, new requests, revenue, estimated profit, pending payments, plan performance, and renewal alerts.
+- Lead CRM records calls, emails, WhatsApp, visits, requirements, customisations, remarks, follow-up dates, and conversion status.
+- Subscription controls support activation, pause, revoke, and archive from Company Management.
+
+For Razorpay, create a webhook for `payment.captured` at `https://YOUR-RENDER-URL/api/webhooks/razorpay`. Keep `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` on the server only.
+
 ### Backup responsibility
 
 The in-app export creates a tenant-scoped portable backup. For disaster recovery, also enable MongoDB Atlas automated backups and periodically test restore in a separate database. Do not store backup JSON in a public folder.

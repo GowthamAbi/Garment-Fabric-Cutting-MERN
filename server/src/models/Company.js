@@ -10,7 +10,7 @@ const companySchema = new mongoose.Schema({
   companyName: { type: String, required: true, trim: true },
   logo: { type: String, default: "" },
   address: { type: String, default: "" },
-  subscriptionPlan: { type: String, enum: ["Trial", "Basic", "Professional", "Enterprise"], default: "Trial" },
+  subscriptionPlan: { type: String, enum: ["Trial", "Starter", "Basic", "Professional", "Business", "Enterprise", "Setup & Training"], default: "Trial" },
   subscriptionStatus: { type: String, enum: ["Active", "Suspended", "Expired"], default: "Active" },
   subscriptionStartsAt: Date,
   subscriptionEndsAt: Date,

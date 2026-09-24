@@ -197,3 +197,20 @@ export async function updateCompany(request, response) {
   if (!company) throw new ApiError(404, "Company not found");
   response.json(company);
 }
+
+export async function controlCompanySubscription(request, response) {
+  const action=String(request.body.action||"").toUpperCase();
+  const updates={
+    ACTIVATE:{subscriptionStatus:"Active",active:true},
+    PAUSE:{subscriptionStatus:"Suspended"},
+    REVOKE:{subscriptionStatus:"Expired",active:false},
+    ARCHIVE:{subscriptionStatus:"Expired",active:false},
+  }[action];
+  if(!updates)throw new ApiError(400,"Action must be ACTIVATE, PAUSE, REVOKE or ARCHIVE");
+  if(action==="ACTIVATE"&&request.body.validityDays)updates.subscriptionEndsAt=new Date(Date.now()+Number(request.body.validityDays)*86400000);
+  const company=await Company.findByIdAndUpdate(request.params.id,updates,{new:true});
+  if(!company)throw new ApiError(404,"Company not found");
+  if(["REVOKE","ARCHIVE"].includes(action))await User.updateMany({companyId:company._id,role:{$ne:"saas_super_admin"}},{active:false});
+  if(action==="ACTIVATE")await User.updateMany({companyId:company._id,role:"company_admin"},{active:true});
+  response.json(company);
+}
