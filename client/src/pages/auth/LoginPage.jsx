@@ -148,6 +148,7 @@ export default function LoginPage({ initialMode = false }) {
           <button type="button" className="link" onClick={() => setForgotMode(true)}>Forgot Password?</button>
         )}
         {!registerMode && <div className="login-role-note"><b>One secure login page</b><span>Your email opens the correct workspace</span><small>SaaS Owner · Company Admin · Store · Production</small></div>}
+        {!registerMode && <a className="primary auth-demo-link" href="/demo">View UG SaaS Demo</a>}
         <button type="button" className="link" onClick={() => { window.location.href = "/privacy"; }}>Privacy Policy</button>
       </form>
     </div>
