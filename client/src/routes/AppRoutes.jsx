@@ -45,6 +45,9 @@ import FabricQrPrintPage from "../pages/fabric/FabricQrPrintPage.jsx";
 import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
 import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
+import OwnerPlansPage from "../pages/saas/OwnerPlansPage.jsx";
+import OwnerSalesPage from "../pages/saas/OwnerSalesPage.jsx";
+import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
@@ -173,6 +176,12 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <CompanyManagementPage notify={notify} />;
     case "Subscriptions":
       return <SaasControlPage notify={notify} />;
+    case "Plans":
+      return <OwnerPlansPage notify={notify} />;
+    case "Payments & Sales":
+      return <OwnerSalesPage notify={notify} />;
+    case "Lead CRM":
+      return <LeadCrmPage notify={notify} />;
     case "Owner Users":
       return <UserManagementPage notify={notify} />;
     case "Account Details":

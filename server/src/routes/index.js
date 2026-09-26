@@ -11,6 +11,7 @@ import reportRoutes from "./report.routes.js";
 import masterRoutes from "./master.routes.js";
 import warehouseRoutes from "./warehouse.routes.js";
 import saasRoutes from "./saas.routes.js";
+import publicSaasRoutes from "./publicSaas.routes.js";
 import garmentRoutes from "./garment.routes.js";
 import fabricCuttingRoutes from "./fabricCutting.routes.js";
 import deliveryRoutes from "./delivery.routes.js";
@@ -31,8 +32,10 @@ router.post("/webhooks/razorpay", asyncHandler(razorpayWebhook));
 
 router.use("/auth", authRoutes);
 router.use("/public", publicOutwardRoutes);
-router.use(requireAuth, requireActiveSubscription, auditMutations);
+router.use("/public/saas", publicSaasRoutes);
+router.use(requireAuth, auditMutations);
 router.use("/saas", saasRoutes);
+router.use(requireActiveSubscription);
 router.use("/dashboard", requireAuth, dashboardRoutes);
 router.use(
   "/items",

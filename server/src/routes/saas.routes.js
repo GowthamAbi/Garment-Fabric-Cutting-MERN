@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { approveSubscription, createSubscription, downloadBackup, getAuditHistory, getSubscription, updateSubscriptionStatus } from "../controllers/saasController.js";
+import { addLeadActivity, approveSubscription, createSubscription, downloadBackup, getAuditHistory, getOwnerOverview, getSubscription, listLeads, listPlans, saveLead, savePlan, updateSubscriptionStatus, verifyRazorpayPayment } from "../controllers/saasController.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
@@ -8,6 +8,15 @@ router.get("/subscription", allowRoles("saas_super_admin", "company_admin", "adm
 router.post("/subscription", allowRoles("saas_super_admin", "company_admin", "admin"), asyncHandler(createSubscription));
 router.patch("/subscription/status", allowRoles("saas_super_admin", "company_admin"), asyncHandler(updateSubscriptionStatus));
 router.patch("/subscription/:id/approve", allowRoles("saas_super_admin"), asyncHandler(approveSubscription));
+router.post("/subscription/verify-razorpay", allowRoles("saas_super_admin", "company_admin", "admin"), asyncHandler(verifyRazorpayPayment));
+router.get("/owner-overview", allowRoles("saas_super_admin"), asyncHandler(getOwnerOverview));
+router.get("/plans", allowRoles("saas_super_admin"), asyncHandler(listPlans));
+router.post("/plans", allowRoles("saas_super_admin"), asyncHandler(savePlan));
+router.put("/plans/:id", allowRoles("saas_super_admin"), asyncHandler(savePlan));
+router.get("/leads", allowRoles("saas_super_admin"), asyncHandler(listLeads));
+router.post("/leads", allowRoles("saas_super_admin"), asyncHandler(saveLead));
+router.put("/leads/:id", allowRoles("saas_super_admin"), asyncHandler(saveLead));
+router.post("/leads/:id/activity", allowRoles("saas_super_admin"), asyncHandler(addLeadActivity));
 router.get("/audit", allowRoles("saas_super_admin", "company_admin", "admin"), asyncHandler(getAuditHistory));
 router.get("/backup", allowRoles("saas_super_admin", "company_admin", "admin"), asyncHandler(downloadBackup));
 export default router;

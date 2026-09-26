@@ -9,6 +9,7 @@ import GlobalFeedback from "./components/common/GlobalFeedback.jsx";
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import PrivacyPage from "./pages/legal/PrivacyPage.jsx";
 import SuperAdminLayout from "./components/layout/SuperAdminLayout.jsx";
+import PublicDemoPage from "./pages/saas/PublicDemoPage.jsx";
 
 function Application() {
   const { token, user } = useAuth();
@@ -117,6 +118,7 @@ export default function App() {
   const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
 
   if (window.location.pathname === "/privacy") return <PrivacyPage />;
+  if (["/demo", "/pricing", "/try-demo"].includes(window.location.pathname)) return <PublicDemoPage />;
 
   if (window.location.pathname === "/outward" && inwardNo) {
     return (
