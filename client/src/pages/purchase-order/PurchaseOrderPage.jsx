@@ -86,12 +86,22 @@ export default function PurchaseOrderPage({ pending, notify }) {
     { key: "itemCode", label: "Item code" },
     { key: "orderQty", label: "Order qty" },
     ...(pending
-      ? [{
-          key: "pendingQty",
-          label: "Balance",
-          filterValue: (order) => Math.max(0, Number(order.orderQty) - Number(order.inwardQty || 0)),
-          render: (order) => Math.max(0, Number(order.orderQty) - Number(order.inwardQty || 0)),
-        }]
+      ? [
+          {
+            key: "pendingQty",
+            label: "Balance",
+            filterValue: (order) =>
+              Math.max(
+                0,
+                Number(order.orderQty) - Number(order.inwardQty || 0),
+              ),
+            render: (order) =>
+              Math.max(
+                0,
+                Number(order.orderQty) - Number(order.inwardQty || 0),
+              ),
+          },
+        ]
       : []),
     {
       key: "deliveryDate",
@@ -146,10 +156,24 @@ export default function PurchaseOrderPage({ pending, notify }) {
             {Object.keys(emptyPurchaseOrder).map((key) => (
               <Field key={key} label={formatLabel(key)}>
                 <input
-                  required={["poNo", "vendorName", "itemCode", "deliveryDate", "orderQty"].includes(key)}
-                  type={key.toLowerCase().includes("date") ? "date" : key === "orderQty" ? "number" : "text"}
+                  required={[
+                    "poNo",
+                    "vendorName",
+                    "itemCode",
+                    "deliveryDate",
+                    "orderQty",
+                  ].includes(key)}
+                  type={
+                    key.toLowerCase().includes("date")
+                      ? "date"
+                      : key === "orderQty"
+                        ? "number"
+                        : "text"
+                  }
                   value={form[key] ?? ""}
-                  onChange={(event) => setForm({ ...form, [key]: event.target.value })}
+                  onChange={(event) =>
+                    setForm({ ...form, [key]: event.target.value })
+                  }
                 />
               </Field>
             ))}

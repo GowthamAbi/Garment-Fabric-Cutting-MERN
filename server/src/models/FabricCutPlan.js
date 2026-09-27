@@ -42,9 +42,13 @@ const foldingBatch = new mongoose.Schema(
 );
 const foldingLine = new mongoose.Schema(
   {
-    colour: { type: String, uppercase: true }, size: { type: String, uppercase: true }, dia: String,
-    actualCuttingPcs: Number, foldingWeightPerPieceKg: Number,
-    wantedWeightKg: Number, actualWeightKg: Number,
+    colour: { type: String, uppercase: true },
+    size: { type: String, uppercase: true },
+    dia: String,
+    actualCuttingPcs: Number,
+    foldingWeightPerPieceKg: Number,
+    wantedWeightKg: Number,
+    actualWeightKg: Number,
   },
   { _id: true },
 );

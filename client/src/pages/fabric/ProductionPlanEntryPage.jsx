@@ -45,8 +45,15 @@ export default function ProductionPlanEntryPage({ notify }) {
           style: row.style || "",
           dcType: row.dcType,
           selectedColours: row.colours.map((colour) => colour.colour),
-          colourBatches: Object.fromEntries(row.colours.map((colour) => [colour.colour, colour.batchNumbers || []])),
-          colourRemarks: Object.fromEntries(row.colours.map((colour) => [colour.colour, colour.remarks || ""])),
+          colourBatches: Object.fromEntries(
+            row.colours.map((colour) => [
+              colour.colour,
+              colour.batchNumbers || [],
+            ]),
+          ),
+          colourRemarks: Object.fromEntries(
+            row.colours.map((colour) => [colour.colour, colour.remarks || ""]),
+          ),
           sizes: data.item.sizes.map((size) => ({
             ...size,
             pcs: row.colours.reduce(
@@ -230,7 +237,58 @@ export default function ProductionPlanEntryPage({ notify }) {
             <p>Enter Item Code and click search.</p>
           )}
         </div>
-        {form.selectedColours.length > 0 && <div className="table-wrap"><table><thead><tr><th>Colour</th><th>Batch Numbers</th><th>Remarks</th></tr></thead><tbody>{form.selectedColours.map((colour) => <tr key={colour}><td>{colour}</td><td><input placeholder="BATCH-1, BATCH-2" value={(form.colourBatches[colour] || []).join(", ")} onChange={(e) => setForm({ ...form, colourBatches: { ...form.colourBatches, [colour]: e.target.value.split(",").map((x) => x.trim()).filter(Boolean) } })} /></td><td><input value={form.colourRemarks[colour] || ""} onChange={(e) => setForm({ ...form, colourRemarks: { ...form.colourRemarks, [colour]: e.target.value } })} /></td></tr>)}</tbody></table></div>}
+        {form.selectedColours.length > 0 && (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Colour</th>
+                  <th>Batch Numbers</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {form.selectedColours.map((colour) => (
+                  <tr key={colour}>
+                    <td>{colour}</td>
+                    <td>
+                      <input
+                        placeholder="BATCH-1, BATCH-2"
+                        value={(form.colourBatches[colour] || []).join(", ")}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            colourBatches: {
+                              ...form.colourBatches,
+                              [colour]: e.target.value
+                                .split(",")
+                                .map((x) => x.trim())
+                                .filter(Boolean),
+                            },
+                          })
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        value={form.colourRemarks[colour] || ""}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            colourRemarks: {
+                              ...form.colourRemarks,
+                              [colour]: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         <h3>Size-wise Required PCS</h3>
         <div className="table-wrap">
           <table>
@@ -247,7 +305,20 @@ export default function ProductionPlanEntryPage({ notify }) {
               {form.sizes.map((row, index) => (
                 <tr key={row.size}>
                   <td>{row.size}</td>
-                  <td><input value={row.dia || ""} placeholder="Required if BOM Dia missing" onChange={(e) => setForm({ ...form, sizes: form.sizes.map((x, i) => i === index ? { ...x, dia: e.target.value } : x) })} /></td>
+                  <td>
+                    <input
+                      value={row.dia || ""}
+                      placeholder="Required if BOM Dia missing"
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          sizes: form.sizes.map((x, i) =>
+                            i === index ? { ...x, dia: e.target.value } : x,
+                          ),
+                        })
+                      }
+                    />
+                  </td>
                   <td>{row.cuttingPieceWeightKg}</td>
                   <td>{row.foldingPieceWeightKg}</td>
                   <td>

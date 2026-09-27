@@ -131,7 +131,8 @@ export async function getOutwardsByDcNo(request, response) {
       request,
     );
     transactions.sort(
-      (left, right) => new Date(left.transactionDate) - new Date(right.transactionDate),
+      (left, right) =>
+        new Date(left.transactionDate) - new Date(right.transactionDate),
     );
   }
 

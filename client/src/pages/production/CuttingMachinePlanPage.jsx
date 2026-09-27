@@ -1,16 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Play, Printer, RefreshCw, Save } from "lucide-react";
 import { exportCsv, exportElementExcel } from "../../api.js";
-import { getCuttingMachinePlans, getCuttingMachineStatus, saveCuttingMachinePlan, cuttingMachineAction, transferCuttingMachinePlan } from "../../api/productionApi.js";
+import {
+  getCuttingMachinePlans,
+  getCuttingMachineStatus,
+  saveCuttingMachinePlan,
+  cuttingMachineAction,
+  transferCuttingMachinePlan,
+} from "../../api/productionApi.js";
 import { printElement } from "../../services/printService.js";
 
-const blank = { machineType: "SPREADER", machineCode: "", planNo: "", colour: "", size: "ALL", pcs: "", priority: 1 };
+const blank = {
+  machineType: "SPREADER",
+  machineCode: "",
+  planNo: "",
+  colour: "",
+  size: "ALL",
+  pcs: "",
+  priority: 1,
+};
 const allowedActions = (row) => {
-  if (["COMPLETED","PUBLISHED"].includes(row.status)) return [];
+  if (["COMPLETED", "PUBLISHED"].includes(row.status)) return [];
   if (row.status === "BREAKDOWN") return ["RESUME"];
-  if (["PAUSED","CHANGE"].includes(row.status)) return ["RESUME","BREAKDOWN"];
-  if (["QUEUED","READY"].includes(row.status)) return ["START","CHANGE","BREAKDOWN"];
-  return row.machineType === "SPREADER" ? ["COMPLETE","CHANGE","BREAKDOWN","BREAK"] : ["COMPLETE","CHANGE","BREAKDOWN","BREAK"];
+  if (["PAUSED", "CHANGE"].includes(row.status)) return ["RESUME", "BREAKDOWN"];
+  if (["QUEUED", "READY"].includes(row.status))
+    return ["START", "CHANGE", "BREAKDOWN"];
+  return row.machineType === "SPREADER"
+    ? ["COMPLETE", "CHANGE", "BREAKDOWN", "BREAK"]
+    : ["COMPLETE", "CHANGE", "BREAKDOWN", "BREAK"];
 };
 
 export default function CuttingMachinePlanPage({ notify, mode = "plan" }) {
@@ -18,97 +35,1429 @@ export default function CuttingMachinePlanPage({ notify, mode = "plan" }) {
   const [rows, setRows] = useState([]);
   const [machines, setMachines] = useState([]);
   const [search, setSearch] = useState("");
-  async function load() { const [plans, status] = await Promise.all([getCuttingMachinePlans(), getCuttingMachineStatus()]); setRows(plans); setMachines(status); }
-  useEffect(() => { load().catch((e) => notify?.(e.message)); }, []);
-  const availableMachines = machines.filter((m) => m.machineType.toUpperCase() === (form.machineType === "SPREADER" ? "SPREADER" : "CUTTER") && m.status !== "Breakdown");
-  const filtered = useMemo(() => rows.filter((r) => `${r.planNo} ${r.dcNo} ${r.machineCode} ${r.colour} ${r.status}`.toLowerCase().includes(search.toLowerCase())), [rows, search]);
-  async function submit(e) { e.preventDefault(); try { await saveCuttingMachinePlan(form); setForm(blank); await load(); notify?.("Machine plan assigned / queued"); } catch (error) { notify?.(error.message); } }
-  async function act(row, action) { let reason = ""; if (["CHANGE", "BREAKDOWN", "BREAK"].includes(action)) { const entered = window.prompt(`${action} reason (required)`); if (entered === null) return; reason = entered.trim(); if (!reason) return notify?.("Reason enter செய்து OK கொடுத்தால் மட்டுமே action save ஆகும்"); } try { await cuttingMachineAction(row._id, action, reason); await load(); notify?.(row.machineType === "SPREADER" && action === "COMPLETE" ? `${row.planNo}: Spreader completed and moved to Cutter` : `${row.planNo}: ${action}`); } catch (error) { notify?.(error.message); } }
-  async function transfer(row) { const machineCode = window.prompt("Target machine code"); if (!machineCode) return; const entered=window.prompt("Transfer reason (required)"); if(entered===null)return; const reason=entered.trim(); if(!reason)return notify?.("Transfer reason enter செய்து OK கொடுத்தால் மட்டுமே save ஆகும்"); try { await transferCuttingMachinePlan(row._id, machineCode, reason); await load(); } catch (error) { notify?.(error.message); } }
-  async function assignCutter(row) { const cutters=machines.filter(m=>String(m.machineType).toUpperCase()==='CUTTER'&&m.status!=='Breakdown'); if(!cutters.length)return notify?.("Cutter machine இல்லை. Cutting Master-ல் Cutter create அல்லது Resume செய்யவும்"); const machineCode=cutters.length===1?cutters[0].machineCode:window.prompt(`Cutter code: ${cutters.map(x=>x.machineCode).join(', ')}`,cutters[0].machineCode); if(!machineCode)return; try{await saveCuttingMachinePlan({machineType:'CUTTER',machineCode,planNo:row.planNo,colour:row.colour,size:row.size,pcs:row.pcs,priority:1});await load();notify?.(`${row.planNo} moved to ${machineCode}`)}catch(error){notify?.(error.message)} }
-  if (mode === "status") return <StatusView machines={machines} rows={filtered} search={search} setSearch={setSearch} act={act} transfer={transfer} assignCutter={assignCutter} />;
-  if (mode === "timeline-spreader") return <TimelineView type="SPREADER" rows={filtered} search={search} setSearch={setSearch} />;
-  if (mode === "timeline-cutter") return <TimelineView type="CUTTER" rows={filtered} search={search} setSearch={setSearch} />;
-  if (mode === "time-history") return <TimeHistoryView rows={filtered} search={search} setSearch={setSearch} />;
+  async function load() {
+    const [plans, status] = await Promise.all([
+      getCuttingMachinePlans(),
+      getCuttingMachineStatus(),
+    ]);
+    setRows(plans);
+    setMachines(status);
+  }
+  useEffect(() => {
+    load().catch((e) => notify?.(e.message));
+  }, []);
+  const availableMachines = machines.filter(
+    (m) =>
+      m.machineType.toUpperCase() ===
+        (form.machineType === "SPREADER" ? "SPREADER" : "CUTTER") &&
+      m.status !== "Breakdown",
+  );
+  const filtered = useMemo(
+    () =>
+      rows.filter((r) =>
+        `${r.planNo} ${r.dcNo} ${r.machineCode} ${r.colour} ${r.status}`
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      ),
+    [rows, search],
+  );
+  async function submit(e) {
+    e.preventDefault();
+    try {
+      await saveCuttingMachinePlan(form);
+      setForm(blank);
+      await load();
+      notify?.("Machine plan assigned / queued");
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+  async function act(row, action) {
+    let reason = "";
+    if (["CHANGE", "BREAKDOWN", "BREAK"].includes(action)) {
+      const entered = window.prompt(`${action} reason (required)`);
+      if (entered === null) return;
+      reason = entered.trim();
+      if (!reason)
+        return notify?.(
+          "Reason enter செய்து OK கொடுத்தால் மட்டுமே action save ஆகும்",
+        );
+    }
+    try {
+      await cuttingMachineAction(row._id, action, reason);
+      await load();
+      notify?.(
+        row.machineType === "SPREADER" && action === "COMPLETE"
+          ? `${row.planNo}: Spreader completed and moved to Cutter`
+          : `${row.planNo}: ${action}`,
+      );
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+  async function transfer(row) {
+    const machineCode = window.prompt("Target machine code");
+    if (!machineCode) return;
+    const entered = window.prompt("Transfer reason (required)");
+    if (entered === null) return;
+    const reason = entered.trim();
+    if (!reason)
+      return notify?.(
+        "Transfer reason enter செய்து OK கொடுத்தால் மட்டுமே save ஆகும்",
+      );
+    try {
+      await transferCuttingMachinePlan(row._id, machineCode, reason);
+      await load();
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+  async function assignCutter(row) {
+    const cutters = machines.filter(
+      (m) =>
+        String(m.machineType).toUpperCase() === "CUTTER" &&
+        m.status !== "Breakdown",
+    );
+    if (!cutters.length)
+      return notify?.(
+        "Cutter machine இல்லை. Cutting Master-ல் Cutter create அல்லது Resume செய்யவும்",
+      );
+    const machineCode =
+      cutters.length === 1
+        ? cutters[0].machineCode
+        : window.prompt(
+            `Cutter code: ${cutters.map((x) => x.machineCode).join(", ")}`,
+            cutters[0].machineCode,
+          );
+    if (!machineCode) return;
+    try {
+      await saveCuttingMachinePlan({
+        machineType: "CUTTER",
+        machineCode,
+        planNo: row.planNo,
+        colour: row.colour,
+        size: row.size,
+        pcs: row.pcs,
+        priority: 1,
+      });
+      await load();
+      notify?.(`${row.planNo} moved to ${machineCode}`);
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
+  if (mode === "status")
+    return (
+      <StatusView
+        machines={machines}
+        rows={filtered}
+        search={search}
+        setSearch={setSearch}
+        act={act}
+        transfer={transfer}
+        assignCutter={assignCutter}
+      />
+    );
+  if (mode === "timeline-spreader")
+    return (
+      <TimelineView
+        type="SPREADER"
+        rows={filtered}
+        search={search}
+        setSearch={setSearch}
+      />
+    );
+  if (mode === "timeline-cutter")
+    return (
+      <TimelineView
+        type="CUTTER"
+        rows={filtered}
+        search={search}
+        setSearch={setSearch}
+      />
+    );
+  if (mode === "time-history")
+    return (
+      <TimeHistoryView rows={filtered} search={search} setSearch={setSearch} />
+    );
   if (mode === "machine-reports") return <MachineReports rows={rows} />;
-  if (mode === "plan-status") return <HistoryView rows={filtered} search={search} setSearch={setSearch} />;
-  return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT · MACHINE PLAN</small><h2>Machine Plan</h2><p>Assign Spreader/Cutter work, control live status and maintain machine queues.</p></div></div>
-    <form className="classic-card machine-plan-form" onSubmit={submit}><div className="form-grid">
-      <label><span>Machine Type</span><select value={form.machineType} onChange={(e) => setForm({ ...form, machineType: e.target.value, machineCode: "" })}><option>SPREADER</option><option>CUTTER</option></select></label>
-      <label><span>Machine</span><select required value={form.machineCode} onChange={(e) => setForm({ ...form, machineCode: e.target.value })}><option value="">Select</option>{availableMachines.map((m) => <option key={m.machineCode}>{m.machineCode}</option>)}</select></label>
-      {['planNo','colour','size','pcs','priority'].map((key) => <label key={key}><span>{key}</span><input required={key !== 'size'} type={['pcs','priority'].includes(key) ? 'number' : 'text'} min="1" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} /></label>)}
-    </div><button className="primary machine-assign-button"><Save /> Assign</button></form>
-    <div className="classic-card"><div className="table-toolbar"><h3>Live & Queue Plans</h3><button onClick={load}><RefreshCw /> Refresh</button></div><div className="table-wrap"><table><thead><tr><th>Machine</th><th>Type</th><th>Plan / DC</th><th>Colour</th><th>Size</th><th>PCS</th><th>Queue</th><th>Status</th><th>Action</th></tr></thead><tbody>{rows.map((row) => <tr key={row._id}><td>{row.machineCode}</td><td>{row.machineType}</td><td>{row.planNo}<small>{row.dcNo}</small></td><td>{row.colour}</td><td>{row.size}</td><td>{row.pcs}</td><td>{row.queuePosition === 0 ? 'LIVE' : row.queuePosition}</td><td><b className={`status-pill status-${row.status.toLowerCase()}`}>{row.status === 'COMPLETED' ? '👍 COMPLETED' : row.status === 'PUBLISHED' ? '✓ COMPLETE → CUTTER' : row.status}</b></td><td><div className="machine-actions">{allowedActions(row).map((a) => <button type="button" key={a} onClick={() => act(row,a)}><Play />{a}</button>)}{!['COMPLETED','PUBLISHED'].includes(row.status)&&<button type="button" onClick={() => transfer(row)}>Transfer</button>}</div></td></tr>)}</tbody></table></div></div>
-  </section>;
+  if (mode === "plan-status")
+    return (
+      <HistoryView rows={filtered} search={search} setSearch={setSearch} />
+    );
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT · MACHINE PLAN</small>
+          <h2>Machine Plan</h2>
+          <p>
+            Assign Spreader/Cutter work, control live status and maintain
+            machine queues.
+          </p>
+        </div>
+      </div>
+      <form className="classic-card machine-plan-form" onSubmit={submit}>
+        <div className="form-grid">
+          <label>
+            <span>Machine Type</span>
+            <select
+              value={form.machineType}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  machineType: e.target.value,
+                  machineCode: "",
+                })
+              }
+            >
+              <option>SPREADER</option>
+              <option>CUTTER</option>
+            </select>
+          </label>
+          <label>
+            <span>Machine</span>
+            <select
+              required
+              value={form.machineCode}
+              onChange={(e) =>
+                setForm({ ...form, machineCode: e.target.value })
+              }
+            >
+              <option value="">Select</option>
+              {availableMachines.map((m) => (
+                <option key={m.machineCode}>{m.machineCode}</option>
+              ))}
+            </select>
+          </label>
+          {["planNo", "colour", "size", "pcs", "priority"].map((key) => (
+            <label key={key}>
+              <span>{key}</span>
+              <input
+                required={key !== "size"}
+                type={["pcs", "priority"].includes(key) ? "number" : "text"}
+                min="1"
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+              />
+            </label>
+          ))}
+        </div>
+        <button className="primary machine-assign-button">
+          <Save /> Assign
+        </button>
+      </form>
+      <div className="classic-card">
+        <div className="table-toolbar">
+          <h3>Live & Queue Plans</h3>
+          <button onClick={load}>
+            <RefreshCw /> Refresh
+          </button>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Machine</th>
+                <th>Type</th>
+                <th>Plan / DC</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>PCS</th>
+                <th>Queue</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row._id}>
+                  <td>{row.machineCode}</td>
+                  <td>{row.machineType}</td>
+                  <td>
+                    {row.planNo}
+                    <small>{row.dcNo}</small>
+                  </td>
+                  <td>{row.colour}</td>
+                  <td>{row.size}</td>
+                  <td>{row.pcs}</td>
+                  <td>
+                    {row.queuePosition === 0 ? "LIVE" : row.queuePosition}
+                  </td>
+                  <td>
+                    <b
+                      className={`status-pill status-${row.status.toLowerCase()}`}
+                    >
+                      {row.status === "COMPLETED"
+                        ? "👍 COMPLETED"
+                        : row.status === "PUBLISHED"
+                          ? "✓ COMPLETE → CUTTER"
+                          : row.status}
+                    </b>
+                  </td>
+                  <td>
+                    <div className="machine-actions">
+                      {allowedActions(row).map((a) => (
+                        <button
+                          type="button"
+                          key={a}
+                          onClick={() => act(row, a)}
+                        >
+                          <Play />
+                          {a}
+                        </button>
+                      ))}
+                      {!["COMPLETED", "PUBLISHED"].includes(row.status) && (
+                        <button type="button" onClick={() => transfer(row)}>
+                          Transfer
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function HistoryView({ rows, search, setSearch }) { return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT</small><h2>Plan Number Status</h2><p>Full Spreader/Cutter stage, queue and action history.</p></div><button onClick={() => exportCsv("plan-number-status.csv", rows)}><Download /> Excel</button></div><div className="classic-card"><input placeholder="Plan / DC / Machine" value={search} onChange={(e) => setSearch(e.target.value)} /><div className="table-wrap"><table><thead><tr><th>Plan</th><th>DC</th><th>Machine</th><th>Stage</th><th>Colour</th><th>Size</th><th>PCS</th><th>Queue</th><th>Status</th><th>History</th></tr></thead><tbody>{rows.map((r) => <tr key={r._id}><td>{r.planNo}</td><td>{r.dcNo}</td><td>{r.machineCode}</td><td>{r.machineType}</td><td>{r.colour}</td><td>{r.size}</td><td>{r.pcs}</td><td>{r.queuePosition}</td><td>{r.status}</td><td>{(r.events||[]).map((e) => `${e.action} ${new Date(e.at).toLocaleString()}`).join(' · ')}</td></tr>)}</tbody></table></div></div></section>; }
+function HistoryView({ rows, search, setSearch }) {
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT</small>
+          <h2>Plan Number Status</h2>
+          <p>Full Spreader/Cutter stage, queue and action history.</p>
+        </div>
+        <button onClick={() => exportCsv("plan-number-status.csv", rows)}>
+          <Download /> Excel
+        </button>
+      </div>
+      <div className="classic-card">
+        <input
+          placeholder="Plan / DC / Machine"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Plan</th>
+                <th>DC</th>
+                <th>Machine</th>
+                <th>Stage</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>PCS</th>
+                <th>Queue</th>
+                <th>Status</th>
+                <th>History</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r._id}>
+                  <td>{r.planNo}</td>
+                  <td>{r.dcNo}</td>
+                  <td>{r.machineCode}</td>
+                  <td>{r.machineType}</td>
+                  <td>{r.colour}</td>
+                  <td>{r.size}</td>
+                  <td>{r.pcs}</td>
+                  <td>{r.queuePosition}</td>
+                  <td>{r.status}</td>
+                  <td>
+                    {(r.events || [])
+                      .map(
+                        (e) => `${e.action} ${new Date(e.at).toLocaleString()}`,
+                      )
+                      .join(" · ")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-const elapsedHours=(row)=>{const start=row.startedAt||((row.status==='RUNNING'||row.completedAt)?row.createdAt:null);if(!start)return 0;const end=row.completedAt?new Date(row.completedAt):new Date();return Math.max(0,(end-new Date(start))/3600000)};
-function TimelineView({type,rows,search,setSearch}){const data=rows.filter(r=>r.machineType===type);return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT · TIME STATUS</small><h2>{type==='SPREADER'?'Spreader':'Cutter'} Timeline</h2><p>DC running/completed status, working hours and production hours.</p></div><button onClick={()=>exportCsv(`${type.toLowerCase()}-timeline.csv`,data)}><Download/> Excel</button></div><div className="classic-card"><input placeholder="Plan / DC / Machine" value={search} onChange={e=>setSearch(e.target.value)}/><div className="time-kpis"><span><small>Running DC</small><b>{data.filter(r=>r.status==='RUNNING').length}</b></span><span><small>Completed DC</small><b>{data.filter(r=>['COMPLETED','PUBLISHED'].includes(r.status)).length}</b></span><span><small>Queue</small><b>{data.filter(r=>['QUEUED','READY'].includes(r.status)).length}</b></span><span><small>Production Hours</small><b>{data.reduce((s,r)=>s+elapsedHours(r),0).toFixed(2)} h</b></span></div><CuttingGantt data={data}/><h3>Detailed Time Status</h3><div className="table-wrap"><table><thead><tr><th>Date</th><th>Plan / DC</th><th>Machine</th><th>Colour</th><th>Size</th><th>PCS</th><th>Start</th><th>End</th><th>Work Hrs</th><th>Production Hrs</th><th>Status</th></tr></thead><tbody>{data.length?data.map(r=>{const start=r.startedAt||((r.status==='RUNNING'||r.completedAt)?r.createdAt:null);return <tr key={r._id}><td>{new Date(r.createdAt).toLocaleDateString()}</td><td>{r.planNo}<small>{r.dcNo}</small></td><td>{r.machineCode}</td><td>{r.colour}</td><td>{r.size}</td><td>{r.pcs}</td><td>{start?new Date(start).toLocaleString():'—'}</td><td>{r.completedAt?new Date(r.completedAt).toLocaleString():r.status==='RUNNING'?'LIVE':'—'}</td><td>{elapsedHours(r).toFixed(2)} h</td><td>{elapsedHours(r).toFixed(2)} h</td><td>{r.status==='PUBLISHED'?'COMPLETED':r.status}</td></tr>}):<tr><td colSpan="11">No {type.toLowerCase()} plan data</td></tr>}</tbody></table></div></div></section>}
+const elapsedHours = (row) => {
+  const start =
+    row.startedAt ||
+    (row.status === "RUNNING" || row.completedAt ? row.createdAt : null);
+  if (!start) return 0;
+  const end = row.completedAt ? new Date(row.completedAt) : new Date();
+  return Math.max(0, (end - new Date(start)) / 3600000);
+};
+function TimelineView({ type, rows, search, setSearch }) {
+  const data = rows.filter((r) => r.machineType === type);
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT · TIME STATUS</small>
+          <h2>{type === "SPREADER" ? "Spreader" : "Cutter"} Timeline</h2>
+          <p>
+            DC running/completed status, working hours and production hours.
+          </p>
+        </div>
+        <button
+          onClick={() => exportCsv(`${type.toLowerCase()}-timeline.csv`, data)}
+        >
+          <Download /> Excel
+        </button>
+      </div>
+      <div className="classic-card">
+        <input
+          placeholder="Plan / DC / Machine"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="time-kpis">
+          <span>
+            <small>Running DC</small>
+            <b>{data.filter((r) => r.status === "RUNNING").length}</b>
+          </span>
+          <span>
+            <small>Completed DC</small>
+            <b>
+              {
+                data.filter((r) =>
+                  ["COMPLETED", "PUBLISHED"].includes(r.status),
+                ).length
+              }
+            </b>
+          </span>
+          <span>
+            <small>Queue</small>
+            <b>
+              {
+                data.filter((r) => ["QUEUED", "READY"].includes(r.status))
+                  .length
+              }
+            </b>
+          </span>
+          <span>
+            <small>Production Hours</small>
+            <b>{data.reduce((s, r) => s + elapsedHours(r), 0).toFixed(2)} h</b>
+          </span>
+        </div>
+        <CuttingGantt data={data} />
+        <h3>Detailed Time Status</h3>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Plan / DC</th>
+                <th>Machine</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>PCS</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Work Hrs</th>
+                <th>Production Hrs</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.length ? (
+                data.map((r) => {
+                  const start =
+                    r.startedAt ||
+                    (r.status === "RUNNING" || r.completedAt
+                      ? r.createdAt
+                      : null);
+                  return (
+                    <tr key={r._id}>
+                      <td>{new Date(r.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        {r.planNo}
+                        <small>{r.dcNo}</small>
+                      </td>
+                      <td>{r.machineCode}</td>
+                      <td>{r.colour}</td>
+                      <td>{r.size}</td>
+                      <td>{r.pcs}</td>
+                      <td>{start ? new Date(start).toLocaleString() : "—"}</td>
+                      <td>
+                        {r.completedAt
+                          ? new Date(r.completedAt).toLocaleString()
+                          : r.status === "RUNNING"
+                            ? "LIVE"
+                            : "—"}
+                      </td>
+                      <td>{elapsedHours(r).toFixed(2)} h</td>
+                      <td>{elapsedHours(r).toFixed(2)} h</td>
+                      <td>
+                        {r.status === "PUBLISHED" ? "COMPLETED" : r.status}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="11">No {type.toLowerCase()} plan data</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function CuttingGantt({ data }) {
   const [selected, setSelected] = useState("");
   const machines = [...new Set(data.map((row) => row.machineCode))];
-  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate() + 1);
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
   const segment = (row) => {
-    const start = new Date(row.startedAt || row.createdAt), end = new Date(row.completedAt || Date.now());
-    const from = Math.max(start, dayStart), to = Math.min(end, dayEnd);
-    if (to <= from || (!row.startedAt && row.status !== "RUNNING" && !row.completedAt)) return null;
-    return { left: (from - dayStart) / 864000, width: (to - from) / 864000, start: new Date(from), end: new Date(to) };
+    const start = new Date(row.startedAt || row.createdAt),
+      end = new Date(row.completedAt || Date.now());
+    const from = Math.max(start, dayStart),
+      to = Math.min(end, dayEnd);
+    if (
+      to <= from ||
+      (!row.startedAt && row.status !== "RUNNING" && !row.completedAt)
+    )
+      return null;
+    return {
+      left: (from - dayStart) / 864000,
+      width: (to - from) / 864000,
+      start: new Date(from),
+      end: new Date(to),
+    };
   };
   const statusSegments = (row) => {
-    const events = [...(row.events || [])].sort((a,b)=>new Date(a.at)-new Date(b.at));
-    if (!events.length) { const item=segment(row); return item ? [{...item,type:row.status==='RUNNING'?"production":"completed",reason:""}] : []; }
-    return events.map((event,index)=>{
-      const start=new Date(event.at), end=new Date(events[index+1]?.at || row.completedAt || Date.now());
-      const from=Math.max(start,dayStart), to=Math.min(end,dayEnd); if(to<=from)return null;
-      const action=String(event.action||"").toUpperCase();
-      const type=action==="BREAKDOWN"?"breakdown":action==="CHANGE"?"change":action==="TRANSFER"?"transfer":action==="BREAK"?"paused":["COMPLETE","PUBLISH","FINISH"].includes(action)?"completed":"production";
-      return {left:(from-dayStart)/864000,width:(to-from)/864000,start:new Date(from),end:new Date(to),type,reason:event.reason||""};
-    }).filter(Boolean);
+    const events = [...(row.events || [])].sort(
+      (a, b) => new Date(a.at) - new Date(b.at),
+    );
+    if (!events.length) {
+      const item = segment(row);
+      return item
+        ? [
+            {
+              ...item,
+              type: row.status === "RUNNING" ? "production" : "completed",
+              reason: "",
+            },
+          ]
+        : [];
+    }
+    return events
+      .map((event, index) => {
+        const start = new Date(event.at),
+          end = new Date(
+            events[index + 1]?.at || row.completedAt || Date.now(),
+          );
+        const from = Math.max(start, dayStart),
+          to = Math.min(end, dayEnd);
+        if (to <= from) return null;
+        const action = String(event.action || "").toUpperCase();
+        const type =
+          action === "BREAKDOWN"
+            ? "breakdown"
+            : action === "CHANGE"
+              ? "change"
+              : action === "TRANSFER"
+                ? "transfer"
+                : action === "BREAK"
+                  ? "paused"
+                  : ["COMPLETE", "PUBLISH", "FINISH"].includes(action)
+                    ? "completed"
+                    : "production";
+        return {
+          left: (from - dayStart) / 864000,
+          width: (to - from) / 864000,
+          start: new Date(from),
+          end: new Date(to),
+          type,
+          reason: event.reason || "",
+        };
+      })
+      .filter(Boolean);
   };
   const week = Array.from({ length: 7 }, (_, index) => {
-    const from = new Date(dayStart); from.setDate(from.getDate() - (6 - index));
-    const to = new Date(from); to.setDate(to.getDate() + 1);
-    const jobs = data.filter((row) => row.machineCode === selected).filter((row) => new Date(row.startedAt || row.createdAt) < to && new Date(row.completedAt || Date.now()) > from);
-    const hours = jobs.reduce((sum, row) => { const a = Math.max(new Date(row.startedAt || row.createdAt), from), b = Math.min(new Date(row.completedAt || Date.now()), to); return sum + Math.max(0, b - a) / 3600000; }, 0);
-    const lossEvents=jobs.flatMap(row=>(row.events||[]).filter(event=>["BREAKDOWN","CHANGE","BREAK","TRANSFER"].includes(event.action)));
-    return { from, jobs, hours, pcs: jobs.reduce((sum, row) => sum + Number(row.pcs || 0), 0), reasons: lossEvents.map(event=>`${event.action}: ${event.reason||"No reason"}`).join(" · ") };
+    const from = new Date(dayStart);
+    from.setDate(from.getDate() - (6 - index));
+    const to = new Date(from);
+    to.setDate(to.getDate() + 1);
+    const jobs = data
+      .filter((row) => row.machineCode === selected)
+      .filter(
+        (row) =>
+          new Date(row.startedAt || row.createdAt) < to &&
+          new Date(row.completedAt || Date.now()) > from,
+      );
+    const hours = jobs.reduce((sum, row) => {
+      const a = Math.max(new Date(row.startedAt || row.createdAt), from),
+        b = Math.min(new Date(row.completedAt || Date.now()), to);
+      return sum + Math.max(0, b - a) / 3600000;
+    }, 0);
+    const lossEvents = jobs.flatMap((row) =>
+      (row.events || []).filter((event) =>
+        ["BREAKDOWN", "CHANGE", "BREAK", "TRANSFER"].includes(event.action),
+      ),
+    );
+    return {
+      from,
+      jobs,
+      hours,
+      pcs: jobs.reduce((sum, row) => sum + Number(row.pcs || 0), 0),
+      reasons: lossEvents
+        .map((event) => `${event.action}: ${event.reason || "No reason"}`)
+        .join(" · "),
+    };
   });
-  return <div className="cutting-gantt-block"><h3>Today · 24 Hour Gantt Chart</h3><div className="gantt-status-legend"><span className="production">Running</span><span className="breakdown">Breakdown</span><span className="change">Change</span><span className="transfer">Transfer</span><span className="paused">Break</span><span className="completed">Completed</span></div><p className="form-hint">Machine row click செய்தால் கீழே One Week Report வரும்.</p><div className="machine-gantt"><div className="gantt-hours"><b>Machine</b><div>{Array.from({ length: 24 }, (_, hour) => <span key={hour}>{String(hour).padStart(2, "0")}</span>)}</div><b>Status</b></div>{machines.map((code) => { const jobs = data.filter((row) => row.machineCode === code); const live = jobs.some((row) => row.status === "RUNNING"); return <button type="button" className={`gantt-machine-row ${selected === code ? "selected" : ""}`} key={code} onClick={() => setSelected(selected === code ? "" : code)}><span className="gantt-machine-name"><b>{code}</b><small>{jobs.find((row) => row.status === "RUNNING")?.dcNo || jobs[0]?.dcNo || "No DC"}</small></span><span className="gantt-track">{jobs.flatMap((row) => statusSegments(row).map((item,index)=><i key={`${row._id}-${index}`} className={item.type} style={{ left: `${item.left}%`, width: `${Math.max(item.width, 0.4)}%` }} title={`${row.planNo}/${row.dcNo} · ${item.type.toUpperCase()} · ${item.reason||"No reason"} · ${item.start.toLocaleTimeString()} - ${item.end.toLocaleTimeString()}`} />))}</span><span className={`machine-status ${live ? "status-running" : "status-available"}`}>{live ? "RUNNING" : jobs[0]?.status||"IDLE"}</span></button>; })}</div>{selected && <div className="week-plan-report"><h3>{selected} · One Week Plan Report</h3><div className="table-wrap"><table><thead><tr><th>Date</th><th>Plan / DC</th><th>PCS</th><th>Work Hrs</th><th>Production Hrs</th><th>Loss / Transfer Reasons</th><th>Status</th></tr></thead><tbody>{week.map((row) => <tr key={row.from.toISOString()}><td>{row.from.toLocaleDateString()}</td><td>{row.jobs.map((job) => `${job.planNo}/${job.dcNo}`).join(", ") || "—"}</td><td>{row.pcs}</td><td>{row.hours.toFixed(2)} h</td><td>{row.hours.toFixed(2)} h</td><td>{row.reasons||"—"}</td><td>{row.jobs.some((job) => job.status === "RUNNING") ? "RUNNING" : row.jobs.length ? row.jobs.map(job=>job.status).join(", ") : "NO PLAN"}</td></tr>)}</tbody></table></div></div>}</div>;
+  return (
+    <div className="cutting-gantt-block">
+      <h3>Today · 24 Hour Gantt Chart</h3>
+      <div className="gantt-status-legend">
+        <span className="production">Running</span>
+        <span className="breakdown">Breakdown</span>
+        <span className="change">Change</span>
+        <span className="transfer">Transfer</span>
+        <span className="paused">Break</span>
+        <span className="completed">Completed</span>
+      </div>
+      <p className="form-hint">
+        Machine row click செய்தால் கீழே One Week Report வரும்.
+      </p>
+      <div className="machine-gantt">
+        <div className="gantt-hours">
+          <b>Machine</b>
+          <div>
+            {Array.from({ length: 24 }, (_, hour) => (
+              <span key={hour}>{String(hour).padStart(2, "0")}</span>
+            ))}
+          </div>
+          <b>Status</b>
+        </div>
+        {machines.map((code) => {
+          const jobs = data.filter((row) => row.machineCode === code);
+          const live = jobs.some((row) => row.status === "RUNNING");
+          return (
+            <button
+              type="button"
+              className={`gantt-machine-row ${selected === code ? "selected" : ""}`}
+              key={code}
+              onClick={() => setSelected(selected === code ? "" : code)}
+            >
+              <span className="gantt-machine-name">
+                <b>{code}</b>
+                <small>
+                  {jobs.find((row) => row.status === "RUNNING")?.dcNo ||
+                    jobs[0]?.dcNo ||
+                    "No DC"}
+                </small>
+              </span>
+              <span className="gantt-track">
+                {jobs.flatMap((row) =>
+                  statusSegments(row).map((item, index) => (
+                    <i
+                      key={`${row._id}-${index}`}
+                      className={item.type}
+                      style={{
+                        left: `${item.left}%`,
+                        width: `${Math.max(item.width, 0.4)}%`,
+                      }}
+                      title={`${row.planNo}/${row.dcNo} · ${item.type.toUpperCase()} · ${item.reason || "No reason"} · ${item.start.toLocaleTimeString()} - ${item.end.toLocaleTimeString()}`}
+                    />
+                  )),
+                )}
+              </span>
+              <span
+                className={`machine-status ${live ? "status-running" : "status-available"}`}
+              >
+                {live ? "RUNNING" : jobs[0]?.status || "IDLE"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {selected && (
+        <div className="week-plan-report">
+          <h3>{selected} · One Week Plan Report</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Plan / DC</th>
+                  <th>PCS</th>
+                  <th>Work Hrs</th>
+                  <th>Production Hrs</th>
+                  <th>Loss / Transfer Reasons</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {week.map((row) => (
+                  <tr key={row.from.toISOString()}>
+                    <td>{row.from.toLocaleDateString()}</td>
+                    <td>
+                      {row.jobs
+                        .map((job) => `${job.planNo}/${job.dcNo}`)
+                        .join(", ") || "—"}
+                    </td>
+                    <td>{row.pcs}</td>
+                    <td>{row.hours.toFixed(2)} h</td>
+                    <td>{row.hours.toFixed(2)} h</td>
+                    <td>{row.reasons || "—"}</td>
+                    <td>
+                      {row.jobs.some((job) => job.status === "RUNNING")
+                        ? "RUNNING"
+                        : row.jobs.length
+                          ? row.jobs.map((job) => job.status).join(", ")
+                          : "NO PLAN"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function TimeHistoryView({rows,search,setSearch}){const plans=[...new Set(rows.map(r=>r.planNo))].map(planNo=>{const stages=rows.filter(r=>r.planNo===planNo),spreader=stages.filter(r=>r.machineType==='SPREADER').at(0),cutter=stages.filter(r=>r.machineType==='CUTTER').at(0);return {planNo,dcNo:spreader?.dcNo||cutter?.dcNo,spreader,cutter}});return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT · TIME STATUS</small><h2>Cutting Time History</h2><p>Each Plan Number’s current Spreader/Cutter location and completion status.</p></div><button onClick={()=>exportCsv('cutting-time-history.csv',plans.map(x=>({planNo:x.planNo,dcNo:x.dcNo,spreader:x.spreader?.machineCode||'',spreaderStatus:x.spreader?.status||'',cutter:x.cutter?.machineCode||'',cutterStatus:x.cutter?.status||'WAITING'})))}><Download/> Excel</button></div><div className="classic-card"><input placeholder="Plan / DC / Machine" value={search} onChange={e=>setSearch(e.target.value)}/><div className="table-wrap"><table><thead><tr><th>Plan No</th><th>DC No</th><th>Spreader</th><th>Spreader Status</th><th>Cutter</th><th>Cutter Status</th><th>Current Stage</th><th>Total Hours</th></tr></thead><tbody>{plans.map(x=><tr key={x.planNo}><td>{x.planNo}</td><td>{x.dcNo}</td><td>{x.spreader?.machineCode||'—'}</td><td>{x.spreader?.status==='PUBLISHED'?'COMPLETED':x.spreader?.status||'—'}</td><td>{x.cutter?.machineCode||'—'}</td><td>{x.cutter?.status||'WAITING FOR CUTTER'}</td><td>{x.cutter?(x.cutter.status==='COMPLETED'?'CUTTING COMPLETED':`CUTTER ${x.cutter.status}`):x.spreader?.status==='PUBLISHED'?'WAITING FOR CUTTER':`SPREADER ${x.spreader?.status||'—'}`}</td><td>{(elapsedHours(x.spreader||{})+elapsedHours(x.cutter||{})).toFixed(2)} h</td></tr>)}</tbody></table></div></div></section>}
+function TimeHistoryView({ rows, search, setSearch }) {
+  const plans = [...new Set(rows.map((r) => r.planNo))].map((planNo) => {
+    const stages = rows.filter((r) => r.planNo === planNo),
+      spreader = stages.filter((r) => r.machineType === "SPREADER").at(0),
+      cutter = stages.filter((r) => r.machineType === "CUTTER").at(0);
+    return { planNo, dcNo: spreader?.dcNo || cutter?.dcNo, spreader, cutter };
+  });
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT · TIME STATUS</small>
+          <h2>Cutting Time History</h2>
+          <p>
+            Each Plan Number’s current Spreader/Cutter location and completion
+            status.
+          </p>
+        </div>
+        <button
+          onClick={() =>
+            exportCsv(
+              "cutting-time-history.csv",
+              plans.map((x) => ({
+                planNo: x.planNo,
+                dcNo: x.dcNo,
+                spreader: x.spreader?.machineCode || "",
+                spreaderStatus: x.spreader?.status || "",
+                cutter: x.cutter?.machineCode || "",
+                cutterStatus: x.cutter?.status || "WAITING",
+              })),
+            )
+          }
+        >
+          <Download /> Excel
+        </button>
+      </div>
+      <div className="classic-card">
+        <input
+          placeholder="Plan / DC / Machine"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Plan No</th>
+                <th>DC No</th>
+                <th>Spreader</th>
+                <th>Spreader Status</th>
+                <th>Cutter</th>
+                <th>Cutter Status</th>
+                <th>Current Stage</th>
+                <th>Total Hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              {plans.map((x) => (
+                <tr key={x.planNo}>
+                  <td>{x.planNo}</td>
+                  <td>{x.dcNo}</td>
+                  <td>{x.spreader?.machineCode || "—"}</td>
+                  <td>
+                    {x.spreader?.status === "PUBLISHED"
+                      ? "COMPLETED"
+                      : x.spreader?.status || "—"}
+                  </td>
+                  <td>{x.cutter?.machineCode || "—"}</td>
+                  <td>{x.cutter?.status || "WAITING FOR CUTTER"}</td>
+                  <td>
+                    {x.cutter
+                      ? x.cutter.status === "COMPLETED"
+                        ? "CUTTING COMPLETED"
+                        : `CUTTER ${x.cutter.status}`
+                      : x.spreader?.status === "PUBLISHED"
+                        ? "WAITING FOR CUTTER"
+                        : `SPREADER ${x.spreader?.status || "—"}`}
+                  </td>
+                  <td>
+                    {(
+                      elapsedHours(x.spreader || {}) +
+                      elapsedHours(x.cutter || {})
+                    ).toFixed(2)}{" "}
+                    h
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function MachineReports({ rows }) {
-  const [filters, setFilters] = useState({ type: "", from: "", to: "", search: "" });
-  const fmt = (value) => value ? new Date(value).toLocaleString() : "—";
+  const [filters, setFilters] = useState({
+    type: "",
+    from: "",
+    to: "",
+    search: "",
+  });
+  const fmt = (value) => (value ? new Date(value).toLocaleString() : "—");
   const reportRows = rows.map((row) => {
-    const events = [...(row.events || [])].sort((a, b) => new Date(a.at) - new Date(b.at));
-    const details = (action) => events.map((event, index) => ({ event, end: events[index + 1]?.at || row.completedAt || (row.status === "RUNNING" ? new Date().toISOString() : event.at) })).filter(({ event }) => event.action === action);
+    const events = [...(row.events || [])].sort(
+      (a, b) => new Date(a.at) - new Date(b.at),
+    );
+    const details = (action) =>
+      events
+        .map((event, index) => ({
+          event,
+          end:
+            events[index + 1]?.at ||
+            row.completedAt ||
+            (row.status === "RUNNING" ? new Date().toISOString() : event.at),
+        }))
+        .filter(({ event }) => event.action === action);
     const group = (action) => {
       const found = details(action);
       return {
-        reason: found.map(({ event }) => event.reason || "—").join(" | ") || "—",
+        reason:
+          found.map(({ event }) => event.reason || "—").join(" | ") || "—",
         start: found.map(({ event }) => fmt(event.at)).join(" | ") || "—",
         end: found.map(({ end }) => fmt(end)).join(" | ") || "—",
-        hours: found.reduce((sum, { event, end }) => sum + Math.max(0, new Date(end) - new Date(event.at)) / 3600000, 0).toFixed(2),
+        hours: found
+          .reduce(
+            (sum, { event, end }) =>
+              sum + Math.max(0, new Date(end) - new Date(event.at)) / 3600000,
+            0,
+          )
+          .toFixed(2),
       };
     };
-    const breakdown = group("BREAKDOWN"), change = group("CHANGE"), rest = group("BREAK");
-    return { machineType: row.machineType, machineCode: row.machineCode, planNo: row.planNo, dcNo: row.dcNo, colour: row.colour, size: row.size, pcs: row.pcs, currentStatus: row.status, action: events.at(-1)?.action || "ASSIGN", fromStatus: events.at(-1)?.fromStatus || "", toStatus: events.at(-1)?.toStatus || row.status, breakdownReason: breakdown.reason, breakdownStartTime: breakdown.start, breakdownEndTime: breakdown.end, breakdownDurationHours: breakdown.hours, changeReason: change.reason, changeStartTime: change.start, changeEndTime: change.end, changeDurationHours: change.hours, breakReason: rest.reason, breakStartTime: rest.start, breakEndTime: rest.end, breakDurationHours: rest.hours, startedAt: row.startedAt, completedAt: row.completedAt };
+    const breakdown = group("BREAKDOWN"),
+      change = group("CHANGE"),
+      rest = group("BREAK");
+    return {
+      machineType: row.machineType,
+      machineCode: row.machineCode,
+      planNo: row.planNo,
+      dcNo: row.dcNo,
+      colour: row.colour,
+      size: row.size,
+      pcs: row.pcs,
+      currentStatus: row.status,
+      action: events.at(-1)?.action || "ASSIGN",
+      fromStatus: events.at(-1)?.fromStatus || "",
+      toStatus: events.at(-1)?.toStatus || row.status,
+      breakdownReason: breakdown.reason,
+      breakdownStartTime: breakdown.start,
+      breakdownEndTime: breakdown.end,
+      breakdownDurationHours: breakdown.hours,
+      changeReason: change.reason,
+      changeStartTime: change.start,
+      changeEndTime: change.end,
+      changeDurationHours: change.hours,
+      breakReason: rest.reason,
+      breakStartTime: rest.start,
+      breakEndTime: rest.end,
+      breakDurationHours: rest.hours,
+      startedAt: row.startedAt,
+      completedAt: row.completedAt,
+    };
   });
-  const filtered = reportRows.filter((row) => (!filters.type || row.machineType === filters.type) && (!filters.from || new Date(row.startedAt || 0) >= new Date(filters.from)) && (!filters.to || new Date(row.startedAt || 0) <= new Date(`${filters.to}T23:59:59`)) && `${row.machineCode} ${row.planNo} ${row.dcNo} ${row.colour} ${row.breakdownReason} ${row.changeReason} ${row.breakReason}`.toLowerCase().includes(filters.search.toLowerCase()));
-  return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT · MACHINE REPORTS</small><h2>Cutter & Spreader Machine Report</h2><p>Breakdown, Change and Break reason with start, end and duration.</p></div><div className="page-actions"><button onClick={() => exportCsv("cutting-machine-complete-report.csv", filtered)}><Download /> Excel</button><button onClick={() => printElement("machine-complete-report")}><Printer /> Print</button></div></div><div className="classic-card machine-report-filters"><label>Machine Type<select value={filters.type} onChange={(event) => setFilters({ ...filters, type: event.target.value })}><option value="">All</option><option>SPREADER</option><option>CUTTER</option></select></label><label>From<input type="date" value={filters.from} onChange={(event) => setFilters({ ...filters, from: event.target.value })} /></label><label>To<input type="date" value={filters.to} onChange={(event) => setFilters({ ...filters, to: event.target.value })} /></label><label>Search<input placeholder="Plan / DC / Machine / Reason" value={filters.search} onChange={(event) => setFilters({ ...filters, search: event.target.value })} /></label></div><div id="machine-complete-report" className="classic-card machine-report-print"><div className="print-report-header"><h2>CUTTER & SPREADER MACHINE REPORT</h2><p>{new Date().toLocaleString()}</p></div><div className="table-wrap"><table className="machine-group-report"><thead><tr><th rowSpan="2">Type</th><th rowSpan="2">Machine</th><th rowSpan="2">Plan No</th><th rowSpan="2">DC No</th><th rowSpan="2">Colour</th><th rowSpan="2">Size</th><th rowSpan="2">PCS</th><th rowSpan="2">Current Status</th><th rowSpan="2">Action</th><th rowSpan="2">From</th><th rowSpan="2">To</th><th colSpan="4">Breakdown</th><th colSpan="4">Change</th><th colSpan="4">Break</th><th rowSpan="2">Started At</th><th rowSpan="2">Completed At</th></tr><tr>{["Breakdown", "Change", "Break"].flatMap((group) => [<th key={`${group}-reason`}>Reason</th>, <th key={`${group}-start`}>Start Time</th>, <th key={`${group}-end`}>End Time</th>, <th key={`${group}-duration`}>Duration Hrs</th>])}</tr></thead><tbody>{filtered.map((row, index) => <tr key={`${row.planNo}-${row.machineCode}-${index}`}><td>{row.machineType}</td><td>{row.machineCode}</td><td>{row.planNo}</td><td>{row.dcNo}</td><td>{row.colour}</td><td>{row.size}</td><td>{row.pcs}</td><td>{row.currentStatus}</td><td>{row.action}</td><td>{row.fromStatus || "—"}</td><td>{row.toStatus || "—"}</td><td>{row.breakdownReason}</td><td>{row.breakdownStartTime}</td><td>{row.breakdownEndTime}</td><td>{row.breakdownDurationHours}</td><td>{row.changeReason}</td><td>{row.changeStartTime}</td><td>{row.changeEndTime}</td><td>{row.changeDurationHours}</td><td>{row.breakReason}</td><td>{row.breakStartTime}</td><td>{row.breakEndTime}</td><td>{row.breakDurationHours}</td><td>{fmt(row.startedAt)}</td><td>{fmt(row.completedAt)}</td></tr>)}</tbody></table></div></div></section>;
+  const filtered = reportRows.filter(
+    (row) =>
+      (!filters.type || row.machineType === filters.type) &&
+      (!filters.from ||
+        new Date(row.startedAt || 0) >= new Date(filters.from)) &&
+      (!filters.to ||
+        new Date(row.startedAt || 0) <= new Date(`${filters.to}T23:59:59`)) &&
+      `${row.machineCode} ${row.planNo} ${row.dcNo} ${row.colour} ${row.breakdownReason} ${row.changeReason} ${row.breakReason}`
+        .toLowerCase()
+        .includes(filters.search.toLowerCase()),
+  );
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT · MACHINE REPORTS</small>
+          <h2>Cutter & Spreader Machine Report</h2>
+          <p>
+            Breakdown, Change and Break reason with start, end and duration.
+          </p>
+        </div>
+        <div className="page-actions">
+          <button
+            onClick={() =>
+              exportCsv("cutting-machine-complete-report.csv", filtered)
+            }
+          >
+            <Download /> Excel
+          </button>
+          <button onClick={() => printElement("machine-complete-report")}>
+            <Printer /> Print
+          </button>
+        </div>
+      </div>
+      <div className="classic-card machine-report-filters">
+        <label>
+          Machine Type
+          <select
+            value={filters.type}
+            onChange={(event) =>
+              setFilters({ ...filters, type: event.target.value })
+            }
+          >
+            <option value="">All</option>
+            <option>SPREADER</option>
+            <option>CUTTER</option>
+          </select>
+        </label>
+        <label>
+          From
+          <input
+            type="date"
+            value={filters.from}
+            onChange={(event) =>
+              setFilters({ ...filters, from: event.target.value })
+            }
+          />
+        </label>
+        <label>
+          To
+          <input
+            type="date"
+            value={filters.to}
+            onChange={(event) =>
+              setFilters({ ...filters, to: event.target.value })
+            }
+          />
+        </label>
+        <label>
+          Search
+          <input
+            placeholder="Plan / DC / Machine / Reason"
+            value={filters.search}
+            onChange={(event) =>
+              setFilters({ ...filters, search: event.target.value })
+            }
+          />
+        </label>
+      </div>
+      <div
+        id="machine-complete-report"
+        className="classic-card machine-report-print"
+      >
+        <div className="print-report-header">
+          <h2>CUTTER & SPREADER MACHINE REPORT</h2>
+          <p>{new Date().toLocaleString()}</p>
+        </div>
+        <div className="table-wrap">
+          <table className="machine-group-report">
+            <thead>
+              <tr>
+                <th rowSpan="2">Type</th>
+                <th rowSpan="2">Machine</th>
+                <th rowSpan="2">Plan No</th>
+                <th rowSpan="2">DC No</th>
+                <th rowSpan="2">Colour</th>
+                <th rowSpan="2">Size</th>
+                <th rowSpan="2">PCS</th>
+                <th rowSpan="2">Current Status</th>
+                <th rowSpan="2">Action</th>
+                <th rowSpan="2">From</th>
+                <th rowSpan="2">To</th>
+                <th colSpan="4">Breakdown</th>
+                <th colSpan="4">Change</th>
+                <th colSpan="4">Break</th>
+                <th rowSpan="2">Started At</th>
+                <th rowSpan="2">Completed At</th>
+              </tr>
+              <tr>
+                {["Breakdown", "Change", "Break"].flatMap((group) => [
+                  <th key={`${group}-reason`}>Reason</th>,
+                  <th key={`${group}-start`}>Start Time</th>,
+                  <th key={`${group}-end`}>End Time</th>,
+                  <th key={`${group}-duration`}>Duration Hrs</th>,
+                ])}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row, index) => (
+                <tr key={`${row.planNo}-${row.machineCode}-${index}`}>
+                  <td>{row.machineType}</td>
+                  <td>{row.machineCode}</td>
+                  <td>{row.planNo}</td>
+                  <td>{row.dcNo}</td>
+                  <td>{row.colour}</td>
+                  <td>{row.size}</td>
+                  <td>{row.pcs}</td>
+                  <td>{row.currentStatus}</td>
+                  <td>{row.action}</td>
+                  <td>{row.fromStatus || "—"}</td>
+                  <td>{row.toStatus || "—"}</td>
+                  <td>{row.breakdownReason}</td>
+                  <td>{row.breakdownStartTime}</td>
+                  <td>{row.breakdownEndTime}</td>
+                  <td>{row.breakdownDurationHours}</td>
+                  <td>{row.changeReason}</td>
+                  <td>{row.changeStartTime}</td>
+                  <td>{row.changeEndTime}</td>
+                  <td>{row.changeDurationHours}</td>
+                  <td>{row.breakReason}</td>
+                  <td>{row.breakStartTime}</td>
+                  <td>{row.breakEndTime}</td>
+                  <td>{row.breakDurationHours}</td>
+                  <td>{fmt(row.startedAt)}</td>
+                  <td>{fmt(row.completedAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function MachineReportsLegacy({ rows }) {
-  const [filters,setFilters]=useState({type:"",status:"",from:"",to:"",search:""});
-  const eventRows=rows.flatMap((row)=>(row.events?.length?row.events:[{action:"ASSIGN",at:row.createdAt,reason:""}]).map((event,index,events)=>{const endTime=events[index+1]?.at||row.completedAt||((row.status==='RUNNING'||['BREAKDOWN','CHANGE','PAUSED'].includes(row.status))?new Date().toISOString():event.at);return {machineType:row.machineType,machineCode:event.machineCode||row.machineCode,planNo:row.planNo,dcNo:row.dcNo,colour:row.colour,size:row.size,pcs:row.pcs,currentStatus:row.status,action:event.action,fromStatus:event.fromStatus,toStatus:event.toStatus,reason:event.reason||"",startTime:event.at,endTime,durationHours:Math.max(0,(new Date(endTime)-new Date(event.at))/3600000).toFixed(2),startedAt:row.startedAt,completedAt:row.completedAt}}));
-  const filtered=eventRows.filter(row=>(!filters.type||row.machineType===filters.type)&&(!filters.status||row.action===filters.status)&&(!filters.from||new Date(row.startTime)>=new Date(filters.from))&&(!filters.to||new Date(row.startTime)<=new Date(`${filters.to}T23:59:59`))&&`${row.machineCode} ${row.planNo} ${row.dcNo} ${row.colour} ${row.reason}`.toLowerCase().includes(filters.search.toLowerCase()));
-  return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT · MACHINE REPORTS</small><h2>Cutter & Spreader Complete Report</h2><p>Plan, DC, machine, action, reason, start/end time and time-loss history A–Z.</p></div><div className="page-actions"><button onClick={()=>exportCsv("cutting-machine-complete-report.csv",filtered)}><Download/> Excel</button><button onClick={()=>printElement("machine-complete-report")}><Printer/> Print</button></div></div><div className="classic-card machine-report-filters"><label>Machine Type<select value={filters.type} onChange={e=>setFilters({...filters,type:e.target.value})}><option value="">All</option><option>SPREADER</option><option>CUTTER</option></select></label><label>Action<select value={filters.status} onChange={e=>setFilters({...filters,status:e.target.value})}><option value="">All</option>{["ASSIGN","START","RESUME","BREAKDOWN","CHANGE","BREAK","TRANSFER","COMPLETE","PUBLISH","FROM_SPREADER"].map(x=><option key={x}>{x}</option>)}</select></label><label>From<input type="date" value={filters.from} onChange={e=>setFilters({...filters,from:e.target.value})}/></label><label>To<input type="date" value={filters.to} onChange={e=>setFilters({...filters,to:e.target.value})}/></label><label>Search<input placeholder="Plan / DC / Machine / Reason" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/></label></div><div id="machine-complete-report" className="classic-card machine-report-print"><div className="print-report-header"><h2>CUTTER & SPREADER MACHINE REPORT</h2><p>{new Date().toLocaleString()}</p></div><div className="time-kpis"><span><small>Total Events</small><b>{filtered.length}</b></span><span><small>Breakdown Hours</small><b>{filtered.filter(x=>x.action==='BREAKDOWN').reduce((s,x)=>s+Number(x.durationHours),0).toFixed(2)}</b></span><span><small>Change Hours</small><b>{filtered.filter(x=>x.action==='CHANGE').reduce((s,x)=>s+Number(x.durationHours),0).toFixed(2)}</b></span><span><small>Completed Plans</small><b>{new Set(filtered.filter(x=>['COMPLETE','PUBLISH'].includes(x.action)).map(x=>x.planNo)).size}</b></span></div><div className="table-wrap"><table><thead><tr><th>S.No</th><th>Start Time</th><th>End Time</th><th>Type</th><th>Machine</th><th>Plan/DC</th><th>Colour</th><th>Size</th><th>PCS</th><th>Action</th><th>From → To</th><th>Reason</th><th>Duration/Loss Hrs</th><th>Current Status</th></tr></thead><tbody>{filtered.map((row,index)=><tr key={`${row.planNo}-${row.startTime}-${index}`}><td>{index+1}</td><td>{new Date(row.startTime).toLocaleString()}</td><td>{new Date(row.endTime).toLocaleString()}</td><td>{row.machineType}</td><td>{row.machineCode}</td><td>{row.planNo}<small>{row.dcNo}</small></td><td>{row.colour}</td><td>{row.size}</td><td>{row.pcs}</td><td>{row.action}</td><td>{row.fromStatus||"—"} → {row.toStatus||"—"}</td><td>{row.reason||"—"}</td><td>{row.durationHours}</td><td>{row.currentStatus}</td></tr>)}</tbody></table></div></div></section>;
+  const [filters, setFilters] = useState({
+    type: "",
+    status: "",
+    from: "",
+    to: "",
+    search: "",
+  });
+  const eventRows = rows.flatMap((row) =>
+    (row.events?.length
+      ? row.events
+      : [{ action: "ASSIGN", at: row.createdAt, reason: "" }]
+    ).map((event, index, events) => {
+      const endTime =
+        events[index + 1]?.at ||
+        row.completedAt ||
+        (row.status === "RUNNING" ||
+        ["BREAKDOWN", "CHANGE", "PAUSED"].includes(row.status)
+          ? new Date().toISOString()
+          : event.at);
+      return {
+        machineType: row.machineType,
+        machineCode: event.machineCode || row.machineCode,
+        planNo: row.planNo,
+        dcNo: row.dcNo,
+        colour: row.colour,
+        size: row.size,
+        pcs: row.pcs,
+        currentStatus: row.status,
+        action: event.action,
+        fromStatus: event.fromStatus,
+        toStatus: event.toStatus,
+        reason: event.reason || "",
+        startTime: event.at,
+        endTime,
+        durationHours: Math.max(
+          0,
+          (new Date(endTime) - new Date(event.at)) / 3600000,
+        ).toFixed(2),
+        startedAt: row.startedAt,
+        completedAt: row.completedAt,
+      };
+    }),
+  );
+  const filtered = eventRows.filter(
+    (row) =>
+      (!filters.type || row.machineType === filters.type) &&
+      (!filters.status || row.action === filters.status) &&
+      (!filters.from || new Date(row.startTime) >= new Date(filters.from)) &&
+      (!filters.to ||
+        new Date(row.startTime) <= new Date(`${filters.to}T23:59:59`)) &&
+      `${row.machineCode} ${row.planNo} ${row.dcNo} ${row.colour} ${row.reason}`
+        .toLowerCase()
+        .includes(filters.search.toLowerCase()),
+  );
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT · MACHINE REPORTS</small>
+          <h2>Cutter & Spreader Complete Report</h2>
+          <p>
+            Plan, DC, machine, action, reason, start/end time and time-loss
+            history A–Z.
+          </p>
+        </div>
+        <div className="page-actions">
+          <button
+            onClick={() =>
+              exportCsv("cutting-machine-complete-report.csv", filtered)
+            }
+          >
+            <Download /> Excel
+          </button>
+          <button onClick={() => printElement("machine-complete-report")}>
+            <Printer /> Print
+          </button>
+        </div>
+      </div>
+      <div className="classic-card machine-report-filters">
+        <label>
+          Machine Type
+          <select
+            value={filters.type}
+            onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+          >
+            <option value="">All</option>
+            <option>SPREADER</option>
+            <option>CUTTER</option>
+          </select>
+        </label>
+        <label>
+          Action
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          >
+            <option value="">All</option>
+            {[
+              "ASSIGN",
+              "START",
+              "RESUME",
+              "BREAKDOWN",
+              "CHANGE",
+              "BREAK",
+              "TRANSFER",
+              "COMPLETE",
+              "PUBLISH",
+              "FROM_SPREADER",
+            ].map((x) => (
+              <option key={x}>{x}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          From
+          <input
+            type="date"
+            value={filters.from}
+            onChange={(e) => setFilters({ ...filters, from: e.target.value })}
+          />
+        </label>
+        <label>
+          To
+          <input
+            type="date"
+            value={filters.to}
+            onChange={(e) => setFilters({ ...filters, to: e.target.value })}
+          />
+        </label>
+        <label>
+          Search
+          <input
+            placeholder="Plan / DC / Machine / Reason"
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+          />
+        </label>
+      </div>
+      <div
+        id="machine-complete-report"
+        className="classic-card machine-report-print"
+      >
+        <div className="print-report-header">
+          <h2>CUTTER & SPREADER MACHINE REPORT</h2>
+          <p>{new Date().toLocaleString()}</p>
+        </div>
+        <div className="time-kpis">
+          <span>
+            <small>Total Events</small>
+            <b>{filtered.length}</b>
+          </span>
+          <span>
+            <small>Breakdown Hours</small>
+            <b>
+              {filtered
+                .filter((x) => x.action === "BREAKDOWN")
+                .reduce((s, x) => s + Number(x.durationHours), 0)
+                .toFixed(2)}
+            </b>
+          </span>
+          <span>
+            <small>Change Hours</small>
+            <b>
+              {filtered
+                .filter((x) => x.action === "CHANGE")
+                .reduce((s, x) => s + Number(x.durationHours), 0)
+                .toFixed(2)}
+            </b>
+          </span>
+          <span>
+            <small>Completed Plans</small>
+            <b>
+              {
+                new Set(
+                  filtered
+                    .filter((x) => ["COMPLETE", "PUBLISH"].includes(x.action))
+                    .map((x) => x.planNo),
+                ).size
+              }
+            </b>
+          </span>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Type</th>
+                <th>Machine</th>
+                <th>Plan/DC</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>PCS</th>
+                <th>Action</th>
+                <th>From → To</th>
+                <th>Reason</th>
+                <th>Duration/Loss Hrs</th>
+                <th>Current Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row, index) => (
+                <tr key={`${row.planNo}-${row.startTime}-${index}`}>
+                  <td>{index + 1}</td>
+                  <td>{new Date(row.startTime).toLocaleString()}</td>
+                  <td>{new Date(row.endTime).toLocaleString()}</td>
+                  <td>{row.machineType}</td>
+                  <td>{row.machineCode}</td>
+                  <td>
+                    {row.planNo}
+                    <small>{row.dcNo}</small>
+                  </td>
+                  <td>{row.colour}</td>
+                  <td>{row.size}</td>
+                  <td>{row.pcs}</td>
+                  <td>{row.action}</td>
+                  <td>
+                    {row.fromStatus || "—"} → {row.toStatus || "—"}
+                  </td>
+                  <td>{row.reason || "—"}</td>
+                  <td>{row.durationHours}</td>
+                  <td>{row.currentStatus}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
 }
 
-function StatusView({ machines, rows, search, setSearch, act, transfer, assignCutter }) { const cutterRows=rows.filter(r=>r.machineType==='CUTTER');const incoming=rows.filter(r=>r.machineType==='SPREADER'&&r.status==='PUBLISHED'&&!rows.some(c=>String(c.upstreamAssignmentId||'')===String(r._id)));return <section className="classic-page"><div className="classic-title"><div><small>CUTTING DEPARTMENT</small><h2>Cutter Status</h2><p>Spreader completed work, Cutter live plan, queue and cutting completion actions.</p></div><button onClick={() => exportCsv("cutter-machine-status.csv", [...incoming,...cutterRows])}><Download /> Excel</button></div><div className="classic-card"><input placeholder="Machine / Plan" value={search} onChange={(e) => setSearch(e.target.value)} /><h3>Incoming from Spreader</h3><div className="table-wrap"><table><thead><tr><th>Plan / DC</th><th>Colour</th><th>Size</th><th>PCS</th><th>Status</th><th>Action</th></tr></thead><tbody>{incoming.length?incoming.map(r=><tr key={r._id}><td>{r.planNo}<small>{r.dcNo}</small></td><td>{r.colour}</td><td>{r.size}</td><td>{r.pcs}</td><td>WAITING FOR CUTTER</td><td><button className="primary compact-action" onClick={()=>assignCutter(r)}>Assign Cutter</button></td></tr>):<tr><td colSpan="6">No pending Spreader work</td></tr>}</tbody></table></div><h3>Cutter Live & Queue</h3><div className="table-wrap"><table><thead><tr><th>Cutter</th><th>Plan / DC</th><th>Colour</th><th>Size</th><th>PCS</th><th>Queue</th><th>Status</th><th>Action</th></tr></thead><tbody>{cutterRows.length?cutterRows.map(r=><tr key={r._id}><td>{r.machineCode}</td><td>{r.planNo}<small>{r.dcNo}</small></td><td>{r.colour}</td><td>{r.size}</td><td>{r.pcs}</td><td>{r.queuePosition===0?'LIVE':r.queuePosition}</td><td>{r.status==='COMPLETED'?'👍 COMPLETED':r.status}</td><td><div className="machine-actions">{allowedActions(r).map(a=><button key={a} onClick={()=>act(r,a)}><Play/>{a}</button>)}{!['COMPLETED'].includes(r.status)&&<button onClick={()=>transfer(r)}>Transfer</button>}</div></td></tr>):<tr><td colSpan="8">No Cutter work assigned</td></tr>}</tbody></table></div><div className="machine-status-cards">{machines.filter(m=>String(m.machineType).toUpperCase()==='CUTTER').map((m) => { const list = m.assignments || []; const live = list.find((r) => r.status === 'RUNNING'); const queue = list.filter((r) => ['QUEUED','READY'].includes(r.status)); return <article key={m._id}><h3>{m.machineCode}</h3><b>Cutter · {m.status}</b><p>Live: {live ? `${live.planNo} / ${live.dcNo}` : 'No live plan'}</p><p>Queue: {queue.map((r) => `${r.queuePosition}. ${r.planNo}`).join(', ') || 'Empty'}</p><p>Completed: {list.filter((r) => r.status==='COMPLETED').length}</p></article>; })}</div></div></section>; }
+function StatusView({
+  machines,
+  rows,
+  search,
+  setSearch,
+  act,
+  transfer,
+  assignCutter,
+}) {
+  const cutterRows = rows.filter((r) => r.machineType === "CUTTER");
+  const incoming = rows.filter(
+    (r) =>
+      r.machineType === "SPREADER" &&
+      r.status === "PUBLISHED" &&
+      !rows.some((c) => String(c.upstreamAssignmentId || "") === String(r._id)),
+  );
+  return (
+    <section className="classic-page">
+      <div className="classic-title">
+        <div>
+          <small>CUTTING DEPARTMENT</small>
+          <h2>Cutter Status</h2>
+          <p>
+            Spreader completed work, Cutter live plan, queue and cutting
+            completion actions.
+          </p>
+        </div>
+        <button
+          onClick={() =>
+            exportCsv("cutter-machine-status.csv", [...incoming, ...cutterRows])
+          }
+        >
+          <Download /> Excel
+        </button>
+      </div>
+      <div className="classic-card">
+        <input
+          placeholder="Machine / Plan"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <h3>Incoming from Spreader</h3>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Plan / DC</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>PCS</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {incoming.length ? (
+                incoming.map((r) => (
+                  <tr key={r._id}>
+                    <td>
+                      {r.planNo}
+                      <small>{r.dcNo}</small>
+                    </td>
+                    <td>{r.colour}</td>
+                    <td>{r.size}</td>
+                    <td>{r.pcs}</td>
+                    <td>WAITING FOR CUTTER</td>
+                    <td>
+                      <button
+                        className="primary compact-action"
+                        onClick={() => assignCutter(r)}
+                      >
+                        Assign Cutter
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6">No pending Spreader work</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <h3>Cutter Live & Queue</h3>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cutter</th>
+                <th>Plan / DC</th>
+                <th>Colour</th>
+                <th>Size</th>
+                <th>PCS</th>
+                <th>Queue</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cutterRows.length ? (
+                cutterRows.map((r) => (
+                  <tr key={r._id}>
+                    <td>{r.machineCode}</td>
+                    <td>
+                      {r.planNo}
+                      <small>{r.dcNo}</small>
+                    </td>
+                    <td>{r.colour}</td>
+                    <td>{r.size}</td>
+                    <td>{r.pcs}</td>
+                    <td>{r.queuePosition === 0 ? "LIVE" : r.queuePosition}</td>
+                    <td>
+                      {r.status === "COMPLETED" ? "👍 COMPLETED" : r.status}
+                    </td>
+                    <td>
+                      <div className="machine-actions">
+                        {allowedActions(r).map((a) => (
+                          <button key={a} onClick={() => act(r, a)}>
+                            <Play />
+                            {a}
+                          </button>
+                        ))}
+                        {!["COMPLETED"].includes(r.status) && (
+                          <button onClick={() => transfer(r)}>Transfer</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8">No Cutter work assigned</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="machine-status-cards">
+          {machines
+            .filter((m) => String(m.machineType).toUpperCase() === "CUTTER")
+            .map((m) => {
+              const list = m.assignments || [];
+              const live = list.find((r) => r.status === "RUNNING");
+              const queue = list.filter((r) =>
+                ["QUEUED", "READY"].includes(r.status),
+              );
+              return (
+                <article key={m._id}>
+                  <h3>{m.machineCode}</h3>
+                  <b>Cutter · {m.status}</b>
+                  <p>
+                    Live:{" "}
+                    {live ? `${live.planNo} / ${live.dcNo}` : "No live plan"}
+                  </p>
+                  <p>
+                    Queue:{" "}
+                    {queue
+                      .map((r) => `${r.queuePosition}. ${r.planNo}`)
+                      .join(", ") || "Empty"}
+                  </p>
+                  <p>
+                    Completed:{" "}
+                    {list.filter((r) => r.status === "COMPLETED").length}
+                  </p>
+                </article>
+              );
+            })}
+        </div>
+      </div>
+    </section>
+  );
+}

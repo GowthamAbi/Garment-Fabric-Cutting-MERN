@@ -118,7 +118,8 @@ export default function App() {
   const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
 
   if (window.location.pathname === "/privacy") return <PrivacyPage />;
-  if (["/demo", "/pricing", "/try-demo"].includes(window.location.pathname)) return <PublicDemoPage />;
+  if (["/demo", "/pricing", "/try-demo"].includes(window.location.pathname))
+    return <PublicDemoPage />;
 
   if (window.location.pathname === "/outward" && inwardNo) {
     return (

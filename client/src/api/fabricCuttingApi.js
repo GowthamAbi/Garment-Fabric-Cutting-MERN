@@ -80,8 +80,10 @@ export const fabricCuttingApi = {
     }),
   deletePlan: (id) => api("/fabric-cutting/plans/" + id, { method: "DELETE" }),
   fabricStock: () => api("/fabric-cutting/stock"),
-  fabricInwardStock: (params) => api("/fabric-cutting/stock/inward" + query(params)),
-  fabricBalance: (params) => api("/fabric-cutting/stock/balance" + query(params)),
+  fabricInwardStock: (params) =>
+    api("/fabric-cutting/stock/inward" + query(params)),
+  fabricBalance: (params) =>
+    api("/fabric-cutting/stock/balance" + query(params)),
   issue: (number, data) =>
     api("/fabric-cutting/plans/" + encodeURIComponent(number) + "/issue", {
       method: "POST",
@@ -92,7 +94,8 @@ export const fabricCuttingApi = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  foldingSetup: (number) => api("/fabric-cutting/plans/" + encodeURIComponent(number) + "/folding"),
+  foldingSetup: (number) =>
+    api("/fabric-cutting/plans/" + encodeURIComponent(number) + "/folding"),
   actuals: (params) => api("/fabric-cutting/actuals" + query(params)),
   saveActual: (data) =>
     api("/fabric-cutting/actuals", {

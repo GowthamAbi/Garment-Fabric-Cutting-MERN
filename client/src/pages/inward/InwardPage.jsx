@@ -111,7 +111,11 @@ export default function InwardPage({ notify }) {
 
   async function submitInward() {
     const invalidRow = rows.find(
-      (row) => !row.poNo || !row.itemCode || !row.inwardQty || Number(row.inwardQty) <= 0,
+      (row) =>
+        !row.poNo ||
+        !row.itemCode ||
+        !row.inwardQty ||
+        Number(row.inwardQty) <= 0,
     );
 
     if (invalidRow) {

@@ -341,30 +341,85 @@ export async function downloadSectionQrPdf(record) {
   pdf.save(`section-${record.code}.pdf`);
 }
 
-export function printTransaction(targetId) {
-  document.body.dataset.printTarget = targetId || "";
-  window.requestAnimationFrame(() => {
-    window.print();
-    delete document.body.dataset.printTarget;
+function printTargetElement(target, title = document.title) {
+  if (!target) throw new Error("Print document is not ready");
+
+  const printFrame = document.createElement("iframe");
+  const styles = [...document.querySelectorAll('link[rel="stylesheet"], style')]
+    .map((node) => node.outerHTML)
+    .join("\n");
+
+  printFrame.setAttribute("title", "Print preview");
+  printFrame.style.position = "fixed";
+  printFrame.style.right = "0";
+  printFrame.style.bottom = "0";
+  printFrame.style.width = "1px";
+  printFrame.style.height = "1px";
+  printFrame.style.border = "0";
+  printFrame.style.opacity = "0";
+  document.body.appendChild(printFrame);
+
+  const printDocument = printFrame.contentDocument;
+  printDocument.open();
+  printDocument.write(`<!doctype html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <base href="${document.baseURI}" />
+        <title>${title}</title>
+        ${styles}
+        <style>
+          html, body { margin: 0; background: #fff; }
+          body * { visibility: visible !important; }
+          .no-print, .page-actions, .lookup-bar, button { display: none !important; }
+          #print-document-root { display: block !important; width: 100% !important; }
+        </style>
+      </head>
+      <body>
+        <main id="print-document-root">${target.outerHTML}</main>
+      </body>
+    </html>`);
+  printDocument.close();
+
+  const cleanup = () => {
+    window.setTimeout(() => printFrame.remove(), 500);
+  };
+  const startPrint = async () => {
+    const images = [...printDocument.images];
+    await Promise.all(
+      images.map((image) => {
+        if (image.complete) return Promise.resolve();
+
+        return new Promise((resolve) => {
+          image.addEventListener("load", resolve, { once: true });
+          image.addEventListener("error", resolve, { once: true });
+        });
+      }),
+    );
+    await printDocument.fonts?.ready;
+
+    window.setTimeout(() => {
+      printFrame.contentWindow?.focus();
+      printFrame.contentWindow?.print();
+    }, 120);
+  };
+
+  printFrame.contentWindow?.addEventListener("afterprint", cleanup, {
+    once: true,
   });
+  startPrint().catch(cleanup);
+  window.setTimeout(cleanup, 30000);
+}
+
+export function printTransaction(targetId) {
+  const target = document.getElementById(targetId);
+  printTargetElement(target, `${targetId.replaceAll("-", " ")} · UG SaaS`);
 }
 export const printCurrentPage = printTransaction;
 
 export function printElement(targetId) {
   const target = document.getElementById(targetId);
-  if (!target) throw new Error("Print document is not ready");
-  const cleanup = () => {
-    document.body.classList.remove("scoped-print-mode");
-    target.classList.remove("scoped-print-target");
-    window.removeEventListener("afterprint", cleanup);
-  };
-  document.body.classList.add("scoped-print-mode");
-  target.classList.add("scoped-print-target");
-  window.addEventListener("afterprint", cleanup, { once: true });
-  window.requestAnimationFrame(() => {
-    window.print();
-    window.setTimeout(cleanup, 1000);
-  });
+  printTargetElement(target, `${targetId.replaceAll("-", " ")} · UG SaaS`);
 }
 
 export async function downloadCuttingDcPdf(record) {

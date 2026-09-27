@@ -12,8 +12,18 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
   async function load() {
     try {
       const params = mode === "summary" ? undefined : dates;
-      setRows(await api[mode === "inward" ? "fabricInwardStock" : mode === "balance" ? "fabricBalance" : "fabricStock"](params));
-    } catch (error) { notify?.(error.message); }
+      setRows(
+        await api[
+          mode === "inward"
+            ? "fabricInwardStock"
+            : mode === "balance"
+              ? "fabricBalance"
+              : "fabricStock"
+        ](params),
+      );
+    } catch (error) {
+      notify?.(error.message);
+    }
   }
   useEffect(() => {
     load();
@@ -39,11 +49,25 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
       <div className="classic-title">
         <div>
           <small>FABRIC DEPARTMENT</small>
-          <h2>{mode === "balance" ? "Fabric Balance Stock" : mode === "inward" ? "Fabric Inward Stock" : "Fabric Stock"}</h2>
-          <p>{mode === "inward" ? "Original inward quantity — locked after save and never reduced by production." : "Inward minus Production Plan reservations and Folding batch consumption."}</p>
+          <h2>
+            {mode === "balance"
+              ? "Fabric Balance Stock"
+              : mode === "inward"
+                ? "Fabric Inward Stock"
+                : "Fabric Stock"}
+          </h2>
+          <p>
+            {mode === "inward"
+              ? "Original inward quantity — locked after save and never reduced by production."
+              : "Inward minus Production Plan reservations and Folding batch consumption."}
+          </p>
         </div>
         <div className="page-actions">
-          <button onClick={() => exportElementExcel("fabric-stock.xls", "fabric-stock-excel")}>
+          <button
+            onClick={() =>
+              exportElementExcel("fabric-stock.xls", "fabric-stock-excel")
+            }
+          >
             <Download /> Excel
           </button>
           <button onClick={() => window.print()}>
@@ -56,36 +80,129 @@ export default function FabricStockPage({ notify, mode = "summary" }) {
       </div>
       <div className="classic-card">
         <div className="filter-panel">
-          <label>Search<input placeholder="Group, batch, set, colour" value={search} onChange={(e) => setSearch(e.target.value)} /></label>
-          {mode !== "summary" && <><label>From<input type="date" value={dates.from} onChange={(e) => setDates({ ...dates, from: e.target.value })} /></label><label>To<input type="date" value={dates.to} onChange={(e) => setDates({ ...dates, to: e.target.value })} /></label></>}
-          <button onClick={load}><Search /> Apply / Refresh</button>
-          <button className="secondary" onClick={load}><RefreshCw /> Refresh</button>
+          <label>
+            Search
+            <input
+              placeholder="Group, batch, set, colour"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+          {mode !== "summary" && (
+            <>
+              <label>
+                From
+                <input
+                  type="date"
+                  value={dates.from}
+                  onChange={(e) => setDates({ ...dates, from: e.target.value })}
+                />
+              </label>
+              <label>
+                To
+                <input
+                  type="date"
+                  value={dates.to}
+                  onChange={(e) => setDates({ ...dates, to: e.target.value })}
+                />
+              </label>
+            </>
+          )}
+          <button onClick={load}>
+            <Search /> Apply / Refresh
+          </button>
+          <button className="secondary" onClick={load}>
+            <RefreshCw /> Refresh
+          </button>
         </div>
       </div>
-      <article id="fabric-stock-excel" className="production-plan-document print-document" ref={ref}>
+      <article
+        id="fabric-stock-excel"
+        className="production-plan-document print-document"
+        ref={ref}
+      >
         <header>
           <small>FABRIC STOCK REPORT</small>
-          <h1>{mode === "inward" ? "Original Fabric Inward Stock" : "Available Fabric Stock"}</h1>
+          <h1>
+            {mode === "inward"
+              ? "Original Fabric Inward Stock"
+              : "Available Fabric Stock"}
+          </h1>
           <p>{new Date().toLocaleDateString()}</p>
         </header>
         <table>
           <thead>
             <tr>
-              {mode === "balance" || mode === "inward" ? <><th>Inward No</th><th>Fabric Name</th><th>Fabric Group</th></> : <><th>S.No</th><th>Fabric Group</th><th>Fabric Code</th></>}
+              {mode === "balance" || mode === "inward" ? (
+                <>
+                  <th>Inward No</th>
+                  <th>Fabric Name</th>
+                  <th>Fabric Group</th>
+                </>
+              ) : (
+                <>
+                  <th>S.No</th>
+                  <th>Fabric Group</th>
+                  <th>Fabric Code</th>
+                </>
+              )}
               <th>Colour</th>
               <th>Dia</th>
-              {(mode === "balance" || mode === "inward") && <><th>Batch No</th><th>Set No</th></>}
-              <th>Rolls</th><th>Inward Weight KG</th><th>Balance Weight KG</th><th>Aging</th>
+              {(mode === "balance" || mode === "inward") && (
+                <>
+                  <th>Batch No</th>
+                  <th>Set No</th>
+                </>
+              )}
+              <th>Rolls</th>
+              <th>Inward Weight KG</th>
+              <th>Balance Weight KG</th>
+              <th>Aging</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((row, index) => (
-              <tr key={`${row.inwardNo || row.fabricGroup}-${row.colour}-${row.dia}-${row.batchNo || ""}-${row.setNo || ""}`}>
-                {mode === "balance" || mode === "inward" ? <><td>{row.inwardNo}</td><td>{row.fabricName}</td><td>{row.fabricGroup}</td></> : <><td>{index + 1}</td><td>{row.fabricGroup}</td><td>{(row.fabricCodes || []).join(", ")}</td></>}
+              <tr
+                key={`${row.inwardNo || row.fabricGroup}-${row.colour}-${row.dia}-${row.batchNo || ""}-${row.setNo || ""}`}
+              >
+                {mode === "balance" || mode === "inward" ? (
+                  <>
+                    <td>{row.inwardNo}</td>
+                    <td>{row.fabricName}</td>
+                    <td>{row.fabricGroup}</td>
+                  </>
+                ) : (
+                  <>
+                    <td>{index + 1}</td>
+                    <td>{row.fabricGroup}</td>
+                    <td>{(row.fabricCodes || []).join(", ")}</td>
+                  </>
+                )}
                 <td>{row.colour}</td>
                 <td>{row.dia}</td>
-                {(mode === "balance" || mode === "inward") && <><td>{row.batchNo || "—"}</td><td>{row.setNo || "—"}</td></>}
-                <td>{row.rolls ?? "—"}</td><td>{row.inwardWeightKg ?? row.grossWeightKg}</td><td>{mode === "inward" ? row.inwardWeightKg : row.balanceWeightKg ?? row.availableWeightKg}</td><td>{row.inwardDate ? Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)) + " days" : "—"}</td>
+                {(mode === "balance" || mode === "inward") && (
+                  <>
+                    <td>{row.batchNo || "—"}</td>
+                    <td>{row.setNo || "—"}</td>
+                  </>
+                )}
+                <td>{row.rolls ?? "—"}</td>
+                <td>{row.inwardWeightKg ?? row.grossWeightKg}</td>
+                <td>
+                  {mode === "inward"
+                    ? row.inwardWeightKg
+                    : (row.balanceWeightKg ?? row.availableWeightKg)}
+                </td>
+                <td>
+                  {row.inwardDate
+                    ? Math.max(
+                        0,
+                        Math.floor(
+                          (Date.now() - new Date(row.inwardDate)) / 86400000,
+                        ),
+                      ) + " days"
+                    : "—"}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -59,7 +59,10 @@ export default function SuperAdminDashboardPage({ notify }) {
 
   async function load() {
     try {
-      const [companyRows, ownerOverview] = await Promise.all([api("/companies"), api("/saas/owner-overview")]);
+      const [companyRows, ownerOverview] = await Promise.all([
+        api("/companies"),
+        api("/saas/owner-overview"),
+      ]);
       setCompanies(companyRows);
       setOverview(ownerOverview);
     } catch (error) {
@@ -365,13 +368,56 @@ export default function SuperAdminDashboardPage({ notify }) {
           label="Trial Companies"
           value={totals.trials}
         />
-        <Summary icon={<IndianRupee />} label="Total Revenue" value={`₹${Number(overview?.metrics?.revenue||0).toLocaleString("en-IN")}`} />
-        <Summary icon={<BellRing />} label="New Requests" value={overview?.metrics?.newRequests||0} />
+        <Summary
+          icon={<IndianRupee />}
+          label="Total Revenue"
+          value={`₹${Number(overview?.metrics?.revenue || 0).toLocaleString("en-IN")}`}
+        />
+        <Summary
+          icon={<BellRing />}
+          label="New Requests"
+          value={overview?.metrics?.newRequests || 0}
+        />
       </div>
 
       <div className="classic-two-column">
-        <Card title="New Demo / Purchase Requests"><div className="recent-activity">{(overview?.recentLeads||[]).slice(0,6).map(row=><div key={row._id}><span><b>{row.companyName}</b><small>{row.city||"—"} · {row.planCode||"Plan not selected"} · {row.status}</small></span><time>{new Date(row.createdAt).toLocaleDateString()}</time></div>)}{!overview?.recentLeads?.length&&<p>No new requests.</p>}</div></Card>
-        <Card title="Plan Performance"><div className="sales-bars">{(overview?.planSales||[]).map(row=><div key={row.name}><span><b>{row.name}</b><small>{row.customers} companies · ₹{Number(row.revenue).toLocaleString("en-IN")}</small></span><i><em style={{width:`${Math.min(100,row.customers*12)}%`}}/></i></div>)}</div></Card>
+        <Card title="New Demo / Purchase Requests">
+          <div className="recent-activity">
+            {(overview?.recentLeads || []).slice(0, 6).map((row) => (
+              <div key={row._id}>
+                <span>
+                  <b>{row.companyName}</b>
+                  <small>
+                    {row.city || "—"} · {row.planCode || "Plan not selected"} ·{" "}
+                    {row.status}
+                  </small>
+                </span>
+                <time>{new Date(row.createdAt).toLocaleDateString()}</time>
+              </div>
+            ))}
+            {!overview?.recentLeads?.length && <p>No new requests.</p>}
+          </div>
+        </Card>
+        <Card title="Plan Performance">
+          <div className="sales-bars">
+            {(overview?.planSales || []).map((row) => (
+              <div key={row.name}>
+                <span>
+                  <b>{row.name}</b>
+                  <small>
+                    {row.customers} companies · ₹
+                    {Number(row.revenue).toLocaleString("en-IN")}
+                  </small>
+                </span>
+                <i>
+                  <em
+                    style={{ width: `${Math.min(100, row.customers * 12)}%` }}
+                  />
+                </i>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
 
       <Card title="Company Workspaces">

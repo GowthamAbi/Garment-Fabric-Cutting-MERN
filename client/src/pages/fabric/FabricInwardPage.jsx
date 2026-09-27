@@ -112,8 +112,12 @@ export default function FabricInwardPage({ notify }) {
           })),
         })),
       });
-      notify?.("Sample inward data loaded. You can edit, add colour, dia or rows before saving.");
-    } catch (error) { notify?.(error.message); }
+      notify?.(
+        "Sample inward data loaded. You can edit, add colour, dia or rows before saving.",
+      );
+    } catch (error) {
+      notify?.(error.message);
+    }
   }
   async function lookupProcess(type) {
     const code = type === "COMPACTING" ? form.compactingCode : form.dyeingCode;

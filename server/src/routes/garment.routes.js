@@ -1,10 +1,36 @@
 import { Router } from "express";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { approveBom, dashboard, deleteBom, listBoms, listMovements, listPos, materialStatus, saveBom, saveMovement, savePo, uploadPos } from "../controllers/garmentController.js";
+import {
+  approveBom,
+  dashboard,
+  deleteBom,
+  listBoms,
+  listMovements,
+  listPos,
+  materialStatus,
+  saveBom,
+  saveMovement,
+  savePo,
+  uploadPos,
+} from "../controllers/garmentController.js";
 
 const router = Router();
-const all = allowRoles("saas_super_admin", "company_admin", "admin", "store", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance", "sewing_coordinator", "management", "view_only");
+const all = allowRoles(
+  "saas_super_admin",
+  "company_admin",
+  "admin",
+  "store",
+  "production",
+  "production_planner",
+  "production_operator",
+  "supervisor",
+  "quality",
+  "maintenance",
+  "sewing_coordinator",
+  "management",
+  "view_only",
+);
 const admin = allowRoles("saas_super_admin", "company_admin", "admin");
 router.use(all);
 router.get("/dashboard", asyncHandler(dashboard));

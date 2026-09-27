@@ -52,24 +52,76 @@ import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
-    case "Fabric Dashboard": return <DepartmentOverviewPage department="FABRIC" notify={notify} onPageChange={onPageChange} />;
-    case "Cutting Dashboard": return <DepartmentOverviewPage department="CUTTING" notify={notify} onPageChange={onPageChange} />;
-    case "Delivery Dashboard": return <DepartmentOverviewPage department="DELIVERY" notify={notify} onPageChange={onPageChange} />;
-    case "Admin Dashboard": return <DepartmentOverviewPage department="ADMIN" notify={notify} onPageChange={onPageChange} />;
-    case "Accessories Dashboard": return <DashboardPage />;
-    case "Elastic Dashboard": return <ProductionDashboardPage />;
-    case "Vendor Registration": return <DeliveryDepartmentPage mode="vendors" notify={notify} />;
-    case "Delivery Plan Details": return <DeliveryDepartmentPage mode="plans" notify={notify} onPageChange={onPageChange} />;
-    case "Section Plan": return <DeliveryDepartmentPage mode="section" notify={notify} />;
-    case "Section History": return <DeliveryDepartmentPage mode="history" notify={notify} />;
+    case "Fabric Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="FABRIC"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Cutting Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="CUTTING"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Delivery Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="DELIVERY"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Admin Dashboard":
+      return (
+        <DepartmentOverviewPage
+          department="ADMIN"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Accessories Dashboard":
+      return <DashboardPage />;
+    case "Elastic Dashboard":
+      return <ProductionDashboardPage />;
+    case "Vendor Registration":
+      return <DeliveryDepartmentPage mode="vendors" notify={notify} />;
+    case "Delivery Plan Details":
+      return (
+        <DeliveryDepartmentPage
+          mode="plans"
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
+    case "Section Plan":
+      return <DeliveryDepartmentPage mode="section" notify={notify} />;
+    case "Section History":
+      return <DeliveryDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
-      return <DepartmentRecordPage mode="print" departmentType="FABRIC" notify={notify} />;
+      return (
+        <DepartmentRecordPage
+          mode="print"
+          departmentType="FABRIC"
+          notify={notify}
+        />
+      );
     case "Fabric Roll QR Print":
       return <FabricQrPrintPage notify={notify} />;
     case "Fabric Inward History":
-      return <DepartmentRecordPage mode="history" departmentType="FABRIC" notify={notify} />;
+      return (
+        <DepartmentRecordPage
+          mode="history"
+          departmentType="FABRIC"
+          notify={notify}
+        />
+      );
     case "Fabric Entry":
     case "Fabric to Cutting Entry":
       return <ProductionPlanEntryPage notify={notify} />;
@@ -95,7 +147,12 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <DepartmentPlanPrintPage type="elastic" notify={notify} />;
     case "Fabric Plan History":
     case "Cutting Plan History":
-      return <ProductionPlanHistoryPage notify={notify} onPageChange={onPageChange} />;
+      return (
+        <ProductionPlanHistoryPage
+          notify={notify}
+          onPageChange={onPageChange}
+        />
+      );
     case "Inward Stock":
     case "Fabric Stock Inward":
       return <FabricStockPage mode="inward" notify={notify} />;
@@ -112,9 +169,13 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Cutting Waste":
       return <CuttingStockPage mode="waste" notify={notify} />;
     case "Spreader Timeline":
-      return <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />;
+      return (
+        <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />
+      );
     case "Separator Timeline":
-      return <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />;
+      return (
+        <CuttingMachinePlanPage mode="timeline-spreader" notify={notify} />
+      );
     case "Cutter Timeline":
       return <CuttingMachinePlanPage mode="timeline-cutter" notify={notify} />;
     case "Machine Reports":

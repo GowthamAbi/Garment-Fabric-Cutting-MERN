@@ -2,7 +2,13 @@ import mongoose from "mongoose";
 
 const employeeSchema = new mongoose.Schema(
   {
-    employeeCode: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    employeeCode: {
+      type: String,
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
+    },
     employeeName: { type: String, required: true, trim: true },
     department: { type: String, default: "Production" },
     skill: { type: String, default: "" },

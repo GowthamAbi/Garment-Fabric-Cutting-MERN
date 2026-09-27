@@ -19,5 +19,10 @@ const stitchingDeliverySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-stitchingDeliverySchema.index({ companyId: 1, factoryId: 1, dcNo: 1, deliveryDate: -1 });
+stitchingDeliverySchema.index({
+  companyId: 1,
+  factoryId: 1,
+  dcNo: 1,
+  deliveryDate: -1,
+});
 export default mongoose.model("StitchingDelivery", stitchingDeliverySchema);

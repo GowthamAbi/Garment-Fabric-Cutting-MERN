@@ -37,7 +37,11 @@ export default function DataTable({
                 <button
                   type="button"
                   className={columnFilters[column.key] ? "active" : ""}
-                  onClick={() => setOpenFilter((current) => current === column.key ? "" : column.key)}
+                  onClick={() =>
+                    setOpenFilter((current) =>
+                      current === column.key ? "" : column.key,
+                    )
+                  }
                 >
                   {column.label} <span>▼</span>
                 </button>
@@ -46,16 +50,29 @@ export default function DataTable({
                     autoFocus
                     value={columnFilters[column.key] || ""}
                     onChange={(event) => {
-                      setColumnFilters((current) => ({ ...current, [column.key]: event.target.value }));
+                      setColumnFilters((current) => ({
+                        ...current,
+                        [column.key]: event.target.value,
+                      }));
                       setOpenFilter("");
                     }}
                     onBlur={() => setOpenFilter("")}
                   >
                     <option value="">All</option>
-                    {[...new Set(rows.map((row) => String(valueFor(row, column) ?? "")))]
+                    {[
+                      ...new Set(
+                        rows.map((row) => String(valueFor(row, column) ?? "")),
+                      ),
+                    ]
                       .filter(Boolean)
-                      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-                      .map((value) => <option key={value} value={value.toLowerCase()}>{value}</option>)}
+                      .sort((a, b) =>
+                        a.localeCompare(b, undefined, { numeric: true }),
+                      )
+                      .map((value) => (
+                        <option key={value} value={value.toLowerCase()}>
+                          {value}
+                        </option>
+                      ))}
                   </select>
                 )}
               </th>
@@ -100,7 +117,10 @@ export default function DataTable({
             ))
           ) : (
             <tr>
-              <td className="empty" colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}>
+              <td
+                className="empty"
+                colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+              >
                 {empty}
               </td>
             </tr>

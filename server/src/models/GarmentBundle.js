@@ -32,7 +32,15 @@ const garmentBundleSchema = new mongoose.Schema(
     lineCode: { type: String, default: "", uppercase: true },
     status: {
       type: String,
-      enum: ["CUT_READY", "LINE_RECEIVED", "RUNNING", "QC_HOLD", "REWORK", "COMPLETED", "DELIVERED"],
+      enum: [
+        "CUT_READY",
+        "LINE_RECEIVED",
+        "RUNNING",
+        "QC_HOLD",
+        "REWORK",
+        "COMPLETED",
+        "DELIVERED",
+      ],
       default: "CUT_READY",
     },
     scans: { type: [scanSchema], default: [] },
@@ -41,5 +49,11 @@ const garmentBundleSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-garmentBundleSchema.index({ companyId: 1, factoryId: 1, dcNo: 1, colour: 1, size: 1 });
+garmentBundleSchema.index({
+  companyId: 1,
+  factoryId: 1,
+  dcNo: 1,
+  colour: 1,
+  size: 1,
+});
 export default mongoose.model("GarmentBundle", garmentBundleSchema);

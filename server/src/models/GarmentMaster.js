@@ -4,7 +4,18 @@ const garmentMasterSchema = new mongoose.Schema(
   {
     masterType: {
       type: String,
-      enum: ["Buyer", "Supplier", "Fabric", "Style", "Colour", "Size", "Line", "Operation", "Machine", "Employee"],
+      enum: [
+        "Buyer",
+        "Supplier",
+        "Fabric",
+        "Style",
+        "Colour",
+        "Size",
+        "Line",
+        "Operation",
+        "Machine",
+        "Employee",
+      ],
       required: true,
     },
     code: { type: String, required: true, uppercase: true, trim: true },

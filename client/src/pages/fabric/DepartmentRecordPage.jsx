@@ -9,7 +9,9 @@ import { printElement } from "../../services/printService.js";
 
 export default function DepartmentRecordPage({ mode, notify, departmentType }) {
   const { user } = useAuth();
-  const department = departmentType || user?.department ||
+  const department =
+    departmentType ||
+    user?.department ||
     (user?.role?.startsWith("fabric") ? "FABRIC" : "CUTTING");
   const [rows, setRows] = useState([]);
   const [number, setNumber] = useState("");
@@ -54,15 +56,29 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
     });
     file.save(`${number}-record.pdf`);
   }
-  if (mode === "history")
-    {
-    const displayRows = department === "FABRIC"
-      ? rows.flatMap((row) => row.colours.flatMap((colour) => colour.details.map((line) => ({
-          ...line, _id: `${row._id}-${colour.colour}-${line._id || line.dia}`, inwardDate: row.inwardDate,
-          inwardNo: row.inwardNo, fabricName: row.fabricName, fabricGroup: row.fabricGroup,
-          colour: colour.colour, aging: Math.max(0, Math.floor((Date.now() - new Date(row.inwardDate)) / 86400000)),
-        }))))
-      : rows;
+  if (mode === "history") {
+    const displayRows =
+      department === "FABRIC"
+        ? rows.flatMap((row) =>
+            row.colours.flatMap((colour) =>
+              colour.details.map((line) => ({
+                ...line,
+                _id: `${row._id}-${colour.colour}-${line._id || line.dia}`,
+                inwardDate: row.inwardDate,
+                inwardNo: row.inwardNo,
+                fabricName: row.fabricName,
+                fabricGroup: row.fabricGroup,
+                colour: colour.colour,
+                aging: Math.max(
+                  0,
+                  Math.floor(
+                    (Date.now() - new Date(row.inwardDate)) / 86400000,
+                  ),
+                ),
+              })),
+            ),
+          )
+        : rows;
     return (
       <section className="classic-page">
         <div className="classic-title">
@@ -71,7 +87,18 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
             <h2>History</h2>
             <p>Date range and unique reference records.</p>
           </div>
-          <div className="page-actions"><button onClick={() => exportCsv(`${department.toLowerCase()}-history.csv`, displayRows)}><Download /> Download History</button></div>
+          <div className="page-actions">
+            <button
+              onClick={() =>
+                exportCsv(
+                  `${department.toLowerCase()}-history.csv`,
+                  displayRows,
+                )
+              }
+            >
+              <Download /> Download History
+            </button>
+          </div>
         </div>
         <div className="classic-card">
           <div className="filter-panel">
@@ -103,7 +130,26 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
                 <tr>
                   <th>S.No</th>
                   <th>Date</th>
-                  {department === "FABRIC" ? <><th>Inward No</th><th>Fabric Name</th><th>Group</th><th>Colour</th><th>Roll</th><th>Dia</th><th>WT</th><th>Aging</th></> : <><th>Plan No</th><th>DC No</th><th>Item</th><th>Status</th><th>Aging</th></>}
+                  {department === "FABRIC" ? (
+                    <>
+                      <th>Inward No</th>
+                      <th>Fabric Name</th>
+                      <th>Group</th>
+                      <th>Colour</th>
+                      <th>Roll</th>
+                      <th>Dia</th>
+                      <th>WT</th>
+                      <th>Aging</th>
+                    </>
+                  ) : (
+                    <>
+                      <th>Plan No</th>
+                      <th>DC No</th>
+                      <th>Item</th>
+                      <th>Status</th>
+                      <th>Aging</th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -115,7 +161,34 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
                         row.inwardDate || row.createdAt,
                       ).toLocaleDateString()}
                     </td>
-                    {department === "FABRIC" ? <><td>{row.inwardNo}</td><td>{row.fabricName}</td><td>{row.fabricGroup}</td><td>{row.colour}</td><td>{row.totalRolls}</td><td>{row.dia}</td><td>{row.totalWeightKg} KG</td><td>{row.aging} days</td></> : <><td>{row.planNo}</td><td>{row.dcNo || "—"}</td><td>{row.itemName}</td><td>{row.status}</td><td>{Math.max(0, Math.floor((Date.now() - new Date(row.createdAt)) / 86400000))} days</td></>}
+                    {department === "FABRIC" ? (
+                      <>
+                        <td>{row.inwardNo}</td>
+                        <td>{row.fabricName}</td>
+                        <td>{row.fabricGroup}</td>
+                        <td>{row.colour}</td>
+                        <td>{row.totalRolls}</td>
+                        <td>{row.dia}</td>
+                        <td>{row.totalWeightKg} KG</td>
+                        <td>{row.aging} days</td>
+                      </>
+                    ) : (
+                      <>
+                        <td>{row.planNo}</td>
+                        <td>{row.dcNo || "—"}</td>
+                        <td>{row.itemName}</td>
+                        <td>{row.status}</td>
+                        <td>
+                          {Math.max(
+                            0,
+                            Math.floor(
+                              (Date.now() - new Date(row.createdAt)) / 86400000,
+                            ),
+                          )}{" "}
+                          days
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -124,7 +197,7 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
         </div>
       </section>
     );
-    }
+  }
   return (
     <section className="classic-page">
       <div className="classic-title">
@@ -160,12 +233,14 @@ export default function DepartmentRecordPage({ mode, notify, departmentType }) {
           </div>
         )}
       </div>
-      <div id="department-record-print">{record &&
-        (department === "CUTTING" ? (
-          <ProductionPlanDocument plan={record} documentRef={ref} />
-        ) : (
-          <FabricRecord record={record} documentRef={ref} />
-        ))}</div>
+      <div id="department-record-print">
+        {record &&
+          (department === "CUTTING" ? (
+            <ProductionPlanDocument plan={record} documentRef={ref} />
+          ) : (
+            <FabricRecord record={record} documentRef={ref} />
+          ))}
+      </div>
     </section>
   );
 }

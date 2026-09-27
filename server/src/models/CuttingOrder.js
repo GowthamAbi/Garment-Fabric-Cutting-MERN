@@ -34,5 +34,11 @@ const cuttingOrderSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-cuttingOrderSchema.index({ companyId: 1, factoryId: 1, dcNo: 1, style: 1, colour: 1 });
+cuttingOrderSchema.index({
+  companyId: 1,
+  factoryId: 1,
+  dcNo: 1,
+  style: 1,
+  colour: 1,
+});
 export default mongoose.model("CuttingOrder", cuttingOrderSchema);

@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { getMasterRecords, saveMasterRecord } from "../controllers/masterController.js";
+import {
+  getMasterRecords,
+  saveMasterRecord,
+} from "../controllers/masterController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 const router = Router();
 router.get("/", asyncHandler(getMasterRecords));

@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { deliverToSection, getWarehouse, transferRework } from "../controllers/warehouseController.js";
+import {
+  deliverToSection,
+  getWarehouse,
+  transferRework,
+} from "../controllers/warehouseController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = Router();

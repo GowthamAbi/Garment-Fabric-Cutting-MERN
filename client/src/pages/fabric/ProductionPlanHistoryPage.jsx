@@ -118,7 +118,15 @@ export default function ProductionPlanHistoryPage({ notify, onPageChange }) {
                   <td>{row.totalPlannedPcs}</td>
                   <td>{row.totalWantedWeightKg}</td>
                   <td>{row.status}</td>
-                  <td>{Math.max(0, Math.floor((Date.now() - new Date(row.createdAt)) / 86400000))} days</td>
+                  <td>
+                    {Math.max(
+                      0,
+                      Math.floor(
+                        (Date.now() - new Date(row.createdAt)) / 86400000,
+                      ),
+                    )}{" "}
+                    days
+                  </td>
                   <td>
                     <div className="row-actions">
                       <button onClick={() => edit(row)}>

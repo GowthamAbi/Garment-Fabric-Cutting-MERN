@@ -11,7 +11,9 @@ export default function CuttingActualMatrix({
   submit,
 }) {
   const { user } = useAuth();
-  const locked = Boolean(actual._id) && !["saas_super_admin", "company_admin", "admin"].includes(user?.role);
+  const locked =
+    Boolean(actual._id) &&
+    !["saas_super_admin", "company_admin", "admin"].includes(user?.role);
   const sizes = [...new Set(actual.lines.map((line) => line.size))];
   const colours = [...new Set(actual.lines.map((line) => line.colour))];
   const calculatedLines = actual.lines.map((line) => {
@@ -116,7 +118,10 @@ export default function CuttingActualMatrix({
           tone={totals.wasteWeightKg < 0 ? "danger" : ""}
         />
         <Kpi label="Weight Efficiency" value={`${efficiency.toFixed(2)}%`} />
-        <Kpi label="Piece Efficiency" value={`${pieceEfficiency.toFixed(2)}%`} />
+        <Kpi
+          label="Piece Efficiency"
+          value={`${pieceEfficiency.toFixed(2)}%`}
+        />
       </section>
 
       <div className="actual-matrix-wrap">
@@ -290,7 +295,12 @@ export default function CuttingActualMatrix({
         <span>Checked By</span>
       </div>
       <button className="primary actual-submit" disabled={locked}>
-        <Save /> {locked ? "Saved · Company Admin Edit Only" : actual._id ? "Update Cutting Actual" : "Complete Cutting"}
+        <Save />{" "}
+        {locked
+          ? "Saved · Company Admin Edit Only"
+          : actual._id
+            ? "Update Cutting Actual"
+            : "Complete Cutting"}
       </button>
     </form>
   );

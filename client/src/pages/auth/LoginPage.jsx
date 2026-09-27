@@ -11,9 +11,18 @@ export default function LoginPage({ initialMode = false }) {
   );
   const [submitting, setSubmitting] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
-  const resetToken = new URLSearchParams(window.location.search).get("resetToken");
+  const resetToken = new URLSearchParams(window.location.search).get(
+    "resetToken",
+  );
   const [forgotMode, setForgotMode] = useState(Boolean(resetToken));
-  const [form, setForm] = useState({ name: "", companyName: "", factoryName: "", email: "", password: "", role: "store" });
+  const [form, setForm] = useState({
+    name: "",
+    companyName: "",
+    factoryName: "",
+    email: "",
+    password: "",
+    role: "store",
+  });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -52,12 +61,17 @@ export default function LoginPage({ initialMode = false }) {
     setError("");
     setSuccess("");
     try {
-      const data = await api(resetToken ? "/auth/reset-password" : "/auth/forgot-password", {
-        method: "POST",
-        body: JSON.stringify(resetToken
-          ? { token: resetToken, password: form.password }
-          : { email: form.email }),
-      });
+      const data = await api(
+        resetToken ? "/auth/reset-password" : "/auth/forgot-password",
+        {
+          method: "POST",
+          body: JSON.stringify(
+            resetToken
+              ? { token: resetToken, password: form.password }
+              : { email: form.email },
+          ),
+        },
+      );
       setSuccess(data.message);
       if (resetToken) window.history.replaceState({}, "", "/");
     } catch (requestError) {
@@ -71,18 +85,55 @@ export default function LoginPage({ initialMode = false }) {
     return (
       <div className="auth">
         <form onSubmit={submitPasswordRequest}>
-          <div className="auth-logo"><Sparkles /></div>
+          <div className="auth-logo">
+            <Sparkles />
+          </div>
           <h1>{resetToken ? "Reset password" : "Forgot password"}</h1>
-          <p>{resetToken ? "Enter your new password" : "Enter your registered email"}</p>
+          <p>
+            {resetToken
+              ? "Enter your new password"
+              : "Enter your registered email"}
+          </p>
           {!resetToken ? (
-            <Field label="Email"><input type="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></Field>
+            <Field label="Email">
+              <input
+                type="email"
+                required
+                value={form.email}
+                onChange={(event) =>
+                  setForm({ ...form, email: event.target.value })
+                }
+              />
+            </Field>
           ) : (
-            <Field label="New Password"><input type="password" minLength="6" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></Field>
+            <Field label="New Password">
+              <input
+                type="password"
+                minLength="6"
+                required
+                value={form.password}
+                onChange={(event) =>
+                  setForm({ ...form, password: event.target.value })
+                }
+              />
+            </Field>
           )}
           {error && <div className="error">{error}</div>}
           {success && <div className="success-message">{success}</div>}
-          <button className="primary" disabled={submitting}>{submitting ? "Please wait..." : resetToken ? "Reset Password" : "Send Reset Link"}</button>
-          <button type="button" className="link" onClick={() => setForgotMode(false)}>Back to Login</button>
+          <button className="primary" disabled={submitting}>
+            {submitting
+              ? "Please wait..."
+              : resetToken
+                ? "Reset Password"
+                : "Send Reset Link"}
+          </button>
+          <button
+            type="button"
+            className="link"
+            onClick={() => setForgotMode(false)}
+          >
+            Back to Login
+          </button>
         </form>
       </div>
     );
@@ -95,18 +146,42 @@ export default function LoginPage({ initialMode = false }) {
           <Sparkles />
         </div>
         <h1>UG SaaS</h1>
-        <p>{registerMode ? "Create the SaaS Owner account · First setup only" : "Admin, Store and Production users sign in here"}</p>
+        <p>
+          {registerMode
+            ? "Create the SaaS Owner account · First setup only"
+            : "Admin, Store and Production users sign in here"}
+        </p>
 
         {registerMode && (
-          <><Field label="Administrator Name">
-            <input
-              required
-              value={form.name}
-              onChange={(event) =>
-                setForm({ ...form, name: event.target.value })
-              }
-            />
-          </Field><Field label="Company Name"><input required value={form.companyName} onChange={(event) => setForm({ ...form, companyName: event.target.value })} /></Field><Field label="Factory Name"><input required value={form.factoryName} onChange={(event) => setForm({ ...form, factoryName: event.target.value })} /></Field></>
+          <>
+            <Field label="Administrator Name">
+              <input
+                required
+                value={form.name}
+                onChange={(event) =>
+                  setForm({ ...form, name: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Company Name">
+              <input
+                required
+                value={form.companyName}
+                onChange={(event) =>
+                  setForm({ ...form, companyName: event.target.value })
+                }
+              />
+            </Field>
+            <Field label="Factory Name">
+              <input
+                required
+                value={form.factoryName}
+                onChange={(event) =>
+                  setForm({ ...form, factoryName: event.target.value })
+                }
+              />
+            </Field>
+          </>
         )}
 
         <Field label="Email">
@@ -143,13 +218,47 @@ export default function LoginPage({ initialMode = false }) {
               : "Login"}
         </button>
 
-        {setupRequired && <button type="button" className="link" onClick={() => setRegisterMode(!registerMode)}>{registerMode ? "Already registered? Login" : "First-time SaaS Owner Setup"}</button>}
-        {!registerMode && (
-          <button type="button" className="link" onClick={() => setForgotMode(true)}>Forgot Password?</button>
+        {setupRequired && (
+          <button
+            type="button"
+            className="link"
+            onClick={() => setRegisterMode(!registerMode)}
+          >
+            {registerMode
+              ? "Already registered? Login"
+              : "First-time SaaS Owner Setup"}
+          </button>
         )}
-        {!registerMode && <div className="login-role-note"><b>One secure login page</b><span>Your email opens the correct workspace</span><small>SaaS Owner · Company Admin · Store · Production</small></div>}
-        {!registerMode && <a className="primary auth-demo-link" href="/demo">View UG SaaS Demo</a>}
-        <button type="button" className="link" onClick={() => { window.location.href = "/privacy"; }}>Privacy Policy</button>
+        {!registerMode && (
+          <button
+            type="button"
+            className="link"
+            onClick={() => setForgotMode(true)}
+          >
+            Forgot Password?
+          </button>
+        )}
+        {!registerMode && (
+          <div className="login-role-note">
+            <b>One secure login page</b>
+            <span>Your email opens the correct workspace</span>
+            <small>SaaS Owner · Company Admin · Store · Production</small>
+          </div>
+        )}
+        {!registerMode && (
+          <a className="primary auth-demo-link" href="/demo">
+            View UG SaaS Demo
+          </a>
+        )}
+        <button
+          type="button"
+          className="link"
+          onClick={() => {
+            window.location.href = "/privacy";
+          }}
+        >
+          Privacy Policy
+        </button>
       </form>
     </div>
   );

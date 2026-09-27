@@ -19,8 +19,29 @@ export default function GlobalFeedback() {
     };
   }, []);
 
-  return <>
-    {pending > 0 && <div className="global-loading-overlay"><div><LoaderCircle className="spin" /><b>Loading...</b><small>Please wait</small></div></div>}
-    {error && <div className="global-error-backdrop" role="alertdialog"><div className="global-error-popup"><AlertTriangle /><h3>Unable to Continue</h3><p>{error}</p><button className="primary" onClick={() => setError("")}><X /> OK</button></div></div>}
-  </>;
+  return (
+    <>
+      {pending > 0 && (
+        <div className="global-loading-overlay">
+          <div>
+            <LoaderCircle className="spin" />
+            <b>Loading...</b>
+            <small>Please wait</small>
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="global-error-backdrop" role="alertdialog">
+          <div className="global-error-popup">
+            <AlertTriangle />
+            <h3>Unable to Continue</h3>
+            <p>{error}</p>
+            <button className="primary" onClick={() => setError("")}>
+              <X /> OK
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }

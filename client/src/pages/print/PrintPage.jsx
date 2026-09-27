@@ -34,9 +34,14 @@ function TransactionReceipt({ record }) {
       : "";
 
   return (
-    <section className={`card transaction-print ${record.kind === "INWARD" ? "inward-label" : ""}`}>
+    <section
+      className={`card transaction-print ${record.kind === "INWARD" ? "inward-label" : ""}`}
+    >
       <header>
-        <div><h2>UG SaaS</h2><p>{record.kind} Receipt</p></div>
+        <div>
+          <h2>UG SaaS</h2>
+          <p>{record.kind} Receipt</p>
+        </div>
         <b>{record.referenceNo}</b>
       </header>
       <dl>
@@ -47,7 +52,9 @@ function TransactionReceipt({ record }) {
               {key === "transactionDate"
                 ? new Date(record[key]).toLocaleString()
                 : record[key] || "—"}
-              {["quantity", "balanceQty"].includes(key) ? ` ${record.unit || ""}` : ""}
+              {["quantity", "balanceQty"].includes(key)
+                ? ` ${record.unit || ""}`
+                : ""}
             </dd>
           </div>
         ))}
@@ -55,12 +62,22 @@ function TransactionReceipt({ record }) {
       {record.kind === "INWARD" && (
         <div className="receipt-qr">
           <QRGenerator value={inwardQrLink} size={205} />
-          <div><b>Inward QR Code</b><p>Scan for outward entry: {record.referenceNo}</p></div>
+          <div>
+            <b>Inward QR Code</b>
+            <p>Scan for outward entry: {record.referenceNo}</p>
+          </div>
         </div>
       )}
       <footer className="no-print">
-        <button onClick={() => printTransaction("transaction-print")}><Printer /> Print</button>
-        <button className="primary" onClick={() => downloadTransactionPdf(record)}><Download /> Download PDF</button>
+        <button onClick={() => printTransaction("transaction-print")}>
+          <Printer /> Print
+        </button>
+        <button
+          className="primary"
+          onClick={() => downloadTransactionPdf(record)}
+        >
+          <Download /> Download PDF
+        </button>
       </footer>
     </section>
   );
@@ -87,8 +104,8 @@ export default function PrintPage({ notify }) {
     setRecord(null);
     try {
       const first = await api(
-          `/transactions/reference/${encodeURIComponent(referenceNo.trim())}`,
-        );
+        `/transactions/reference/${encodeURIComponent(referenceNo.trim())}`,
+      );
       setRecord(first);
     } catch (error) {
       notify(error.message);
@@ -151,9 +168,11 @@ export default function PrintPage({ notify }) {
         </div>
       </section>
 
-      {record && <div className="transaction-print-sheet" id="transaction-print">
-        <TransactionReceipt record={record} />
-      </div>}
+      {record && (
+        <div className="transaction-print-sheet" id="transaction-print">
+          <TransactionReceipt record={record} />
+        </div>
+      )}
 
       {dcReport && (
         <section className="card dc-print" id="dc-print">
@@ -195,7 +214,9 @@ export default function PrintPage({ notify }) {
                   <tr key={entry._id || entry.referenceNo}>
                     <td>{index + 1}</td>
                     <td className="view-only-column">{entry.referenceNo}</td>
-                    <td className="view-only-column">{entry.inwardReference || "—"}</td>
+                    <td className="view-only-column">
+                      {entry.inwardReference || "—"}
+                    </td>
                     <td>{entry.description}</td>
                     <td>{entry.itemCode}</td>
                     <td className="center-cell">{entry.colour || "—"}</td>

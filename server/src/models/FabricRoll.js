@@ -30,5 +30,11 @@ const fabricRollSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-fabricRollSchema.index({ companyId: 1, factoryId: 1, fabricCode: 1, colour: 1, lotNo: 1 });
+fabricRollSchema.index({
+  companyId: 1,
+  factoryId: 1,
+  fabricCode: 1,
+  colour: 1,
+  lotNo: 1,
+});
 export default mongoose.model("FabricRoll", fabricRollSchema);

@@ -106,8 +106,13 @@ export default function FabricCuttingPage({ mode, notify }) {
           colour: item.colour,
           details: item.details.map((detail) => ({
             dia: detail.dia,
-            rollCount: detail.totalRolls || detail.sampleRolls || detail.lotRolls || "",
-            weightKg: detail.totalWeightKg || detail.sampleWeightKg || detail.lotWeightKg || "",
+            rollCount:
+              detail.totalRolls || detail.sampleRolls || detail.lotRolls || "",
+            weightKg:
+              detail.totalWeightKg ||
+              detail.sampleWeightKg ||
+              detail.lotWeightKg ||
+              "",
           })),
         })),
       }));
@@ -148,24 +153,26 @@ export default function FabricCuttingPage({ mode, notify }) {
       const row = await api.plan(search);
       setCurrentPlan(row);
       const existing = (await api.actuals({ planNo: row.planNo }))[0];
-      setActual(existing || {
-        planNo: row.planNo,
-        status: "COMPLETED",
-        remarks: "",
-        lines: row.colours.flatMap((colour) =>
-          colour.sizes.map((size) => ({
-            colour: colour.colour,
-            size: size.size,
-            dia: size.dia || "",
-            plannedPcs: size.plannedPcs,
-            pieceWeightKg: size.cuttingWeightPerPieceKg,
-            plannedWeightKg: size.wantedWeightKg,
-            actualPcs: size.plannedPcs,
-            bundleCount: "",
-            bundleWeightKg: "",
-          })),
-        ),
-      });
+      setActual(
+        existing || {
+          planNo: row.planNo,
+          status: "COMPLETED",
+          remarks: "",
+          lines: row.colours.flatMap((colour) =>
+            colour.sizes.map((size) => ({
+              colour: colour.colour,
+              size: size.size,
+              dia: size.dia || "",
+              plannedPcs: size.plannedPcs,
+              pieceWeightKg: size.cuttingWeightPerPieceKg,
+              plannedWeightKg: size.wantedWeightKg,
+              actualPcs: size.plannedPcs,
+              bundleCount: "",
+              bundleWeightKg: "",
+            })),
+          ),
+        },
+      );
     } catch (error) {
       notify?.(error.message);
     }

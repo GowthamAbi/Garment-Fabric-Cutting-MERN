@@ -9,9 +9,7 @@ const upper = (value) =>
     .toUpperCase();
 
 function companyAdmin(request) {
-  return ["saas_super_admin", "company_admin"].includes(
-    request.user.role,
-  );
+  return ["saas_super_admin", "company_admin"].includes(request.user.role);
 }
 
 export async function listFabricMasters(request, response) {
@@ -166,7 +164,10 @@ export async function approveItemMaster(request, response) {
   if (!existing) throw new ApiError(404, "Item master not found");
   const rejected = request.body.status === "REJECTED";
   if (isAdmin && !isCompanyAdmin && existing.approvalLevel !== "ADMIN")
-    throw new ApiError(403, "This request is waiting for Company Admin approval");
+    throw new ApiError(
+      403,
+      "This request is waiting for Company Admin approval",
+    );
   const update = isCompanyAdmin
     ? {
         status: rejected ? "REJECTED" : "APPROVED",

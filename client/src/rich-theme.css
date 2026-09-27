@@ -1,0 +1,342 @@
+/*
+ * UG SaaS premium screen theme.
+ *
+ * These styles are deliberately screen-only. Operational print documents keep
+ * their high-contrast, ink-friendly rules from styles.css.
+ */
+@media screen {
+  :root {
+    --rich-navy: #071b2d;
+    --rich-navy-soft: #102f49;
+    --rich-emerald: #08775f;
+    --rich-emerald-light: #14a27e;
+    --rich-gold: #d6a84c;
+    --rich-gold-light: #f1d48b;
+    --rich-ink: #10283a;
+    --rich-muted: #65798a;
+    --rich-line: rgba(17, 66, 82, 0.13);
+    --rich-paper: rgba(255, 255, 255, 0.94);
+    --rich-shadow: 0 18px 48px rgba(6, 27, 44, 0.1);
+  }
+
+  body {
+    color: var(--rich-ink);
+    background:
+      radial-gradient(
+        circle at 82% 4%,
+        rgba(214, 168, 76, 0.12),
+        transparent 28%
+      ),
+      radial-gradient(circle at 8% 92%, rgba(8, 119, 95, 0.1), transparent 28%),
+      #f5f7f6;
+  }
+
+  .app-shell,
+  .owner-shell {
+    background: transparent;
+  }
+
+  .app-shell > aside,
+  .owner-shell > aside {
+    background:
+      radial-gradient(
+        circle at 10% 0%,
+        rgba(42, 181, 142, 0.2),
+        transparent 25%
+      ),
+      linear-gradient(180deg, #071f32 0%, #082d34 48%, #06372f 100%);
+    border-right: 1px solid rgba(241, 212, 139, 0.2);
+    box-shadow: 14px 0 42px rgba(3, 19, 31, 0.2);
+  }
+
+  .brand,
+  .owner-brand {
+    border-bottom-color: rgba(255, 255, 255, 0.09);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.04), transparent);
+  }
+
+  .brand-icon,
+  .owner-brand > span {
+    background: linear-gradient(145deg, #f5dd94, var(--rich-gold));
+    color: var(--rich-navy);
+    box-shadow: 0 8px 24px rgba(214, 168, 76, 0.3);
+  }
+
+  .brand-title,
+  .owner-brand b {
+    color: #ffffff;
+    letter-spacing: 0.02em;
+  }
+
+  .brand-subtitle,
+  .owner-brand small {
+    color: var(--rich-gold-light);
+    opacity: 0.8;
+  }
+
+  .department-nav {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.025);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  .department-nav-title {
+    color: var(--rich-gold-light);
+    background: linear-gradient(90deg, rgba(214, 168, 76, 0.15), transparent);
+  }
+
+  .app-shell aside nav button,
+  .owner-shell aside nav button {
+    color: rgba(237, 247, 246, 0.76);
+    transition:
+      transform 160ms ease,
+      background 160ms ease,
+      color 160ms ease;
+  }
+
+  .app-shell aside nav button:hover,
+  .app-shell aside nav button.active,
+  .app-shell aside nav button.group-active,
+  .owner-shell aside nav button:hover,
+  .owner-shell aside nav button.active {
+    color: #ffffff;
+    background: linear-gradient(
+      90deg,
+      rgba(20, 162, 126, 0.28),
+      rgba(214, 168, 76, 0.08)
+    );
+    box-shadow: inset 3px 0 0 var(--rich-gold);
+    transform: translateX(2px);
+  }
+
+  .topbar,
+  .owner-topbar {
+    border-bottom: 1px solid var(--rich-line);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 10px 30px rgba(7, 27, 45, 0.06);
+    backdrop-filter: blur(18px);
+  }
+
+  .topbar h1,
+  .owner-topbar h1,
+  .title h2,
+  .page-title h2 {
+    color: var(--rich-navy);
+  }
+
+  .page {
+    position: relative;
+  }
+
+  .page::before {
+    position: fixed;
+    z-index: -1;
+    top: 78px;
+    right: 0;
+    bottom: 0;
+    left: 264px;
+    content: "";
+    pointer-events: none;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+      radial-gradient(
+        circle at 86% 8%,
+        rgba(214, 168, 76, 0.09),
+        transparent 26%
+      );
+  }
+
+  .card,
+  .classic-card,
+  .professional-flow > .page-title,
+  .owner-stats > div,
+  .company-workspace-summary > div,
+  .stat {
+    border: 1px solid var(--rich-line);
+    background: linear-gradient(145deg, #ffffff 0%, #fffdf8 100%);
+    box-shadow: var(--rich-shadow);
+  }
+
+  .card,
+  .classic-card,
+  .professional-flow > .page-title {
+    border-radius: 18px;
+  }
+
+  .card-title,
+  .classic-card > h3 {
+    color: var(--rich-navy);
+    border-bottom-color: rgba(17, 66, 82, 0.1);
+  }
+
+  .stat,
+  .owner-stats > div,
+  .company-workspace-summary > div {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat::after,
+  .owner-stats > div::after,
+  .company-workspace-summary > div::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 54px;
+    height: 3px;
+    content: "";
+    background: linear-gradient(90deg, var(--rich-emerald), var(--rich-gold));
+  }
+
+  .stat i,
+  .owner-stats svg,
+  .company-workspace-summary svg {
+    color: var(--rich-emerald);
+    background: linear-gradient(145deg, #e3f7f1, #fff6dd);
+    box-shadow: inset 0 0 0 1px rgba(8, 119, 95, 0.09);
+  }
+
+  .primary,
+  .form-actions .primary,
+  .title > button.primary {
+    border-color: transparent !important;
+    background: linear-gradient(
+      135deg,
+      var(--rich-navy-soft),
+      var(--rich-emerald)
+    ) !important;
+    box-shadow: 0 9px 22px rgba(8, 95, 81, 0.22);
+  }
+
+  .primary:hover,
+  .form-actions .primary:hover,
+  .title > button.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(8, 95, 81, 0.3);
+  }
+
+  input,
+  select,
+  textarea {
+    border-color: rgba(17, 66, 82, 0.2) !important;
+    background-color: rgba(255, 255, 255, 0.94);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--rich-emerald) !important;
+    outline: 3px solid rgba(8, 119, 95, 0.11);
+    box-shadow: 0 6px 18px rgba(7, 58, 53, 0.08);
+  }
+
+  table thead th {
+    color: #f9fbfb;
+    background: linear-gradient(180deg, var(--rich-navy-soft), #0c3b4b);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  table tbody tr {
+    transition: background 140ms ease;
+  }
+
+  table tbody tr:hover {
+    background: rgba(8, 119, 95, 0.045);
+  }
+
+  .owner-secure {
+    color: #6d5017;
+    background: linear-gradient(135deg, #fff6dc, #f6e1a5);
+    box-shadow: inset 0 0 0 1px rgba(214, 168, 76, 0.24);
+  }
+
+  .profile,
+  .owner-profile-trigger {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(214, 168, 76, 0.07)
+    );
+  }
+
+  .auth {
+    background:
+      radial-gradient(
+        circle at 15% 15%,
+        rgba(20, 162, 126, 0.24),
+        transparent 32%
+      ),
+      radial-gradient(
+        circle at 85% 12%,
+        rgba(214, 168, 76, 0.18),
+        transparent 30%
+      ),
+      linear-gradient(145deg, #061a2b, #073c38);
+  }
+
+  .auth form {
+    border: 1px solid rgba(214, 168, 76, 0.25);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 30px 90px rgba(2, 16, 27, 0.36);
+  }
+}
+
+/*
+ * Print recovery layer.
+ * Older page-specific rules hid every DOM node globally, so two print modules
+ * could cancel each other and create a blank sheet. This final layer restores
+ * the document first, then isolates only an explicitly scoped print target.
+ */
+@media print {
+  body * {
+    visibility: visible !important;
+  }
+
+  .app-shell > aside,
+  .owner-shell > aside,
+  .topbar,
+  .owner-topbar,
+  .no-print,
+  .receipt-actions,
+  .qr-actions,
+  .page-actions,
+  .lookup-bar,
+  .toast,
+  .global-loader,
+  .global-loading-overlay {
+    display: none !important;
+  }
+
+  .app-shell > main,
+  .owner-shell > main {
+    margin: 0 !important;
+  }
+
+  .page {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body:not(.scoped-print-mode) .classic-page > * {
+    display: revert !important;
+  }
+
+  body.scoped-print-mode .app-shell .page > *,
+  body.scoped-print-mode .owner-shell .page > * {
+    visibility: hidden !important;
+  }
+
+  body.scoped-print-mode .scoped-print-target,
+  body.scoped-print-mode .scoped-print-target * {
+    visibility: visible !important;
+  }
+
+  body.scoped-print-mode .scoped-print-target {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    display: block !important;
+    width: 100% !important;
+  }
+}

@@ -4,7 +4,9 @@ import Item from "../models/Item.js";
 
 async function syncItemMaster(purchaseOrderData) {
   const itemCode = purchaseOrderData.itemCode.trim().toUpperCase();
-  const colour = String(purchaseOrderData.colour || "").trim().toUpperCase();
+  const colour = String(purchaseOrderData.colour || "")
+    .trim()
+    .toUpperCase();
 
   return Item.findOneAndUpdate(
     { itemCode, colour },
@@ -38,7 +40,11 @@ export const purchaseOrderService = {
     const itemCode = purchaseOrderData.itemCode.trim().toUpperCase();
     await syncItemMaster({ ...purchaseOrderData, poNo, itemCode });
 
-    return purchaseOrderRepository.create({ ...purchaseOrderData, poNo, itemCode });
+    return purchaseOrderRepository.create({
+      ...purchaseOrderData,
+      poNo,
+      itemCode,
+    });
   },
 
   updatePurchaseOrder: async (purchaseOrderId, purchaseOrderData) => {

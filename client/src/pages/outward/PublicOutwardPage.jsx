@@ -11,7 +11,12 @@ export default function PublicOutwardPage({ inwardNo }) {
   const [receipt, setReceipt] = useState(null);
   const [scanNext, setScanNext] = useState(false);
   const [nextScanValue, setNextScanValue] = useState("");
-  const [form, setForm] = useState({ itemName: "", dcNo: "", section: "", wantedMtr: "" });
+  const [form, setForm] = useState({
+    itemName: "",
+    dcNo: "",
+    section: "",
+    wantedMtr: "",
+  });
   const [status, setStatus] = useState({
     loading: true,
     saving: false,
@@ -45,10 +50,16 @@ export default function PublicOutwardPage({ inwardNo }) {
     event.preventDefault();
     const wantedQty = Number(form.wantedMtr);
 
-    if (!form.itemName.trim() || !form.dcNo.trim() || !form.section.trim() || wantedQty <= 0) {
+    if (
+      !form.itemName.trim() ||
+      !form.dcNo.trim() ||
+      !form.section.trim() ||
+      wantedQty <= 0
+    ) {
       setStatus((current) => ({
         ...current,
-        error: "Item Name, DC No, Section Name and valid Wanted Mtr are required",
+        error:
+          "Item Name, DC No, Section Name and valid Wanted Mtr are required",
         success: "",
       }));
       return;
@@ -237,25 +248,52 @@ export default function PublicOutwardPage({ inwardNo }) {
         </form>
       </section>
       {receipt && (
-        <div className="outward-success-overlay" role="dialog" aria-modal="true">
+        <div
+          className="outward-success-overlay"
+          role="dialog"
+          aria-modal="true"
+        >
           <section className="outward-success-popup">
             <PackageCheck />
             <h2>Outward Completed</h2>
-            <p><b>{receipt.outwardNo}</b> successfully saved.</p>
-            <p>DC No: {receipt.dcNo} · Quantity: {receipt.quantity} {receipt.unit}</p>
+            <p>
+              <b>{receipt.outwardNo}</b> successfully saved.
+            </p>
+            <p>
+              DC No: {receipt.dcNo} · Quantity: {receipt.quantity}{" "}
+              {receipt.unit}
+            </p>
             {!scanNext ? (
               <div className="outward-success-actions">
-                <button type="button" onClick={() => downloadTransactionPdf(receipt)}>Download Outward PDF</button>
-                <button className="primary" type="button" onClick={() => setScanNext(true)}>Scan Next Inward</button>
+                <button
+                  type="button"
+                  onClick={() => downloadTransactionPdf(receipt)}
+                >
+                  Download Outward PDF
+                </button>
+                <button
+                  className="primary"
+                  type="button"
+                  onClick={() => setScanNext(true)}
+                >
+                  Scan Next Inward
+                </button>
               </div>
             ) : (
               <form className="next-inward-scan" onSubmit={openNextInward}>
                 <label>
                   <span>Scan QR or enter next Inward No.</span>
-                  <input autoFocus value={nextScanValue} onChange={(event) => setNextScanValue(event.target.value)} placeholder="INW-... or complete QR link" />
+                  <input
+                    autoFocus
+                    value={nextScanValue}
+                    onChange={(event) => setNextScanValue(event.target.value)}
+                    placeholder="INW-... or complete QR link"
+                  />
                 </label>
                 <button className="primary">Open Next Inward</button>
-                <button type="button" onClick={() => setScanNext(false)}>Back</button>
+                <button type="button" onClick={() => setScanNext(false)}>
+                  Back
+                </button>
               </form>
             )}
           </section>

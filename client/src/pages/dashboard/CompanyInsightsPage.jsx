@@ -29,9 +29,11 @@ export default function CompanyInsightsPage({ mode, notify }) {
     try {
       await fabricCuttingApi.approveItemMaster(id, status);
       setData(await api("/dashboard/company-overview"));
-      notify?.(mode === "Department Approvals" && status === "APPROVED"
-        ? "Admin approved; sent to Company Admin"
-        : `Master ${status.toLowerCase()}`);
+      notify?.(
+        mode === "Department Approvals" && status === "APPROVED"
+          ? "Admin approved; sent to Company Admin"
+          : `Master ${status.toLowerCase()}`,
+      );
     } catch (error) {
       notify?.(error.message);
     }
@@ -64,7 +66,9 @@ export default function CompanyInsightsPage({ mode, notify }) {
                   <th>Entity</th>
                   <th>Status</th>
                 </>
-              ) : ["Company Approvals", "Department Approvals"].includes(mode) ? (
+              ) : ["Company Approvals", "Department Approvals"].includes(
+                  mode,
+                ) ? (
                 <>
                   <th>Item</th>
                   <th>Fabric Group</th>
@@ -105,7 +109,11 @@ export default function CompanyInsightsPage({ mode, notify }) {
                       <td>{row.fabricGroup}</td>
                       <td>{new Date(row.updatedAt).toLocaleString()}</td>
                       <td>{row.status}</td>
-                      <td>{row.approvalLevel === "ADMIN" ? "Admin Review" : "Company Admin Review"}</td>
+                      <td>
+                        {row.approvalLevel === "ADMIN"
+                          ? "Admin Review"
+                          : "Company Admin Review"}
+                      </td>
                       <td>
                         <div className="row-actions">
                           <button onClick={() => decision(row._id, "APPROVED")}>

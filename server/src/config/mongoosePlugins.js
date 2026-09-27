@@ -2,13 +2,24 @@ import mongoose from "mongoose";
 import { getTenant } from "../utils/tenantContext.js";
 
 const scopedOperations = [
-  "countDocuments", "deleteMany", "deleteOne", "find", "findOne",
-  "findOneAndDelete", "findOneAndUpdate", "updateMany", "updateOne",
+  "countDocuments",
+  "deleteMany",
+  "deleteOne",
+  "find",
+  "findOne",
+  "findOneAndDelete",
+  "findOneAndUpdate",
+  "updateMany",
+  "updateOne",
 ];
 
 function tenantPlugin(schema) {
   schema.add({
-    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", index: true },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      index: true,
+    },
     factoryId: { type: mongoose.Schema.Types.ObjectId, index: true },
     updatedBy: { type: String, default: "System" },
   });
@@ -17,8 +28,10 @@ function tenantPlugin(schema) {
     schema.pre(operation, function scopeTenant() {
       if (this.model.modelName === "Company") return;
       const tenant = getTenant();
-      if (tenant.companyId && tenant.role !== "saas_super_admin") this.where({ companyId: tenant.companyId });
-      if (tenant.factoryId && tenant.role !== "saas_super_admin") this.where({ factoryId: tenant.factoryId });
+      if (tenant.companyId && tenant.role !== "saas_super_admin")
+        this.where({ companyId: tenant.companyId });
+      if (tenant.factoryId && tenant.role !== "saas_super_admin")
+        this.where({ factoryId: tenant.factoryId });
     });
   }
 
@@ -26,7 +39,9 @@ function tenantPlugin(schema) {
     if (this.model()?.modelName === "Company") return;
     const tenant = getTenant();
     if (tenant.companyId && tenant.role !== "saas_super_admin") {
-      this.pipeline().unshift({ $match: { companyId: new mongoose.Types.ObjectId(tenant.companyId) } });
+      this.pipeline().unshift({
+        $match: { companyId: new mongoose.Types.ObjectId(tenant.companyId) },
+      });
     }
   });
 

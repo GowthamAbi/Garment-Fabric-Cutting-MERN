@@ -11,7 +11,13 @@ function extractValue(rawValue, field) {
   }
 }
 
-export default function QRScanInput({ field, label, value, onChange, required = true }) {
+export default function QRScanInput({
+  field,
+  label,
+  value,
+  onChange,
+  required = true,
+}) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const detectorRef = useRef(null);
@@ -30,13 +36,19 @@ export default function QRScanInput({ field, label, value, onChange, required = 
   async function startScanner() {
     setError("");
     if (!("BarcodeDetector" in window)) {
-      setError("This browser camera scanner is not supported. Use Chrome/Brave or scan with a USB scanner.");
+      setError(
+        "This browser camera scanner is not supported. Use Chrome/Brave or scan with a USB scanner.",
+      );
       return;
     }
 
     try {
-      window.dispatchEvent(new CustomEvent("accessories-qr-scanner-open", { detail: scannerId }));
-      detectorRef.current = new window.BarcodeDetector({ formats: ["qr_code"] });
+      window.dispatchEvent(
+        new CustomEvent("accessories-qr-scanner-open", { detail: scannerId }),
+      );
+      detectorRef.current = new window.BarcodeDetector({
+        formats: ["qr_code"],
+      });
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: "environment" } },
         audio: false,
@@ -45,7 +57,10 @@ export default function QRScanInput({ field, label, value, onChange, required = 
       setScanning(true);
     } catch (scanError) {
       stopScanner();
-      setError(scanError?.message || "Camera permission is required to scan the QR code.");
+      setError(
+        scanError?.message ||
+          "Camera permission is required to scan the QR code.",
+      );
     }
   }
 
@@ -55,7 +70,10 @@ export default function QRScanInput({ field, label, value, onChange, required = 
     };
     window.addEventListener("accessories-qr-scanner-open", closeOtherScanner);
     return () => {
-      window.removeEventListener("accessories-qr-scanner-open", closeOtherScanner);
+      window.removeEventListener(
+        "accessories-qr-scanner-open",
+        closeOtherScanner,
+      );
       stopScanner();
     };
   }, [scannerId]);
@@ -82,12 +100,15 @@ export default function QRScanInput({ field, label, value, onChange, required = 
       frameRef.current = requestAnimationFrame(detect);
     };
 
-    video.play().then(() => {
-      frameRef.current = requestAnimationFrame(detect);
-    }).catch((playError) => {
-      setError(playError?.message || "Unable to display camera preview.");
-      stopScanner();
-    });
+    video
+      .play()
+      .then(() => {
+        frameRef.current = requestAnimationFrame(detect);
+      })
+      .catch((playError) => {
+        setError(playError?.message || "Unable to display camera preview.");
+        stopScanner();
+      });
 
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
@@ -102,15 +123,41 @@ export default function QRScanInput({ field, label, value, onChange, required = 
           required={required}
           value={value}
           placeholder={`Scan ${label}`}
-          onChange={(event) => onChange(extractValue(event.target.value, field))}
+          onChange={(event) =>
+            onChange(extractValue(event.target.value, field))
+          }
         />
-        <button type="button" className={scanning ? "danger" : "scan-button"} onClick={scanning ? stopScanner : startScanner}>
+        <button
+          type="button"
+          className={scanning ? "danger" : "scan-button"}
+          onClick={scanning ? stopScanner : startScanner}
+        >
           {scanning ? <CameraOff /> : <Camera />}
           {scanning ? "Stop" : "Scan"}
         </button>
       </div>
-      {scanning && <div className="qr-camera-backdrop"><div className="qr-camera-modal"><div className="qr-camera-title"><strong>Scan {label}</strong><button type="button" className="danger" onClick={stopScanner}><CameraOff /> Stop</button></div><div className="qr-camera"><video ref={videoRef} muted playsInline /><div className="qr-camera-frame" /></div><small>Place the QR clearly inside the green box</small></div></div>}
-      {error && <small className="scan-error"><Keyboard /> {error}</small>}
+      {scanning && (
+        <div className="qr-camera-backdrop">
+          <div className="qr-camera-modal">
+            <div className="qr-camera-title">
+              <strong>Scan {label}</strong>
+              <button type="button" className="danger" onClick={stopScanner}>
+                <CameraOff /> Stop
+              </button>
+            </div>
+            <div className="qr-camera">
+              <video ref={videoRef} muted playsInline />
+              <div className="qr-camera-frame" />
+            </div>
+            <small>Place the QR clearly inside the green box</small>
+          </div>
+        </div>
+      )}
+      {error && (
+        <small className="scan-error">
+          <Keyboard /> {error}
+        </small>
+      )}
     </label>
   );
 }

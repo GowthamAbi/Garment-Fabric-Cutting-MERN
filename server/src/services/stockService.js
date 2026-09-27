@@ -62,7 +62,10 @@ export async function createInward(inwardData) {
       if (purchaseOrder) {
         const pendingQty = purchaseOrder.orderQty - purchaseOrder.inwardQty;
         if (Number(inwardData.quantity) > pendingQty) {
-          throw new ApiError(400, `Only ${pendingQty} quantity pending in this PO item`);
+          throw new ApiError(
+            400,
+            `Only ${pendingQty} quantity pending in this PO item`,
+          );
         }
         purchaseOrder.inwardQty += Number(inwardData.quantity);
         purchaseOrder.status =

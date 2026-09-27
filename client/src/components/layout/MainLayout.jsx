@@ -320,37 +320,119 @@ const departmentNavigation = {
   FABRIC: [
     { label: "Dashboard", icon: LayoutDashboard, page: "Fabric Dashboard" },
     { label: "Fabric Master", icon: Boxes, page: "Fabric Master" },
-    { label: "Fabric Inward", icon: ArrowDownToLine, items: ["Fabric Inward Entry", "Fabric Roll QR Print", "Fabric Inward Print", "Fabric Inward History"] },
-    { label: "Production Plan", icon: ClipboardList, items: ["Fabric Entry", "Plan Print", "Folding Entry", "Folding Print", "Fabric Plan History"] },
-    { label: "Stock", icon: Boxes, items: ["Inward Stock", "Fabric Stock Balance"] },
+    {
+      label: "Fabric Inward",
+      icon: ArrowDownToLine,
+      items: [
+        "Fabric Inward Entry",
+        "Fabric Roll QR Print",
+        "Fabric Inward Print",
+        "Fabric Inward History",
+      ],
+    },
+    {
+      label: "Production Plan",
+      icon: ClipboardList,
+      items: [
+        "Fabric Entry",
+        "Plan Print",
+        "Folding Entry",
+        "Folding Print",
+        "Fabric Plan History",
+      ],
+    },
+    {
+      label: "Stock",
+      icon: Boxes,
+      items: ["Inward Stock", "Fabric Stock Balance"],
+    },
   ],
   CUTTING: [
     { label: "Dashboard", icon: LayoutDashboard, page: "Cutting Dashboard" },
-    { label: "Cutting Master", icon: Settings2, items: ["Machine Detail Entry & QR Print"] },
-    { label: "Production Plan", icon: ClipboardList, items: ["Cutting Actual Entry", "Cutting Plan Print", "Cutting Plan History"] },
-    { label: "Machine Plan", icon: ClipboardList, items: ["Machine Plan Entry", "Plan Number Status", "Cutter Status"] },
-    { label: "Stock", icon: Boxes, items: ["Cutting Pending", "Cutting Stock", "Cutting Waste"] },
-    { label: "Time Status", icon: Clock3, items: ["Spreader Timeline", "Cutter Timeline", "Machine Reports", "Cutting Time History"] },
+    {
+      label: "Cutting Master",
+      icon: Settings2,
+      items: ["Machine Detail Entry & QR Print"],
+    },
+    {
+      label: "Production Plan",
+      icon: ClipboardList,
+      items: [
+        "Cutting Actual Entry",
+        "Cutting Plan Print",
+        "Cutting Plan History",
+      ],
+    },
+    {
+      label: "Machine Plan",
+      icon: ClipboardList,
+      items: ["Machine Plan Entry", "Plan Number Status", "Cutter Status"],
+    },
+    {
+      label: "Stock",
+      icon: Boxes,
+      items: ["Cutting Pending", "Cutting Stock", "Cutting Waste"],
+    },
+    {
+      label: "Time Status",
+      icon: Clock3,
+      items: [
+        "Spreader Timeline",
+        "Cutter Timeline",
+        "Machine Reports",
+        "Cutting Time History",
+      ],
+    },
   ],
   DELIVERY: [
     { label: "Dashboard", icon: LayoutDashboard, page: "Delivery Dashboard" },
     { label: "Vendor Master", icon: Users, items: ["Vendor Registration"] },
-    { label: "Delivery Plan", icon: Truck, items: ["Delivery Plan Details", "Section Plan", "Section History"] },
+    {
+      label: "Delivery Plan",
+      icon: Truck,
+      items: ["Delivery Plan Details", "Section Plan", "Section History"],
+    },
   ],
   ELASTIC: [
     { label: "Dashboard", icon: LayoutDashboard, page: "Elastic Dashboard" },
-    { label: "Elastic Requirement", icon: Activity, page: "Elastic Requirement" },
-    { label: "Masters", icon: Settings2, items: ["Production Masters", "Machine Register", "Employee Register"] },
-    { label: "Production Planning", icon: ClipboardList, page: "Production Planning" },
+    {
+      label: "Elastic Requirement",
+      icon: Activity,
+      page: "Elastic Requirement",
+    },
+    {
+      label: "Masters",
+      icon: Settings2,
+      items: ["Production Masters", "Machine Register", "Employee Register"],
+    },
+    {
+      label: "Production Planning",
+      icon: ClipboardList,
+      page: "Production Planning",
+    },
     { label: "Cutting DC", icon: Scissors, page: "Cutting DC" },
     { label: "Production Control", icon: Activity, page: "Production Control" },
     { label: "Status", icon: Clock3, page: "Status" },
-    { label: "Warehouse", icon: Boxes, items: ["Production Ready", "Rework Warehouse", "Rejection Warehouse", "Balance Elastic", "Section Delivery"] },
+    {
+      label: "Warehouse",
+      icon: Boxes,
+      items: [
+        "Production Ready",
+        "Rework Warehouse",
+        "Rejection Warehouse",
+        "Balance Elastic",
+        "Section Delivery",
+      ],
+    },
     { label: "Pending & Issues", icon: Wrench, page: "Pending & Issues" },
     { label: "Reports", icon: BarChart3, page: "Reports" },
   ],
   ACCESSORIES: [
-    { label: "Dashboard", icon: LayoutDashboard, page: "Accessories Dashboard" },
+    {
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      page: "Accessories Dashboard",
+    },
     { label: "Inward", icon: ArrowDownToLine, page: "Inward" },
     { label: "PO", icon: ShoppingCart, page: "PO" },
     { label: "PO Pending", icon: Clock3, page: "PO Pending" },
@@ -362,27 +444,46 @@ const departmentNavigation = {
   ],
   ADMIN: [
     { label: "Dashboard", icon: LayoutDashboard, page: "Admin Dashboard" },
-    { label: "Department Approvals", icon: ListChecks, page: "Department Approvals" },
+    {
+      label: "Department Approvals",
+      icon: ListChecks,
+      page: "Department Approvals",
+    },
     { label: "Item Master", icon: ClipboardList, page: "Item Master" },
     { label: "User Management", icon: Users, page: "User Management" },
     { label: "Audit & Backup", icon: DatabaseBackup, page: "Audit & Backup" },
     { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
   ],
   COMPANY_ADMIN: [
-    { label: "Company Dashboard", icon: LayoutDashboard, page: "Company Dashboard" },
+    {
+      label: "Company Dashboard",
+      icon: LayoutDashboard,
+      page: "Company Dashboard",
+    },
     { label: "Company Reports", icon: BarChart3, page: "Company Reports" },
     { label: "Company Timeline", icon: Clock3, page: "Company Timeline" },
     { label: "Company Stock", icon: Boxes, page: "Company Stock" },
     { label: "Company Approvals", icon: ListChecks, page: "Company Approvals" },
-    { label: "Company Subscription", icon: CreditCard, items: ["Subscription Plan", "Subscription Purchase", "Subscription Bills", "Subscription Usage"] },
+    {
+      label: "Company Subscription",
+      icon: CreditCard,
+      items: [
+        "Subscription Plan",
+        "Subscription Purchase",
+        "Subscription Bills",
+        "Subscription Usage",
+      ],
+    },
     { label: "Modules", icon: Sparkles, page: "Modules" },
     { label: "SaaS Companies", icon: Building2, page: "SaaS Companies" },
   ],
 };
 
-const groupedSidebarPages = new Set(Object.values(departmentNavigation).flatMap((groups) =>
-  groups.flatMap(({ page, items = [] }) => [page, ...items].filter(Boolean)),
-));
+const groupedSidebarPages = new Set(
+  Object.values(departmentNavigation).flatMap((groups) =>
+    groups.flatMap(({ page, items = [] }) => [page, ...items].filter(Boolean)),
+  ),
+);
 groupedSidebarPages.add("Sewing Delivery");
 [
   "Fabric Inward",
@@ -399,7 +500,16 @@ groupedSidebarPages.add("Sewing Delivery");
 const departmentRoles = {
   FABRIC: ["fabric_admin", "fabric_entry"],
   CUTTING: ["cutting_admin", "cutting_entry"],
-  ELASTIC: ["elastic_admin", "elastic_entry", "production", "production_planner", "production_operator", "supervisor", "quality", "maintenance"],
+  ELASTIC: [
+    "elastic_admin",
+    "elastic_entry",
+    "production",
+    "production_planner",
+    "production_operator",
+    "supervisor",
+    "quality",
+    "maintenance",
+  ],
   ACCESSORIES: ["store", "accessories_admin", "accessories_entry"],
   DELIVERY: ["delivery_admin", "delivery_entry"],
   ADMIN: ["admin"],
@@ -407,11 +517,23 @@ const departmentRoles = {
 };
 
 const departmentTitles = {
-  FABRIC: "Fabric Department", CUTTING: "Cutting Department", ELASTIC: "Elastic Department",
-  ACCESSORIES: "Accessories Department", DELIVERY: "Delivery Department", ADMIN: "Admin Department",
+  FABRIC: "Fabric Department",
+  CUTTING: "Cutting Department",
+  ELASTIC: "Elastic Department",
+  ACCESSORIES: "Accessories Department",
+  DELIVERY: "Delivery Department",
+  ADMIN: "Admin Department",
   COMPANY_ADMIN: "Company Admin",
 };
-const departmentOrder = ["FABRIC", "CUTTING", "ELASTIC", "ACCESSORIES", "DELIVERY", "ADMIN", "COMPANY_ADMIN"];
+const departmentOrder = [
+  "FABRIC",
+  "CUTTING",
+  "ELASTIC",
+  "ACCESSORIES",
+  "DELIVERY",
+  "ADMIN",
+  "COMPANY_ADMIN",
+];
 
 export default function MainLayout({ page, onPageChange, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -491,7 +613,12 @@ export default function MainLayout({ page, onPageChange, children }) {
         "Pending & Issues",
         "Reports",
       ],
-      DELIVERY: ["Vendor Registration", "Delivery Plan Details", "Section Plan", "Section History"],
+      DELIVERY: [
+        "Vendor Registration",
+        "Delivery Plan Details",
+        "Section Plan",
+        "Section History",
+      ],
     }[user?.department] || [];
 
   function selectPage(pageName) {
@@ -523,31 +650,73 @@ export default function MainLayout({ page, onPageChange, children }) {
 
         <nav>
           {Object.entries(departmentNavigation)
-            .sort(([a], [b]) => departmentOrder.indexOf(a) - departmentOrder.indexOf(b))
-            .filter(([department]) =>
-              ["saas_super_admin", "company_admin"].includes(user?.role) ||
-              (user?.role === "admin" && department !== "COMPANY_ADMIN") ||
-              user?.department === department || departmentRoles[department]?.includes(user?.role),
+            .sort(
+              ([a], [b]) =>
+                departmentOrder.indexOf(a) - departmentOrder.indexOf(b),
+            )
+            .filter(
+              ([department]) =>
+                ["saas_super_admin", "company_admin"].includes(user?.role) ||
+                (user?.role === "admin" && department !== "COMPANY_ADMIN") ||
+                user?.department === department ||
+                departmentRoles[department]?.includes(user?.role),
             )
             .map(([department, groups]) => (
               <section className="department-nav" key={department}>
-                <div className="department-nav-title">{departmentTitles[department]}</div>
-                {groups.map(({ label, icon: Icon, page: directPage, items }) => {
-                  const key = `${department}-${label}`;
-                  const active = directPage === page || items?.includes(page);
-                  return items ? (
-                    <div className="nav-group" key={key}>
-                      <button className={active ? "group-active" : ""} onClick={() => setDepartmentOpen((old) => ({ ...old, [key]: !old[key] }))}>
-                        <Icon /><span>{label}</span><ChevronDown className={departmentOpen[key] ? "chevron open" : "chevron"} />
+                <div className="department-nav-title">
+                  {departmentTitles[department]}
+                </div>
+                {groups.map(
+                  ({ label, icon: Icon, page: directPage, items }) => {
+                    const key = `${department}-${label}`;
+                    const active = directPage === page || items?.includes(page);
+                    return items ? (
+                      <div className="nav-group" key={key}>
+                        <button
+                          className={active ? "group-active" : ""}
+                          onClick={() =>
+                            setDepartmentOpen((old) => ({
+                              ...old,
+                              [key]: !old[key],
+                            }))
+                          }
+                        >
+                          <Icon />
+                          <span>{label}</span>
+                          <ChevronDown
+                            className={
+                              departmentOpen[key] ? "chevron open" : "chevron"
+                            }
+                          />
+                        </button>
+                        {departmentOpen[key] && (
+                          <div className="nav-submenu">
+                            {items.map((item) => (
+                              <button
+                                key={item}
+                                className={page === item ? "active" : ""}
+                                onClick={() => selectPage(item)}
+                              >
+                                {item
+                                  .replace("Fabric ", "")
+                                  .replace("Cutting ", "")}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        key={key}
+                        className={active ? "active" : ""}
+                        onClick={() => selectPage(directPage)}
+                      >
+                        <Icon />
+                        {label}
                       </button>
-                      {departmentOpen[key] && <div className="nav-submenu">
-                        {items.map((item) => <button key={item} className={page === item ? "active" : ""} onClick={() => selectPage(item)}>{item.replace("Fabric ", "").replace("Cutting ", "")}</button>)}
-                      </div>}
-                    </div>
-                  ) : (
-                    <button key={key} className={active ? "active" : ""} onClick={() => selectPage(directPage)}><Icon />{label}</button>
-                  );
-                })}
+                    );
+                  },
+                )}
               </section>
             ))}
           {navigation
