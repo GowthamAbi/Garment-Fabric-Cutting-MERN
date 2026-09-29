@@ -9,6 +9,8 @@ import {
   getProfile,
   updateProfile,
   getSetupStatus,
+  getSession,
+  logout,
 } from "../controllers/authController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
@@ -22,6 +24,8 @@ router.post("/register", asyncHandler(register));
 router.post("/login", loginRateLimit, asyncHandler(login));
 router.post("/forgot-password", asyncHandler(forgotPassword));
 router.post("/reset-password", asyncHandler(resetPassword));
+router.get("/session", requireAuth, asyncHandler(getSession));
+router.post("/logout", requireAuth, asyncHandler(logout));
 router.get(
   "/users",
   requireAuth,

@@ -255,7 +255,9 @@ export async function getOwnerOverview(_request, response) {
       users: users.length,
       activeUsers: users.filter((u) => u.active).length,
       trials: companies.filter((c) => c.subscriptionPlan === "Trial").length,
-      newRequests: leads.filter((l) => l.status === "NEW").length,
+      newRequests: leads.filter((lead) =>
+        ["NEW", "TRIAL_PENDING"].includes(lead.status),
+      ).length,
       revenue,
       profit,
       pendingAmount: payments
@@ -320,12 +322,76 @@ export async function publicPlans(_request, response) {
       .select("-createdAt -updatedAt -__v"),
   );
 }
+
+const cleanText = (value, maximum = 250) =>
+  String(value || "")
+    .trim()
+    .replace(/[<>]/g, "")
+    .slice(0, maximum);
+
+function validatePublicContact(body) {
+  const email = cleanText(body.email, 160).toLowerCase();
+  const phone = cleanText(body.phone, 24).replace(/[^0-9+() -]/g, "");
+
+  if (!body.companyName || !body.contactName || !email || !phone) {
+    throw new ApiError(
+      400,
+      "Company, contact name, email and phone are required",
+    );
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new ApiError(400, "Enter a valid email address");
+  }
+
+  return { email, phone };
+}
+
 export async function publicRequest(request, response) {
+  if (request.body.companyWebsite) {
+    return response.status(201).json({
+      success: true,
+      message: "Request received. Our team will contact you.",
+    });
+  }
+
+  const { email, phone } = validatePublicContact(request.body);
+  const source = [
+    "DEMO_BOOKING",
+    "DEMO_CONTACT_SALES",
+    "DEMO_PLAN_REQUEST",
+    "WEBSITE",
+  ].includes(request.body.source)
+    ? request.body.source
+    : "WEBSITE";
+  const requestType =
+    source === "DEMO_BOOKING"
+      ? "BOOK_DEMO"
+      : source === "DEMO_CONTACT_SALES"
+        ? "CONTACT_SALES"
+        : source === "DEMO_PLAN_REQUEST"
+          ? "PLAN_REQUEST"
+          : "LEAD";
   const lead = await SalesLead.create({
-    ...request.body,
-    source: request.body.source || "WEBSITE",
+    companyName: cleanText(request.body.companyName, 120),
+    contactName: cleanText(request.body.contactName, 100),
+    city: cleanText(request.body.city, 100),
+    phone,
+    email,
+    source,
+    requestType,
+    planCode: cleanText(request.body.planCode, 40).toUpperCase(),
+    userCount: Math.min(
+      10000,
+      Math.max(1, Number(request.body.userCount) || 1),
+    ),
+    requirements: cleanText(request.body.requirements, 1500),
     status: "NEW",
-    activities: [{ type: "NOTE", note: "Website purchase/demo request" }],
+    activities: [
+      {
+        type: "NOTE",
+        note: `${requestType} request received from public demo`,
+      },
+    ],
   });
   response.status(201).json({
     success: true,
@@ -343,49 +409,142 @@ export async function startPublicTrial(request, response) {
     city,
     departments = [],
   } = request.body;
+  if (request.body.companyWebsite) {
+    return response.status(201).json({
+      success: true,
+      message: "Trial request submitted for owner approval.",
+    });
+  }
   if (!companyName || !name || !email || !password)
     throw new ApiError(400, "Company, name, email and password are required");
   if (String(password).length < 8)
     throw new ApiError(400, "Password must contain at least 8 characters");
   if (await User.exists({ email: String(email).toLowerCase() }))
     throw new ApiError(409, "Email already registered");
+  const normalizedEmail = cleanText(email, 160).toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
+    throw new ApiError(400, "Enter a valid email address");
+  if (
+    await SalesLead.exists({
+      email: normalizedEmail,
+      status: "TRIAL_PENDING",
+    })
+  )
+    throw new ApiError(409, "A trial request is already awaiting approval");
+
+  const lead = await SalesLead.create({
+    companyName: cleanText(companyName, 120),
+    contactName: cleanText(name, 100),
+    email: normalizedEmail,
+    phone: cleanText(phone, 24),
+    city: cleanText(city, 100),
+    departments: Array.isArray(departments)
+      ? departments.map((value) => cleanText(value, 30)).slice(0, 10)
+      : [],
+    requestType: "TRIAL",
+    planCode: "TRIAL",
+    status: "TRIAL_PENDING",
+    pendingPasswordHash: await bcrypt.hash(password, 12),
+    source: "WEBSITE_TRIAL",
+    activities: [
+      { type: "NOTE", note: "Trial registration awaiting SaaS Owner approval" },
+    ],
+  });
+  response.status(201).json({
+    success: true,
+    requestId: lead._id,
+    message: "Trial request submitted. Login opens only after owner approval.",
+  });
+}
+
+export async function decideLeadRequest(request, response) {
+  const action = String(request.body.action || "").toUpperCase();
+  if (!["ACCEPT", "REJECT"].includes(action))
+    throw new ApiError(400, "Action must be ACCEPT or REJECT");
+
+  const lead = await SalesLead.findById(request.params.id).select(
+    "+pendingPasswordHash",
+  );
+  if (!lead) throw new ApiError(404, "Request not found");
+  if (!["NEW", "TRIAL_PENDING"].includes(lead.status))
+    throw new ApiError(409, "This request is already decided");
+
+  if (lead.requestType === "TRIAL" && lead.status !== "TRIAL_PENDING")
+    throw new ApiError(409, "Trial request is not awaiting approval");
+
+  if (action === "REJECT") {
+    lead.status = "REJECTED";
+    lead.pendingPasswordHash = "";
+    lead.decisionBy = request.user.name;
+    lead.decisionAt = new Date();
+    lead.activities.push({
+      type: "NOTE",
+      note: "Request rejected by SaaS Owner",
+    });
+    await lead.save();
+    return response.json({ message: "Request rejected", lead });
+  }
+
+  if (lead.requestType !== "TRIAL") {
+    lead.status = "APPROVED";
+    lead.decisionBy = request.user.name;
+    lead.decisionAt = new Date();
+    lead.activities.push({
+      type: "NOTE",
+      note: "Request accepted for follow-up",
+    });
+    await lead.save();
+    return response.json({ message: "Request accepted", lead });
+  }
+
+  if (!lead.pendingPasswordHash)
+    throw new ApiError(409, "Trial credential is unavailable");
+  if (await User.exists({ email: lead.email }))
+    throw new ApiError(409, "Email is already registered");
+
   await ensurePlans();
   const trial = await SaasPlan.findOne({ code: "TRIAL", active: true }).lean();
+  const expiry = addDays(trial?.validityDays || 14);
   const company = await Company.create({
-    companyName,
-    address: city || "",
+    companyName: lead.companyName,
+    address: lead.city || "",
     subscriptionPlan: "Trial",
     subscriptionStatus: "Active",
     subscriptionStartsAt: new Date(),
-    subscriptionEndsAt: addDays(trial?.validityDays || 14),
+    subscriptionEndsAt: expiry,
     factories: [
-      { name: `${companyName} Main`, code: "MAIN", address: city || "" },
+      {
+        name: `${lead.companyName} Main`,
+        code: "MAIN",
+        address: lead.city || "",
+      },
     ],
   });
   await User.create({
-    name,
-    email,
-    password: await bcrypt.hash(password, 12),
+    name: lead.contactName,
+    email: lead.email,
+    password: lead.pendingPasswordHash,
     role: "company_admin",
     companyId: company._id,
     factoryId: company.factories[0]._id,
   });
-  await SalesLead.create({
-    companyName,
-    contactName: name,
-    email,
-    phone,
-    city,
-    departments,
-    status: "TRIAL_ACTIVE",
-    demoExpiresAt: company.subscriptionEndsAt,
-    convertedCompanyId: company._id,
-    source: "WEBSITE_TRIAL",
+
+  lead.status = "TRIAL_ACTIVE";
+  lead.pendingPasswordHash = "";
+  lead.demoExpiresAt = expiry;
+  lead.convertedCompanyId = company._id;
+  lead.decisionBy = request.user.name;
+  lead.decisionAt = new Date();
+  lead.activities.push({
+    type: "NOTE",
+    note: "Trial approved and workspace activated",
   });
-  response.status(201).json({
-    success: true,
-    expiresAt: company.subscriptionEndsAt,
-    message: "Trial created. You can login now.",
+  await lead.save();
+
+  response.json({
+    message: "Trial approved. Customer can login now.",
+    expiresAt: expiry,
+    lead,
   });
 }
 

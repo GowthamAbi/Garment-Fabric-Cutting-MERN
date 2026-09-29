@@ -64,6 +64,8 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     active: { type: Boolean, default: true },
+    sessionVersion: { type: Number, default: 0, select: false },
+    passwordChangedAt: Date,
     resetPasswordToken: { type: String, default: "" },
     resetPasswordExpires: Date,
   },

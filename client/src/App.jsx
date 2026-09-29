@@ -12,7 +12,7 @@ import SuperAdminLayout from "./components/layout/SuperAdminLayout.jsx";
 import PublicDemoPage from "./pages/saas/PublicDemoPage.jsx";
 
 function Application() {
-  const { token, user } = useAuth();
+  const { token, user, checkingSession } = useAuth();
   const adminRoles = ["saas_super_admin", "admin"];
   const [page, setPage] = useState(
     window.location.pathname === "/production"
@@ -75,7 +75,25 @@ function Application() {
     window.setTimeout(() => setMessage(""), 2600);
   }
 
-  if (!token) return <LoginPage />;
+  if (checkingSession) {
+    return (
+      <div className="secure-session-check">
+        <strong>UG SaaS</strong>
+        <span>Verifying secure session…</span>
+      </div>
+    );
+  }
+
+  if (!token || !user) return <LoginPage />;
+
+  const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
+
+  if (window.location.pathname === "/privacy") return <PrivacyPage />;
+  if (["/demo", "/pricing", "/try-demo"].includes(window.location.pathname))
+    return <PublicDemoPage />;
+  if (window.location.pathname === "/outward" && inwardNo) {
+    return <PublicOutwardPage inwardNo={inwardNo} />;
+  }
 
   const productionQrPage =
     window.location.pathname === "/production" &&
@@ -115,21 +133,6 @@ function Application() {
 }
 
 export default function App() {
-  const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
-
-  if (window.location.pathname === "/privacy") return <PrivacyPage />;
-  if (["/demo", "/pricing", "/try-demo"].includes(window.location.pathname))
-    return <PublicDemoPage />;
-
-  if (window.location.pathname === "/outward" && inwardNo) {
-    return (
-      <>
-        <GlobalFeedback />
-        <PublicOutwardPage inwardNo={inwardNo} />
-      </>
-    );
-  }
-
   return (
     <LanguageProvider>
       <AuthProvider>

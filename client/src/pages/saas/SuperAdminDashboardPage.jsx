@@ -72,7 +72,31 @@ export default function SuperAdminDashboardPage({ notify }) {
 
   useEffect(() => {
     load();
+    const refreshTimer = window.setInterval(load, 30000);
+    return () => window.clearInterval(refreshTimer);
   }, []);
+
+  async function decideRequest(lead, action) {
+    const confirmed = window.confirm(
+      action === "ACCEPT"
+        ? lead.requestType === "TRIAL"
+          ? "Approve trial and activate this customer workspace?"
+          : "Accept this request for owner follow-up?"
+        : "Reject this customer request?",
+    );
+    if (!confirmed) return;
+
+    try {
+      const result = await api(`/saas/leads/${lead._id}/decision`, {
+        method: "PATCH",
+        body: JSON.stringify({ action }),
+      });
+      notify?.(result.message);
+      await load();
+    } catch (error) {
+      notify?.(error.message);
+    }
+  }
 
   async function openCompany(company) {
     try {
@@ -392,7 +416,25 @@ export default function SuperAdminDashboardPage({ notify }) {
                     {row.status}
                   </small>
                 </span>
-                <time>{new Date(row.createdAt).toLocaleDateString()}</time>
+                <span className="owner-request-actions">
+                  <time>{new Date(row.createdAt).toLocaleDateString()}</time>
+                  {["NEW", "TRIAL_PENDING"].includes(row.status) && (
+                    <span>
+                      <button
+                        className="primary"
+                        onClick={() => decideRequest(row, "ACCEPT")}
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="danger"
+                        onClick={() => decideRequest(row, "REJECT")}
+                      >
+                        Reject
+                      </button>
+                    </span>
+                  )}
+                </span>
               </div>
             ))}
             {!overview?.recentLeads?.length && <p>No new requests.</p>}

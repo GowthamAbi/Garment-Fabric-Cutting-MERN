@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="index, follow" />
     <meta
       name="description"
-      content="Interactive UG SaaS garment factory demo"
+      content="Read-only UG SaaS garment factory product demonstration"
     />
-    <title>UG SaaS Interactive Demo</title>
+    <title>UG SaaS · Read-Only Product Demo</title>
     <link rel="stylesheet" href="/demo-app.css" />
   </head>
   <body>
     <div class="demo-notice">
-      <span>INTERACTIVE PRODUCT DEMO</span> Sample company and dummy records
-      only <button id="exitDemo">Customer Login</button>
+      <span>READ-ONLY PRODUCT DEMO</span> Dummy records only · No entry, save or
+      live database access <button id="exitDemo">Customer Login</button>
     </div>
     <div class="app-shell">
       <aside id="sidebar">
@@ -24,7 +25,7 @@
         <nav id="demoNav"></nav>
         <div class="demo-user">
           <span>GA</span>
-          <div><b>Gowtham Admin</b><small>Demo Administrator</small></div>
+          <div><b>Gowtham Admin</b><small>Read-Only Visitor</small></div>
         </div>
       </aside>
       <main>
@@ -34,20 +35,26 @@
             <small id="crumb">EXECUTIVE CONTROL CENTRE</small>
             <h1 id="pageTitle">Company Dashboard</h1>
           </div>
-          <label class="global-search"
-            >⌕
+          <label class="global-search">
+            ⌕
             <input
               id="globalSearch"
-              placeholder="Search plan, DC, colour, vendor..." /></label
-          ><button class="icon-btn" id="bellBtn">♢<i>4</i></button
-          ><button class="secondary cta-action" data-action="request">
-            Book Live Demo</button
-          ><button class="secondary cta-action" data-action="sales">
-            Contact Sales</button
-          ><button class="primary cta-action" data-action="trial">
-            Register Trial</button
-          ><button class="secondary cta-action" data-action="login">
-            Login
+              placeholder="Search dummy plan, DC, colour or vendor..."
+            />
+          </label>
+          <button class="icon-btn" id="bellBtn">♢<i>4</i></button>
+          <span class="readonly-pill">READ ONLY</span>
+          <button class="secondary cta-action" data-action="request">
+            Book Live Demo
+          </button>
+          <button class="secondary cta-action" data-action="sales">
+            Contact Sales
+          </button>
+          <button class="primary cta-action" data-action="trial">
+            Register Trial
+          </button>
+          <button class="secondary cta-action" data-action="login">
+            Customer Login
           </button>
         </header>
         <section id="page"></section>

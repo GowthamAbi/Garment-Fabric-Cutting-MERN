@@ -4,6 +4,9 @@ import { api, exportCsv } from "../../api.js";
 import PageTitle from "../../components/common/PageTitle.jsx";
 const statuses = [
   "NEW",
+  "TRIAL_PENDING",
+  "APPROVED",
+  "REJECTED",
   "CONTACTED",
   "DEMO_SCHEDULED",
   "DEMO_COMPLETED",
@@ -82,6 +85,27 @@ export default function LeadCrmPage({ notify }) {
       body: JSON.stringify({ type, note, status }),
     });
     load();
+  }
+  async function decide(x, action) {
+    const confirmed = window.confirm(
+      action === "ACCEPT"
+        ? x.requestType === "TRIAL"
+          ? "Approve this trial and activate the customer workspace?"
+          : "Accept this customer request for follow-up?"
+        : "Reject this request? The customer will not receive SaaS access.",
+    );
+    if (!confirmed) return;
+
+    try {
+      const result = await api(`/saas/leads/${x._id}/decision`, {
+        method: "PATCH",
+        body: JSON.stringify({ action }),
+      });
+      notify?.(result.message);
+      load();
+    } catch (error) {
+      notify?.(error.message);
+    }
   }
   return (
     <section className="classic-page">
@@ -183,6 +207,11 @@ export default function LeadCrmPage({ notify }) {
                 </b>
               </header>
               <p>{x.requirements || "No requirement entered"}</p>
+              {x.requestType && x.requestType !== "LEAD" && (
+                <p>
+                  <b>Request:</b> {x.requestType.replaceAll("_", " ")}
+                </p>
+              )}
               <dl>
                 <div>
                   <dt>Phone</dt>
@@ -204,6 +233,22 @@ export default function LeadCrmPage({ notify }) {
                 </div>
               </dl>
               <footer>
+                {["NEW", "TRIAL_PENDING"].includes(x.status) && (
+                  <>
+                    <button
+                      className="primary"
+                      onClick={() => decide(x, "ACCEPT")}
+                    >
+                      Accept
+                    </button>
+                    <button
+                      className="danger"
+                      onClick={() => decide(x, "REJECT")}
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
                 <button onClick={() => activity(x, "CALL")}>Call</button>
                 <button onClick={() => activity(x, "WHATSAPP")}>
                   WhatsApp

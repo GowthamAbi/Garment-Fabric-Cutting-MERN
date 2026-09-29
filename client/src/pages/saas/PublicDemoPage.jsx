@@ -97,9 +97,7 @@ export default function PublicDemoPage() {
         method: "POST",
         body: JSON.stringify(trial),
       });
-      setMessage(
-        `${r.message} Trial expires ${new Date(r.expiresAt).toLocaleDateString()}`,
-      );
+      setMessage(r.message);
     } catch (x) {
       setMessage(x.message);
     }

@@ -5,7 +5,10 @@ import morgan from "morgan";
 import apiRoutes from "./routes/index.js";
 
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
-import { securityHeaders } from "./middleware/securityMiddleware.js";
+import {
+  securityHeaders,
+  trustedMutationOrigin,
+} from "./middleware/securityMiddleware.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -62,6 +65,8 @@ app.use(
     credentials: true,
   }),
 );
+
+app.use(trustedMutationOrigin(allowedOrigins));
 
 // ==========================================
 // BODY PARSER

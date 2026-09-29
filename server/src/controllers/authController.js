@@ -4,6 +4,7 @@ import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import crypto from "node:crypto";
 import Company from "../models/Company.js";
+import { clearLoginAttempts } from "../middleware/securityMiddleware.js";
 
 function createToken(user) {
   return jwt.sign(
@@ -15,15 +16,38 @@ function createToken(user) {
       factoryId: user.factoryId,
       permissions: user.permissions,
       department: user.department,
+      sessionVersion: Number(user.sessionVersion || 0),
     },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" },
+    {
+      expiresIn: "8h",
+      issuer: "ug-saas-api",
+      audience: "ug-saas-web",
+    },
   );
 }
 
-function createAuthResponse(user, companyName = "UG SaaS") {
+function sessionCookieName() {
+  return process.env.NODE_ENV === "production"
+    ? "__Host-ug_session"
+    : "ug_session";
+}
+
+function sessionCookieOptions() {
+  const production = process.env.NODE_ENV === "production";
+
   return {
-    token: createToken(user),
+    httpOnly: true,
+    secure: production,
+    sameSite: production ? "none" : "lax",
+    partitioned: production,
+    path: "/",
+    maxAge: 8 * 60 * 60 * 1000,
+  };
+}
+
+function createUserResponse(user, companyName = "UG SaaS") {
+  return {
     user: {
       _id: user._id,
       name: user.name,
@@ -36,6 +60,15 @@ function createAuthResponse(user, companyName = "UG SaaS") {
       companyName,
     },
   };
+}
+
+function startSession(response, user, companyName) {
+  response.cookie(
+    sessionCookieName(),
+    createToken(user),
+    sessionCookieOptions(),
+  );
+  return createUserResponse(user, companyName);
 }
 
 export async function getSetupStatus(_request, response) {
@@ -88,7 +121,7 @@ export async function register(request, response) {
     factoryId: company.factories[0]._id,
   });
 
-  response.status(201).json(createAuthResponse(user, company.companyName));
+  response.status(201).json(startSession(response, user, company.companyName));
 }
 
 export async function getUsers(_request, response) {
@@ -226,6 +259,8 @@ export async function resetPassword(request, response) {
   });
   if (!user) throw new ApiError(400, "Reset link is invalid or expired");
   user.password = await bcrypt.hash(password, 12);
+  user.passwordChangedAt = new Date();
+  user.sessionVersion = Number(user.sessionVersion || 0) + 1;
   user.resetPasswordToken = "";
   user.resetPasswordExpires = undefined;
   await user.save();
@@ -233,7 +268,9 @@ export async function resetPassword(request, response) {
 }
 
 export async function login(request, response) {
-  const user = await User.findOne({ email: request.body.email?.toLowerCase() });
+  const user = await User.findOne({
+    email: request.body.email?.toLowerCase(),
+  }).select("+sessionVersion");
   const validPassword =
     user && (await bcrypt.compare(request.body.password || "", user.password));
 
@@ -247,7 +284,29 @@ export async function login(request, response) {
     if (!company?.active || company?.subscriptionStatus !== "Active" || expired)
       throw new ApiError(402, "Company subscription is inactive or expired");
   }
-  response.json(createAuthResponse(user, company?.companyName));
+  clearLoginAttempts(request);
+  response.json(startSession(response, user, company?.companyName));
+}
+
+export async function getSession(request, response) {
+  const user = await User.findById(request.user.id)
+    .select("name email role department permissions active companyId factoryId")
+    .lean();
+  if (!user?.active) throw new ApiError(401, "Session is no longer active");
+
+  const company = await Company.findById(user.companyId)
+    .select("companyName active subscriptionStatus subscriptionEndsAt")
+    .lean();
+
+  response.json(createUserResponse(user, company?.companyName));
+}
+
+export async function logout(request, response) {
+  await User.findByIdAndUpdate(request.user.id, {
+    $inc: { sessionVersion: 1 },
+  });
+  response.clearCookie(sessionCookieName(), sessionCookieOptions());
+  response.status(204).end();
 }
 
 export async function getProfile(request, response) {
@@ -269,8 +328,12 @@ export async function updateProfile(request, response) {
     if (request.body.password.length < 8)
       throw new ApiError(400, "Password must contain at least 8 characters");
     updates.password = await bcrypt.hash(request.body.password, 12);
+    updates.passwordChangedAt = new Date();
   }
-  const user = await User.findByIdAndUpdate(request.user.id, updates, {
+  const updateQuery = request.body.password
+    ? { $set: updates, $inc: { sessionVersion: 1 } }
+    : { $set: updates };
+  const user = await User.findByIdAndUpdate(request.user.id, updateQuery, {
     new: true,
     runValidators: true,
   }).select(

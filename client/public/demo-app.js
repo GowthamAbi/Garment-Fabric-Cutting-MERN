@@ -934,7 +934,7 @@ function dashboard() {
   ]
     .map(
       (x) =>
-        `<button class="quick"><span>${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small></button>`,
+        `<article class="quick readonly-quick"><span>${x[0]}</span><b>${x[1]}</b><small>${x[2]}</small><em>Preview only</em></article>`,
     )
     .join(
       "",
@@ -960,14 +960,14 @@ function department(id) {
   const [name, desc, m, key] = departmentConfigs[id];
   title.textContent = name;
   crumb.textContent = "DEPARTMENT DASHBOARD";
-  page.innerHTML = `<div class="page-intro"><div><h2>${name}</h2><p>${desc} · Sample data</p></div><button class="primary">+ New Entry</button></div>${metrics(m)}${tableView(key)}`;
+  page.innerHTML = `<div class="page-intro"><div><h2>${name}</h2><p>${desc} · Sample data</p></div><span class="readonly-badge">READ-ONLY VIEW</span></div>${metrics(m)}${tableView(key)}`;
   bind();
 }
 function dataPage(id) {
   const t = tables[id];
   title.textContent = t?.title || id.replaceAll("-", " ");
   crumb.textContent = "INTERACTIVE DEMO · DUMMY DATA";
-  page.innerHTML = `<div class="page-intro"><div><h2>${t?.title || title.textContent}</h2><p>Explore filters, details and Excel download with sample records.</p></div><button class="primary">+ Create New</button></div>${tableView(id)}`;
+  page.innerHTML = `<div class="page-intro"><div><h2>${t?.title || title.textContent}</h2><p>Explore filters, details and Excel download with sample records.</p></div><span class="readonly-badge">READ-ONLY VIEW</span></div>${tableView(id)}`;
   bind();
 }
 function go(id) {
@@ -1014,11 +1014,6 @@ function bind() {
   document
     .querySelectorAll(".export-btn")
     .forEach((b) => (b.onclick = () => downloadCsv(b.dataset.key)));
-  document
-    .querySelectorAll(".quick,.page-intro .primary")
-    .forEach(
-      (b) => (b.onclick = () => toast("Demo mode: entry form preview opened")),
-    );
 }
 function showDetail(key, row) {
   const t = tables[key],
@@ -1053,13 +1048,13 @@ const API_BASE =
     : "https://garment-fabric-cutting-mern.onrender.com/api";
 const formStyle = document.createElement("style");
 formStyle.textContent =
-  ".lead-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.lead-form label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#52615f}.lead-form label.wide,.lead-form .form-message,.lead-form .form-submit{grid-column:1/-1}.lead-form input,.lead-form select,.lead-form textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:11px;font:13px Arial;background:#fff}.lead-form textarea{min-height:90px;resize:vertical}.lead-form .form-message{font-size:12px;padding:10px;border-radius:6px;background:#eef6f3;color:#176b59;display:none}.lead-form .form-message.error{background:#fae7e8;color:#a63d43}@media(max-width:700px){.lead-form{grid-template-columns:1fr}.lead-form label.wide,.lead-form .form-message,.lead-form .form-submit{grid-column:1}}";
+  ".lead-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.lead-form .website-field{position:absolute;left:-9999px;opacity:0;pointer-events:none}.lead-form label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#52615f}.lead-form label.wide,.lead-form .form-message,.lead-form .form-submit{grid-column:1/-1}.lead-form input,.lead-form select,.lead-form textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:11px;font:13px Arial;background:#fff}.lead-form textarea{min-height:90px;resize:vertical}.lead-form .form-message{font-size:12px;padding:10px;border-radius:6px;background:#eef6f3;color:#176b59;display:none}.lead-form .form-message.error{background:#fae7e8;color:#a63d43}@media(max-width:700px){.lead-form{grid-template-columns:1fr}.lead-form label.wide,.lead-form .form-message,.lead-form .form-submit{grid-column:1}}";
 document.head.appendChild(formStyle);
 function openPublicForm(mode) {
   const isTrial = mode === "trial",
     isSales = mode === "sales";
   document.getElementById("modalBody").innerHTML =
-    `<small style="color:var(--green);font-weight:800;letter-spacing:.12em">${isTrial ? "FREE CONTROLLED TRIAL" : isSales ? "CONTACT SALES" : "LIVE PRODUCT DEMO"}</small><h2>${isTrial ? "Register your trial company" : isSales ? "Talk to UG SaaS Sales" : "Book a personalised live demo"}</h2><p style="color:var(--muted);font-size:12px">${isTrial ? "Create your company-admin login and explore UG SaaS for the owner-configured trial period." : "Submit your company requirement. It will appear in the SaaS Owner Lead CRM for follow-up."}</p><form class="lead-form" id="publicForm">${isTrial ? `<label>Company Name<input name="companyName" required></label><label>Your Name<input name="name" required></label><label>Work Email<input name="email" type="email" required></label><label>Phone Number<input name="phone" required></label><label>City<input name="city"></label><label>Password<input name="password" type="password" minlength="8" required placeholder="Minimum 8 characters"></label><label class="wide">Departments<select name="departmentChoice"><option value="FABRIC,CUTTING">Fabric + Cutting</option><option value="FABRIC,CUTTING,ELASTIC,ACCESSORIES,DELIVERY">All Departments</option></select></label>` : `<label>Company Name<input name="companyName" required></label><label>Contact Person<input name="contactName" required></label><label>Phone Number<input name="phone" required></label><label>Email Address<input name="email" type="email" required></label><label>City<input name="city"></label><label>Interested Plan<select name="planCode"><option>PROFESSIONAL</option><option>STARTER</option><option>BUSINESS</option><option>ENTERPRISE</option><option>SETUP</option></select></label><label>Expected Users<input name="userCount" type="number" value="10" min="1"></label><label>Preferred Contact<select name="preferredContact"><option>Phone Call</option><option>WhatsApp</option><option>Email</option><option>Factory Visit</option></select></label><label class="wide">Requirements<textarea name="requirements" placeholder="Departments, current process and expected features"></textarea></label>`}<div class="form-message" id="formMessage"></div><button class="primary form-submit" type="submit">${isTrial ? "Create Trial & Register" : "Send Request to UG SaaS Owner"}</button></form>`;
+    `<small style="color:var(--green);font-weight:800;letter-spacing:.12em">${isTrial ? "OWNER-APPROVED TRIAL" : isSales ? "CONTACT SALES" : "LIVE PRODUCT DEMO"}</small><h2>${isTrial ? "Request your trial company" : isSales ? "Talk to UG SaaS Sales" : "Book a personalised live demo"}</h2><p style="color:var(--muted);font-size:12px">${isTrial ? "Submit your details. Login access opens only after the UG SaaS Owner approves your request." : "Submit your company requirement. It will appear in the SaaS Owner dashboard for follow-up."}</p><form class="lead-form" id="publicForm"><input class="website-field" name="companyWebsite" tabindex="-1" autocomplete="off">${isTrial ? `<label>Company Name<input name="companyName" required></label><label>Your Name<input name="name" required></label><label>Work Email<input name="email" type="email" required></label><label>Phone Number<input name="phone" required></label><label>City<input name="city"></label><label>Password<input name="password" type="password" minlength="8" required placeholder="Minimum 8 characters"></label><label class="wide">Departments<select name="departmentChoice"><option value="FABRIC,CUTTING">Fabric + Cutting</option><option value="FABRIC,CUTTING,ELASTIC,ACCESSORIES,DELIVERY">All Departments</option></select></label>` : `<label>Company Name<input name="companyName" required></label><label>Contact Person<input name="contactName" required></label><label>Phone Number<input name="phone" required></label><label>Email Address<input name="email" type="email" required></label><label>City<input name="city"></label><label>Interested Plan<select name="planCode"><option>PROFESSIONAL</option><option>STARTER</option><option>BUSINESS</option><option>ENTERPRISE</option><option>SETUP</option></select></label><label>Expected Users<input name="userCount" type="number" value="10" min="1"></label><label>Preferred Contact<select name="preferredContact"><option>Phone Call</option><option>WhatsApp</option><option>Email</option><option>Factory Visit</option></select></label><label class="wide">Requirements<textarea name="requirements" placeholder="Departments, current process and expected features"></textarea></label>`}<div class="form-message" id="formMessage"></div><button class="primary form-submit" type="submit">${isTrial ? "Submit Trial for Owner Approval" : "Send Request to UG SaaS Owner"}</button></form>`;
   document.getElementById("modal").classList.remove("hidden");
   document.getElementById("publicForm").onsubmit = async (e) => {
     e.preventDefault();
@@ -1091,9 +1086,7 @@ function openPublicForm(mode) {
       if (!res.ok) throw new Error(data.message || "Unable to submit request");
       msg.className = "form-message";
       msg.style.display = "block";
-      msg.textContent = isTrial
-        ? `${data.message} Now use Customer Login.`
-        : data.message;
+      msg.textContent = data.message;
       form.reset();
     } catch (err) {
       msg.className = "form-message error";
@@ -1102,7 +1095,7 @@ function openPublicForm(mode) {
     } finally {
       btn.disabled = false;
       btn.textContent = isTrial
-        ? "Create Trial & Register"
+        ? "Submit Trial for Owner Approval"
         : "Send Request to UG SaaS Owner";
     }
   };
@@ -1126,11 +1119,11 @@ document.getElementById("bellBtn").onclick = () => {
 document
   .querySelectorAll(".cta-action")
   .forEach(
-    (b) =>
-      (b.onclick = () =>
-        b.dataset.action === "login"
+    (button) =>
+      (button.onclick = () =>
+        button.dataset.action === "login"
           ? (location.href = "/")
-          : openPublicForm(b.dataset.action)),
+          : openPublicForm(button.dataset.action)),
   );
 document.getElementById("globalSearch").onkeydown = (e) => {
   if (e.key === "Enter") {

@@ -11,6 +11,35 @@
   --amber: #d28a24;
   --blue: #2c73b9;
 }
+
+.readonly-pill,
+.readonly-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid #d8b35d;
+  border-radius: 999px;
+  color: #725014;
+  background: #fff7dc;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.readonly-quick {
+  cursor: default;
+}
+
+.readonly-quick em {
+  color: #987126;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 * {
   box-sizing: border-box;
 }

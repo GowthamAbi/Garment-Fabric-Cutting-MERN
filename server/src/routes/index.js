@@ -31,9 +31,9 @@ router.get("/health", (_request, response) => {
 router.post("/webhooks/razorpay", asyncHandler(razorpayWebhook));
 
 router.use("/auth", authRoutes);
-router.use("/public", publicOutwardRoutes);
 router.use("/public/saas", publicSaasRoutes);
 router.use(requireAuth, auditMutations);
+router.use("/public", publicOutwardRoutes);
 router.use("/saas", saasRoutes);
 router.use(requireActiveSubscription);
 router.use("/dashboard", requireAuth, dashboardRoutes);

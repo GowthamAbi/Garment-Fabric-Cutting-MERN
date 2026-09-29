@@ -3,7 +3,6 @@ import { api } from "../../api.js";
 import Card from "../../components/common/Card.jsx";
 import DataTable from "../../components/DataTable.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
-import { tokenService } from "../../services/tokenService.js";
 
 export default function AuditBackupPage({ notify }) {
   const today = new Date().toISOString().slice(0, 10);
@@ -22,7 +21,8 @@ export default function AuditBackupPage({ notify }) {
       import.meta.env.VITE_API_URL || "http://localhost:5000/api"
     ).replace(/\/$/, "");
     const response = await fetch(`${base}/saas/backup`, {
-      headers: { Authorization: `Bearer ${tokenService.getToken()}` },
+      credentials: "include",
+      cache: "no-store",
     });
     if (!response.ok) throw new Error("Backup failed");
     const blob = await response.blob();

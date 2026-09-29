@@ -245,20 +245,6 @@ export default function LoginPage({ initialMode = false }) {
             <small>SaaS Owner · Company Admin · Store · Production</small>
           </div>
         )}
-        {!registerMode && (
-          <a className="primary auth-demo-link" href="/demo">
-            View UG SaaS Demo
-          </a>
-        )}
-        <button
-          type="button"
-          className="link"
-          onClick={() => {
-            window.location.href = "/privacy";
-          }}
-        >
-          Privacy Policy
-        </button>
       </form>
     </div>
   );

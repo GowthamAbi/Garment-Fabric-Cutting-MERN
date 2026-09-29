@@ -13,6 +13,7 @@ import {
   savePlan,
   updateSubscriptionStatus,
   verifyRazorpayPayment,
+  decideLeadRequest,
 } from "../controllers/saasController.js";
 import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -66,6 +67,11 @@ router.post(
   "/leads/:id/activity",
   allowRoles("saas_super_admin"),
   asyncHandler(addLeadActivity),
+);
+router.patch(
+  "/leads/:id/decision",
+  allowRoles("saas_super_admin"),
+  asyncHandler(decideLeadRequest),
 );
 router.get(
   "/audit",
