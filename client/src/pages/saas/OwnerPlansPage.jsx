@@ -27,7 +27,9 @@ export default function OwnerPlansPage({ notify }) {
     api("/saas/plans")
       .then(setPlans)
       .catch((e) => notify?.(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   const field = (key, value) => setForm({ ...form, [key]: value });
   async function save(e) {
     e.preventDefault();

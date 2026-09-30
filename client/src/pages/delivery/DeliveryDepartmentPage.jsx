@@ -49,7 +49,9 @@ function Vendors({ notify }) {
       .vendors()
       .then(setRows)
       .catch((e) => notify?.(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   const edit = (r) => setForm({ ...r, stitchingItems: r.stitchingItems || [] });
   async function save(e) {
     e.preventDefault();
@@ -188,7 +190,9 @@ function Plans({ notify, onPageChange }) {
       .plans()
       .then(setRows)
       .catch((e) => notify?.(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   return (
     <section className="classic-page">
       <Head
@@ -561,7 +565,9 @@ function History({ notify }) {
       .history(f)
       .then(setRows)
       .catch((e) => notify?.(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   const flat = rows.flatMap((r) =>
     r.lines.map((x) => ({
       Date: new Date(r.deliveryDate).toLocaleDateString(),

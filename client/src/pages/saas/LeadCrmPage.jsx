@@ -42,7 +42,9 @@ export default function LeadCrmPage({ notify }) {
     api("/saas/leads")
       .then(setRows)
       .catch((e) => notify?.(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   const shown = useMemo(
     () => rows.filter((x) => !filter || x.status === filter),
     [rows, filter],

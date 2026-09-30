@@ -45,7 +45,9 @@ export default function SubscriptionCenterPage({ mode }) {
     api("/saas/subscription")
       .then(setData)
       .catch((e) => setError(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   const [Icon, title, subtitle] = content[mode] || content["Subscription Plan"];
   async function status(action) {
     try {

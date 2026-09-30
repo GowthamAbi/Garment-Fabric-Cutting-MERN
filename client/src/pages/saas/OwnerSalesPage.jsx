@@ -13,7 +13,9 @@ export default function OwnerSalesPage({ notify }) {
         setSub(b);
       })
       .catch((e) => notify?.(e.message));
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
   async function approve(id) {
     try {
       await api(`/saas/subscription/${id}/approve`, { method: "PATCH" });
