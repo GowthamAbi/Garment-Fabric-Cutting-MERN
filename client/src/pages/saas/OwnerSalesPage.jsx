@@ -26,6 +26,8 @@ export default function OwnerSalesPage({ notify }) {
   if (!overview) return <p>Loading sales...</p>;
   const m = overview.metrics;
   const max = Math.max(1, ...overview.planSales.map((x) => x.revenue));
+  const companyName = (company) =>
+    company?.companyName || company?.name || company?._id || company || "—";
   return (
     <section className="classic-page">
       <PageTitle
@@ -110,7 +112,7 @@ export default function OwnerSalesPage({ notify }) {
               {(sub.payments || []).map((x) => (
                 <tr key={x._id}>
                   <td>{x.referenceNo}</td>
-                  <td>{x.companyId || "—"}</td>
+                  <td>{companyName(x.companyId)}</td>
                   <td>{x.plan}</td>
                   <td>{x.paymentMethod}</td>
                   <td>

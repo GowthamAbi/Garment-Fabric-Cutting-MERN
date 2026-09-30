@@ -1,5 +1,19 @@
 import { useMemo, useState } from "react";
 
+function displayValue(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value !== "object") return value;
+
+  return (
+    value.companyName ||
+    value.name ||
+    value.label ||
+    value.code ||
+    value._id ||
+    JSON.stringify(value)
+  );
+}
+
 export default function DataTable({
   columns,
   rows,
@@ -13,7 +27,7 @@ export default function DataTable({
   const valueFor = (row, column) =>
     typeof column.filterValue === "function"
       ? column.filterValue(row)
-      : row[column.key];
+      : displayValue(row[column.key]);
 
   const filteredRows = useMemo(
     () =>
@@ -98,7 +112,7 @@ export default function DataTable({
                   <td key={column.key}>
                     {typeof column.render === "function"
                       ? column.render(row)
-                      : (row[column.key] ?? "—")}
+                      : displayValue(row[column.key])}
                   </td>
                 ))}
                 {(onEdit || onDelete) && (
