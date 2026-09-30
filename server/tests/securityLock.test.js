@@ -38,6 +38,20 @@ test("frontend API calls require cookie credentials and avoid cache", async () =
   assert.doesNotMatch(api, /Authorization:\s*`Bearer/);
 });
 
+test("anonymous session checks do not show an error popup or expire again", async () => {
+  const authContext = await read("../../client/src/context/AuthContext.jsx");
+  const requestClient = await read("../../client/src/api/axiosInstance.js");
+
+  assert.match(authContext, /request\("\/auth\/session",\s*\{/);
+  assert.match(authContext, /suppressGlobalError:\s*true/);
+  assert.match(authContext, /suppressSessionExpired:\s*true/);
+  assert.match(requestClient, /if \(!suppressGlobalError\)/);
+  assert.match(
+    requestClient,
+    /response\.status === 401 && !suppressSessionExpired/,
+  );
+});
+
 test("public trial remains pending until the SaaS Owner decides", async () => {
   const controller = await read("../src/controllers/saasController.js");
   const model = await read("../src/models/SalesLead.js");

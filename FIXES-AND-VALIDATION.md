@@ -9,6 +9,9 @@
 - Confirmed payment company references are rendered as readable company names
   rather than raw populated MongoDB objects.
 - Confirmed the shared data table safely formats populated object values.
+- Fixed the anonymous customer-login flow. A normal 401 response from the
+  initial session probe is now handled silently instead of showing the
+  "Unable to Continue / Please login to continue" popup.
 
 ## Security and deployment
 

@@ -17,7 +17,10 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     clearSensitiveBrowserState();
 
-    request("/auth/session")
+    request("/auth/session", {
+      suppressGlobalError: true,
+      suppressSessionExpired: true,
+    })
       .then((session) => setUser(session.user))
       .catch(() => setUser(null))
       .finally(() => setCheckingSession(false));
@@ -65,7 +68,11 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     try {
-      await request("/auth/logout", { method: "POST" });
+      await request("/auth/logout", {
+        method: "POST",
+        suppressGlobalError: true,
+        suppressSessionExpired: true,
+      });
     } catch {
       // Local lock still happens if the network is unavailable.
     }
