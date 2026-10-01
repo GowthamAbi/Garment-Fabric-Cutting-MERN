@@ -27,8 +27,11 @@ const normalizeOrigin = (url) =>
 const allowedOrigins = new Set(
   [
     "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "https://store-inventory-app.netlify.app",
     "https://garmentsaas.netlify.app",
+    "https://ugsaas.com",
+    "https://www.ugsaas.com",
 
     ...(process.env.CLIENT_URL
       ? process.env.CLIENT_URL.split(",").map(normalizeOrigin).filter(Boolean)

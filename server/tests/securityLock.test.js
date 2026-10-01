@@ -4,6 +4,14 @@ import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
+test("production frontend domains are allowed by CORS", async () => {
+  const app = await read("../src/app.js");
+
+  assert.match(app, /"https:\/\/ugsaas\.com"/);
+  assert.match(app, /"https:\/\/www\.ugsaas\.com"/);
+  assert.match(app, /"https:\/\/garmentsaas\.netlify\.app"/);
+});
+
 test("business data routes are gated while limited lead forms stay public", async () => {
   const routes = await read("../src/routes/index.js");
   const authenticationGate = routes.indexOf("router.use(requireAuth");
