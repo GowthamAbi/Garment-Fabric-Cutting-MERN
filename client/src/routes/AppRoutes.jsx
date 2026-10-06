@@ -1,5 +1,4 @@
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
-import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
 import AutomationPage from "../pages/erp/AutomationPage.jsx";
 import HistoryPage from "../pages/history/HistoryPage.jsx";
 import InwardPage from "../pages/inward/InwardPage.jsx";
