@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const subscriptionPaymentSchema = new mongoose.Schema(
   {
@@ -23,10 +24,11 @@ const subscriptionPaymentSchema = new mongoose.Schema(
     notes: String,
     approvedBy: String,
     taxAmount: { type: Number, default: 0 },
+    taxPercent: { type: Number, min: 0, max: 100 },
     setupFee: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
 
 subscriptionPaymentSchema.index({ companyId: 1, createdAt: -1 });
-export default mongoose.model("SubscriptionPayment", subscriptionPaymentSchema);
+export default createTenantModel("SubscriptionPayment", subscriptionPaymentSchema);

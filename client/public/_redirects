@@ -1,1 +1,8 @@
-/*    /index.html   200
+/             /landing.html   200!
+/login        /index.html     200
+/demo         /demo.html      200
+/try-demo     /demo.html      200
+/pricing      /landing.html   200
+/privacy      /legal.html     200
+/terms        /legal.html     200
+/*            /index.html     200

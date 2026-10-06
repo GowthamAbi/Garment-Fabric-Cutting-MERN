@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const eventSchema = new mongoose.Schema(
   {
@@ -68,4 +69,4 @@ const productionJobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("ProductionJob", productionJobSchema);
+export default createTenantModel("ProductionJob", productionJobSchema);

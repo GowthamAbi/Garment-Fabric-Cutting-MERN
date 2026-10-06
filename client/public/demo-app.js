@@ -1045,7 +1045,7 @@ function toast(msg) {
 const API_BASE =
   location.hostname === "localhost"
     ? "http://localhost:5000/api"
-    : "https://garment-fabric-cutting-mern.onrender.com/api";
+    : "https://api.ugsaas.com/api";
 const formStyle = document.createElement("style");
 formStyle.textContent =
   ".lead-form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.lead-form .website-field{position:absolute;left:-9999px;opacity:0;pointer-events:none}.lead-form label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#52615f}.lead-form label.wide,.lead-form .form-message,.lead-form .form-submit{grid-column:1/-1}.lead-form input,.lead-form select,.lead-form textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:11px;font:13px Arial;background:#fff}.lead-form textarea{min-height:90px;resize:vertical}.lead-form .form-message{font-size:12px;padding:10px;border-radius:6px;background:#eef6f3;color:#176b59;display:none}.lead-form .form-message.error{background:#fae7e8;color:#a63d43}@media(max-width:700px){.lead-form{grid-template-columns:1fr}.lead-form label.wide,.lead-form .form-message,.lead-form .form-submit{grid-column:1}}";
@@ -1111,7 +1111,7 @@ document.getElementById("modal").onclick = (e) => {
 };
 document.getElementById("menuBtn").onclick = () =>
   document.getElementById("sidebar").classList.toggle("open");
-document.getElementById("exitDemo").onclick = () => (location.href = "/");
+document.getElementById("exitDemo").onclick = () => (location.href = "/login");
 document.getElementById("bellBtn").onclick = () => {
   go("approvals");
   toast("4 pending items opened");
@@ -1122,7 +1122,7 @@ document
     (button) =>
       (button.onclick = () =>
         button.dataset.action === "login"
-          ? (location.href = "/")
+          ? (location.href = "/login")
           : openPublicForm(button.dataset.action)),
   );
 document.getElementById("globalSearch").onkeydown = (e) => {
@@ -1137,3 +1137,8 @@ document.getElementById("globalSearch").onkeydown = (e) => {
   }
 };
 go("dashboard");
+
+const requestedAction = new URLSearchParams(location.search).get("open");
+if (["trial", "request", "sales"].includes(requestedAction)) {
+  openPublicForm(requestedAction);
+}

@@ -27,6 +27,7 @@ const ownerNavigation = [
   ["Subscriptions", CreditCard],
   ["Owner Users", Users],
   ["Audit & Backup", DatabaseBackup],
+  ["Subscription Automation", DatabaseBackup],
   ["Owner Settings", Settings],
 ];
 

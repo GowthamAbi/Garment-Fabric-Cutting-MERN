@@ -1,14 +1,26 @@
+import { settleSubscription } from "../services/subscriptionSettlementService.js";
+import { PaymentInbox } from "../automation/models.js";
+import { capturedPaymentMatches } from "../utils/paymentPolicy.js";
+import InvoiceSequence from "../models/InvoiceSequence.js";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import AuditLog from "../models/AuditLog.js";
 import Company from "../models/Company.js";
 import SubscriptionPayment from "../models/SubscriptionPayment.js";
+import SubscriptionInvoice from "../models/SubscriptionInvoice.js";
 import SaasPlan from "../models/SaasPlan.js";
 import SalesLead from "../models/SalesLead.js";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
+import { assertStrongPassword } from "../utils/passwordPolicy.js";
+import { provisionTenant } from "../services/tenantProvisioningService.js";
+import { createInvoiceForPayment } from "../services/invoiceService.js";
+import TenantRegistry from "../models/TenantRegistry.js";
+import BillingRequest from "../models/BillingRequest.js";
+import { getTenant, runWithTenant } from "../utils/tenantContext.js";
+import { currentDatabase } from "../config/tenantDatabase.js";
 
 const addDays = (days) => new Date(Date.now() + days * 86400000);
 const defaultPlans = [
@@ -48,13 +60,15 @@ export async function getSubscription(request, response) {
   const plans = await SaasPlan.find({ active: true })
     .sort({ sortOrder: 1 })
     .lean();
+  const invoices = await SubscriptionInvoice.find().sort({ invoiceDate: -1 }).limit(100).lean();
   response.json({
     company,
     payments,
     plans,
+    invoices,
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
     razorpayEnabled: Boolean(
-      process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET,
+      process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.RAZORPAY_WEBHOOK_SECRET && process.env.AUTOMATION_ENABLED === "true",
     ),
   });
 }
@@ -69,6 +83,8 @@ export async function createSubscription(request, response) {
     active: true,
   });
   const method = request.body.paymentMethod || "MANUAL";
+  if (method === "RAZORPAY" && (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET || !process.env.RAZORPAY_WEBHOOK_SECRET || process.env.AUTOMATION_ENABLED !== "true"))
+    throw new ApiError(503, "Configure payment keys, verified webhook and automation worker before accepting online payments");
   if (!planRecord || !["MANUAL", "RAZORPAY"].includes(method))
     throw new ApiError(400, "Valid plan and payment method are required");
   const taxAmount = Number(
@@ -77,7 +93,7 @@ export async function createSubscription(request, response) {
       100
     ).toFixed(2),
   );
-  const total = planRecord.price + planRecord.setupFee + taxAmount;
+  const total = Number((planRecord.price + planRecord.setupFee + taxAmount).toFixed(2));
   const payment = await SubscriptionPayment.create({
     companyId: request.user.companyId,
     referenceNo: generateReferenceNo("SUB"),
@@ -85,9 +101,23 @@ export async function createSubscription(request, response) {
     amount: total,
     setupFee: planRecord.setupFee,
     taxAmount,
+    taxPercent: planRecord.taxPercent,
     paymentMethod: method,
     status: method === "MANUAL" ? "PENDING_APPROVAL" : "CREATED",
     notes: request.body.notes || "",
+  });
+  const tenant = getTenant();
+  const billingRequest = await BillingRequest.create({
+    companyKey: tenant.companyKey,
+    databaseName: tenant.databaseName,
+    tenantPaymentId: payment._id,
+    referenceNo: payment.referenceNo,
+    plan: payment.plan,
+    amount: payment.amount,
+    validityDays: planRecord.validityDays,
+    paymentMethod: method,
+    status: payment.status,
+    notes: payment.notes,
   });
   if (method === "RAZORPAY") {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET)
@@ -118,62 +148,46 @@ export async function createSubscription(request, response) {
       );
     payment.providerOrderId = order.id;
     await payment.save();
+    billingRequest.providerOrderId = order.id;
+    await billingRequest.save();
   }
   response.status(201).json({
     ...payment.toObject(),
+    billingRequestId: billingRequest._id,
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
   });
 }
 
 export async function approveSubscription(request, response) {
-  const payment = await SubscriptionPayment.findById(request.params.id);
-  if (!payment) throw new ApiError(404, "Subscription payment not found");
-  const plan = await SaasPlan.findOne({ name: payment.plan }).lean();
-  payment.status = "PAID";
-  payment.approvedBy = request.user.name;
-  payment.periodStart = new Date();
-  payment.periodEnd = addDays(plan?.validityDays || 30);
-  await payment.save();
-  await Company.findByIdAndUpdate(payment.companyId, {
-    subscriptionPlan: payment.plan,
-    subscriptionStatus: "Active",
-    subscriptionStartsAt: payment.periodStart,
-    subscriptionEndsAt: payment.periodEnd,
-    active: true,
+  const billing = await BillingRequest.findById(request.params.id).lean();
+  if (!billing) throw new ApiError(404, "Billing request not found");
+  const result = await settleSubscription(billing, {
+    actor: request.user.userId || request.user.name, manual: true,
   });
-  response.json(payment);
+  response.json(result);
 }
 
 export async function verifyRazorpayPayment(request, response) {
-  const payment = await SubscriptionPayment.findOne({
-    providerOrderId: request.body.razorpay_order_id,
-  });
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) throw new ApiError(503, "Payment verification is not configured");
+  const payment = await SubscriptionPayment.findOne({ providerOrderId: request.body.razorpay_order_id });
   if (!payment) throw new ApiError(404, "Payment order not found");
-  const expected = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
-    .update(
-      `${request.body.razorpay_order_id}|${request.body.razorpay_payment_id}`,
-    )
-    .digest("hex");
-  if (
-    !request.body.razorpay_signature ||
-    expected !== request.body.razorpay_signature
-  )
+  const expected = crypto.createHmac("sha256", secret)
+    .update(`${request.body.razorpay_order_id}|${request.body.razorpay_payment_id}`).digest("hex");
+  const signature = request.body.razorpay_signature || "";
+  if (!/^[a-f0-9]{64}$/i.test(signature) ||
+      !crypto.timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex")))
     throw new ApiError(401, "Invalid Razorpay signature");
-  const plan = await SaasPlan.findOne({ name: payment.plan }).lean();
-  payment.status = "PAID";
-  payment.providerPaymentId = request.body.razorpay_payment_id;
-  payment.periodStart = new Date();
-  payment.periodEnd = addDays(plan?.validityDays || 30);
-  await payment.save();
-  await Company.findByIdAndUpdate(payment.companyId, {
-    subscriptionPlan: payment.plan,
-    subscriptionStatus: "Active",
-    subscriptionStartsAt: payment.periodStart,
-    subscriptionEndsAt: payment.periodEnd,
-    active: true,
-  });
-  response.json(payment);
+  // Checkout signature proves authenticity, not capture. Only the signed
+  // payment.captured webhook can activate an online subscription.
+  if (payment.status === "PAID") {
+    if (payment.providerPaymentId !== request.body.razorpay_payment_id)
+      throw new ApiError(409, "Order was settled using another payment");
+    const invoice = await SubscriptionInvoice.findOne({ paymentId: payment._id });
+    return response.json({ payment, invoice, pending: false });
+  }
+  response.status(202).json({ payment, pending: true,
+    message: "Payment received. Subscription activation awaits verified payment capture." });
 }
 
 export async function listPlans(_request, response) {
@@ -223,10 +237,9 @@ export async function savePlan(request, response) {
 
 export async function getOwnerOverview(_request, response) {
   await ensurePlans();
-  const [companies, users, payments, leads, plans] = await Promise.all([
-    Company.find().lean(),
-    User.find().lean(),
-    SubscriptionPayment.find().lean(),
+  const [companies, payments, leads, plans] = await Promise.all([
+    TenantRegistry.find().lean(),
+    BillingRequest.find().lean(),
     SalesLead.find().sort({ createdAt: -1 }).lean(),
     SaasPlan.find().sort({ sortOrder: 1 }).lean(),
   ]);
@@ -249,11 +262,9 @@ export async function getOwnerOverview(_request, response) {
   response.json({
     metrics: {
       companies: companies.length,
-      activeCompanies: companies.filter(
-        (c) => c.active && c.subscriptionStatus === "Active",
-      ).length,
-      users: users.length,
-      activeUsers: users.filter((u) => u.active).length,
+      activeCompanies: companies.filter((c) => c.status === "ACTIVE").length,
+      users: "Private",
+      activeUsers: "Private",
       trials: companies.filter((c) => c.subscriptionPlan === "Trial").length,
       newRequests: leads.filter((lead) =>
         ["NEW", "TRIAL_PENDING"].includes(lead.status),
@@ -417,10 +428,7 @@ export async function startPublicTrial(request, response) {
   }
   if (!companyName || !name || !email || !password)
     throw new ApiError(400, "Company, name, email and password are required");
-  if (String(password).length < 8)
-    throw new ApiError(400, "Password must contain at least 8 characters");
-  if (await User.exists({ email: String(email).toLowerCase() }))
-    throw new ApiError(409, "Email already registered");
+  assertStrongPassword(password, { name, email });
   const normalizedEmail = cleanText(email, 160).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
     throw new ApiError(400, "Enter a valid email address");
@@ -499,40 +507,24 @@ export async function decideLeadRequest(request, response) {
 
   if (!lead.pendingPasswordHash)
     throw new ApiError(409, "Trial credential is unavailable");
-  if (await User.exists({ email: lead.email }))
-    throw new ApiError(409, "Email is already registered");
-
   await ensurePlans();
   const trial = await SaasPlan.findOne({ code: "TRIAL", active: true }).lean();
   const expiry = addDays(trial?.validityDays || 14);
-  const company = await Company.create({
+  const provisioned = await provisionTenant({
     companyName: lead.companyName,
-    address: lead.city || "",
-    subscriptionPlan: "Trial",
-    subscriptionStatus: "Active",
-    subscriptionStartsAt: new Date(),
-    subscriptionEndsAt: expiry,
-    factories: [
-      {
-        name: `${lead.companyName} Main`,
-        code: "MAIN",
-        address: lead.city || "",
-      },
-    ],
-  });
-  await User.create({
-    name: lead.contactName,
-    email: lead.email,
-    password: lead.pendingPasswordHash,
-    role: "company_admin",
-    companyId: company._id,
-    factoryId: company.factories[0]._id,
+    adminName: lead.contactName,
+    adminEmail: lead.email,
+    passwordHash: lead.pendingPasswordHash,
+    city: lead.city || "",
+    plan: "Trial",
+    expiresAt: expiry,
+    createdBy: request.user.userId || request.user.name,
   });
 
   lead.status = "TRIAL_ACTIVE";
   lead.pendingPasswordHash = "";
   lead.demoExpiresAt = expiry;
-  lead.convertedCompanyId = company._id;
+  lead.convertedCompanyId = provisioned.company._id;
   lead.decisionBy = request.user.name;
   lead.decisionAt = new Date();
   lead.activities.push({
@@ -544,6 +536,9 @@ export async function decideLeadRequest(request, response) {
   response.json({
     message: "Trial approved. Customer can login now.",
     expiresAt: expiry,
+    companyKey: provisioned.registry.companyKey,
+    loginPath: provisioned.registry.loginPath,
+    userId: provisioned.userId,
     lead,
   });
 }
@@ -553,6 +548,14 @@ export async function updateSubscriptionStatus(request, response) {
   const states = { ACTIVATE: "Active", PAUSE: "Suspended", REMOVE: "Expired" };
   if (!states[action])
     throw new ApiError(400, "Action must be ACTIVATE, PAUSE or REMOVE");
+  if (action === "ACTIVATE") {
+    const current = await Company.findById(request.user.companyId).lean();
+    const now = new Date();
+    if (!current?.subscriptionEndsAt || current.subscriptionEndsAt <= now) throw new ApiError(402, "Renew an expired subscription before activation");
+    const paid = await SubscriptionPayment.exists({ companyId: request.user.companyId, status: "PAID", periodStart: { $lte: now }, periodEnd: current.subscriptionEndsAt });
+    const registry = await TenantRegistry.findOne({ companyKey: getTenant().companyKey }).lean();
+    if (!paid && !(current.subscriptionPlan === "Trial" && registry?.status === "ACTIVE")) throw new ApiError(403, "No paid or approved trial entitlement permits activation");
+  }
   const company = await Company.findByIdAndUpdate(
     request.user.companyId,
     { subscriptionStatus: states[action], active: action !== "REMOVE" },
@@ -563,39 +566,25 @@ export async function updateSubscriptionStatus(request, response) {
 }
 
 export async function razorpayWebhook(request, response) {
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+  if (!secret || !request.rawBody) throw new ApiError(503, "Webhook verification is not configured");
   const signature = request.get("x-razorpay-signature") || "";
-  const expected = crypto
-    .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET || "missing")
-    .update(request.rawBody || JSON.stringify(request.body))
-    .digest("hex");
-  if (
-    !signature ||
-    signature.length !== expected.length ||
-    !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
-  )
+  const expected = crypto.createHmac("sha256", secret).update(request.rawBody).digest("hex");
+  if (!/^[a-f0-9]{64}$/i.test(signature) ||
+      !crypto.timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex")))
     throw new ApiError(401, "Invalid payment signature");
   const entity = request.body.payload?.payment?.entity;
-  if (request.body.event === "payment.captured" && entity?.order_id) {
-    const payment = await SubscriptionPayment.findOne({
-      providerOrderId: entity.order_id,
-    });
-    if (payment && payment.status !== "PAID") {
-      const plan = await SaasPlan.findOne({ name: payment.plan }).lean();
-      payment.status = "PAID";
-      payment.providerPaymentId = entity.id;
-      payment.periodStart = new Date();
-      payment.periodEnd = addDays(plan?.validityDays || 30);
-      await payment.save();
-      await Company.findByIdAndUpdate(payment.companyId, {
-        subscriptionPlan: payment.plan,
-        subscriptionStatus: "Active",
-        subscriptionStartsAt: payment.periodStart,
-        subscriptionEndsAt: payment.periodEnd,
-        active: true,
-      });
-    }
-  }
-  response.json({ received: true });
+  if (request.body.event !== "payment.captured" || !entity?.order_id)
+    return response.json({ received: true });
+  const billing = await BillingRequest.findOne({ providerOrderId: entity.order_id }).lean();
+  if (!billing) throw new ApiError(404, "Payment order is not recognized");
+  if (!capturedPaymentMatches(entity, billing)) throw new ApiError(409, "Payment does not match the order");
+  await PaymentInbox.findOneAndUpdate({ key: `capture-${entity.id}` }, { $setOnInsert: {
+    key: `capture-${entity.id}`, billingId: String(billing._id),
+    entity: { id: entity.id, order_id: entity.order_id, amount: entity.amount, currency: entity.currency, status: entity.status },
+    status: "PENDING", nextAttemptAt: new Date(), attempts: 0,
+  } }, { upsert: true });
+  response.status(202).json({ received: true, queued: true });
 }
 
 export async function getAuditHistory(request, response) {
@@ -615,11 +604,13 @@ export async function getAuditHistory(request, response) {
 
 export async function downloadBackup(request, response) {
   const companyId = new mongoose.Types.ObjectId(request.user.companyId);
-  const collections = await mongoose.connection.db.listCollections().toArray();
+  const tenantDb = currentDatabase().db;
+  const collections = await tenantDb.listCollections().toArray();
   const data = {};
   for (const collection of collections) {
     if (["companies", "system.version"].includes(collection.name)) continue;
-    data[collection.name] = await mongoose.connection.db
+    if (["users", "supportgrants", "invoicesequences"].includes(collection.name)) continue;
+    data[collection.name] = await tenantDb
       .collection(collection.name)
       .find({ companyId })
       .toArray();

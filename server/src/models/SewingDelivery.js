@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const sewingDeliverySchema = new mongoose.Schema(
   {
@@ -19,4 +20,4 @@ const sewingDeliverySchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("SewingDelivery", sewingDeliverySchema);
+export default createTenantModel("SewingDelivery", sewingDeliverySchema);

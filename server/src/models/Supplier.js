@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 const schema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -8,4 +9,4 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-export default mongoose.model("Supplier", schema);
+export default createTenantModel("Supplier", schema);

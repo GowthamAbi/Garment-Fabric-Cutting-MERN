@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { controlDatabase } from "../config/tenantDatabase.js";
 
 const activitySchema = new mongoose.Schema(
   {
@@ -67,4 +68,5 @@ const schema = new mongoose.Schema(
 );
 
 schema.index({ status: 1, nextFollowUpAt: 1 });
-export default mongoose.model("SalesLead", schema);
+const connection = controlDatabase();
+export default connection.models.SalesLead || connection.model("SalesLead", schema);

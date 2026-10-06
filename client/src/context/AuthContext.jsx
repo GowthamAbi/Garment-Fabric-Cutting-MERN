@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { request } from "../api/axiosInstance.js";
 import { tokenService } from "../services/tokenService.js";
+import { companyKeyFromLocation, tenantLoginPath } from "../utils/tenantClient.js";
 
 const AuthContext = createContext(null);
 
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
     const expireSession = () => {
       clearSensitiveBrowserState();
       setUser(null);
-      window.history.replaceState({}, "", "/");
+      window.history.replaceState({}, "", tenantLoginPath(companyKeyFromLocation()));
     };
 
     window.addEventListener("ug-session-expired", expireSession);
@@ -78,7 +79,7 @@ export function AuthProvider({ children }) {
     }
     clearSensitiveBrowserState();
     setUser(null);
-    window.history.replaceState({}, "", "/");
+    window.history.replaceState({}, "", tenantLoginPath(companyKeyFromLocation()));
   }
 
   return (

@@ -5,9 +5,13 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "jobs:once": "node scripts/run-jobs.js",
+    "migrate:dry": "node scripts/migrate-company-databases.js",
+    "migrate:apply": "node scripts/migrate-company-databases.js --apply"
   },
   "dependencies": {
+    "bson": "^6.10.4",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",

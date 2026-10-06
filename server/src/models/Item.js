@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const itemSchema = new mongoose.Schema(
   {
@@ -29,4 +30,4 @@ itemSchema.index(
   { unique: true },
 );
 
-export default mongoose.model("Item", itemSchema);
+export default createTenantModel("Item", itemSchema);

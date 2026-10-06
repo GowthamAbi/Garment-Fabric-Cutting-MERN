@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const scanSchema = new mongoose.Schema(
   {
@@ -56,4 +57,4 @@ garmentBundleSchema.index({
   colour: 1,
   size: 1,
 });
-export default mongoose.model("GarmentBundle", garmentBundleSchema);
+export default createTenantModel("GarmentBundle", garmentBundleSchema);

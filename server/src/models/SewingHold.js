@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const sewingHoldSchema = new mongoose.Schema(
   {
@@ -20,4 +21,4 @@ const sewingHoldSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("SewingHold", sewingHoldSchema);
+export default createTenantModel("SewingHold", sewingHoldSchema);

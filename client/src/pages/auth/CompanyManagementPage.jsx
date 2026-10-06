@@ -19,6 +19,7 @@ export default function CompanyManagementPage({ notify }) {
   const { user } = useAuth();
   const [form, setForm] = useState(blank);
   const [rows, setRows] = useState([]);
+  const [created, setCreated] = useState(null);
   async function load() {
     try {
       setRows(await api("/companies"));
@@ -33,7 +34,8 @@ export default function CompanyManagementPage({ notify }) {
   async function submit(event) {
     event.preventDefault();
     try {
-      await api("/companies", { method: "POST", body: JSON.stringify(form) });
+      const result = await api("/companies", { method: "POST", body: JSON.stringify(form) });
+      setCreated(result);
       setForm(blank);
       await load();
       notify?.("Company and administrator created");
@@ -99,6 +101,7 @@ export default function CompanyManagementPage({ notify }) {
                           : "text"
                     }
                     required={!["address"].includes(key)}
+                    minLength={key === "adminPassword" ? 12 : undefined}
                     value={form[key]}
                     onChange={(e) =>
                       setForm({ ...form, [key]: e.target.value })
@@ -108,7 +111,16 @@ export default function CompanyManagementPage({ notify }) {
               </label>
             ))}
             <button className="primary">Create Company</button>
+            <small>Administrator password must contain 12+ characters, uppercase, lowercase, number and symbol.</small>
           </form>
+          {created && (
+            <div className="success-message">
+              <b>Workspace created</b><br />
+              URL: {window.location.origin}{created.company.loginPath}<br />
+              Admin User ID: {created.admin.userId}<br />
+              Activation sent to: {created.admin.email}
+            </div>
+          )}
         </Card>
       )}
       <Card title="Companies">
@@ -117,17 +129,10 @@ export default function CompanyManagementPage({ notify }) {
           columns={[
             { key: "companyName", label: "Company" },
             { key: "subscriptionPlan", label: "Plan" },
-            { key: "subscriptionStatus", label: "Subscription" },
-            {
-              key: "factories",
-              label: "Factories",
-              render: (row) => row.factories?.map((f) => f.name).join(", "),
-            },
-            {
-              key: "active",
-              label: "Active",
-              render: (row) => (row.active ? "Yes" : "No"),
-            },
+            { key: "companyKey", label: "Company ID" },
+            { key: "loginPath", label: "Unique Login URL" },
+            { key: "status", label: "Subscription" },
+            { key: "dataOwner", label: "Data Owner" },
             {
               key: "actions",
               label: "Owner Actions",

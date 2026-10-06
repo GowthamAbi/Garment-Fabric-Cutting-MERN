@@ -1,11 +1,21 @@
-import bcrypt from "bcryptjs";
 import Company from "../models/Company.js";
 import User from "../models/User.js";
 import ApiError from "../utils/ApiError.js";
 import AuditLog from "../models/AuditLog.js";
 import GarmentMovement from "../models/GarmentMovement.js";
+import TenantRegistry from "../models/TenantRegistry.js";
+import { provisionTenant } from "../services/tenantProvisioningService.js";
+import { assertStrongPassword } from "../utils/passwordPolicy.js";
+import { runWithTenant } from "../utils/tenantContext.js";
 
 export async function getCompanies(request, response) {
+  if (request.user.role === "saas_super_admin") {
+    const tenants = await TenantRegistry.find()
+      .select("companyKey companyName loginPath status subscriptionPlan subscriptionEndsAt dataOwner ownerDataAccess retentionLock createdAt")
+      .sort({ companyName: 1 })
+      .lean();
+    return response.json(tenants);
+  }
   const companies = await Company.find(
     request.user.role === "saas_super_admin"
       ? {}
@@ -27,6 +37,8 @@ export async function getCompanies(request, response) {
 }
 
 export async function getCompanyWorkspace(request, response) {
+  if (request.user.role === "saas_super_admin")
+    throw new ApiError(403, "Customer production data is private. Owner access requires a customer-issued support grant");
   const company = await Company.findById(request.params.id).lean();
   if (!company) throw new ApiError(404, "Company not found");
   const users = await User.find({ companyId: company._id })
@@ -93,6 +105,8 @@ export async function getCompanyWorkspace(request, response) {
 }
 
 export async function updateCompanyUser(request, response) {
+  if (request.user.role === "saas_super_admin")
+    throw new ApiError(403, "The company administrator must manage company users");
   const allowedRoles = [
     "company_admin",
     "admin",
@@ -165,34 +179,28 @@ export async function createCompany(request, response) {
       "Company, factory and administrator details are required",
     );
   }
-  if (await User.exists({ email: adminEmail.toLowerCase() }))
-    throw new ApiError(409, "Email already registered");
-  const company = await Company.create({
-    companyName,
-    address,
-    subscriptionPlan,
-    subscriptionStartsAt: new Date(),
-    subscriptionEndsAt: new Date(Date.now() + 14 * 86400000),
-    factories: [
-      { name: factoryName, code: request.body.factoryCode || "MAIN", address },
-    ],
-  });
-  const factoryId = company.factories[0]._id;
-  const user = await User.create({
-    name: adminName,
-    email: adminEmail,
-    password: await bcrypt.hash(adminPassword, 12),
-    role: "company_admin",
-    companyId: company._id,
-    factoryId,
+  assertStrongPassword(adminPassword, { name: adminName, email: adminEmail });
+  const expiresAt = new Date(Date.now() + Number(request.body.validityDays || 14) * 86400000);
+  const provisioned = await provisionTenant({
+    companyName, adminName, adminEmail, password: adminPassword,
+    city: address, plan: subscriptionPlan || "Trial", expiresAt,
+    createdBy: request.user.userId || request.user.name,
   });
   response.status(201).json({
-    company,
-    admin: { _id: user._id, name: user.name, email: user.email },
+    company: {
+      companyName,
+      companyKey: provisioned.registry.companyKey,
+      loginPath: provisioned.registry.loginPath,
+      databaseName: provisioned.registry.databaseName,
+      subscriptionPlan: provisioned.registry.subscriptionPlan,
+    },
+    admin: { userId: provisioned.userId, name: adminName, email: provisioned.userEmail },
   });
 }
 
 export async function updateCompany(request, response) {
+  if (request.user.role === "saas_super_admin")
+    throw new ApiError(403, "Customer profile changes require the company administrator");
   const company = await Company.findByIdAndUpdate(
     request.params.id,
     request.body,
@@ -219,19 +227,26 @@ export async function controlCompanySubscription(request, response) {
     updates.subscriptionEndsAt = new Date(
       Date.now() + Number(request.body.validityDays) * 86400000,
     );
-  const company = await Company.findByIdAndUpdate(request.params.id, updates, {
-    new: true,
+  const registry = await TenantRegistry.findById(request.params.id);
+  if (!registry) throw new ApiError(404, "Company workspace not found");
+  registry.status = action === "ACTIVATE" ? "ACTIVE" : action === "PAUSE" ? "SUSPENDED" : "ARCHIVED";
+  if (updates.subscriptionEndsAt) registry.subscriptionEndsAt = updates.subscriptionEndsAt;
+  await registry.save();
+  await runWithTenant(
+    { companyKey: registry.companyKey, databaseName: registry.databaseName },
+    async () => {
+      const company = await Company.findOne();
+      if (company) {
+        Object.assign(company, updates);
+        await company.save();
+      }
+    },
+  );
+  response.json({
+    _id: registry._id,
+    companyName: registry.companyName,
+    companyKey: registry.companyKey,
+    status: registry.status,
+    subscriptionEndsAt: registry.subscriptionEndsAt,
   });
-  if (!company) throw new ApiError(404, "Company not found");
-  if (["REVOKE", "ARCHIVE"].includes(action))
-    await User.updateMany(
-      { companyId: company._id, role: { $ne: "saas_super_admin" } },
-      { active: false },
-    );
-  if (action === "ACTIVATE")
-    await User.updateMany(
-      { companyId: company._id, role: "company_admin" },
-      { active: true },
-    );
-  response.json(company);
 }

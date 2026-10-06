@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const masterRecordSchema = new mongoose.Schema(
   {
@@ -24,4 +25,4 @@ masterRecordSchema.index(
   { companyId: 1, factoryId: 1, masterType: 1, code: 1 },
   { unique: true },
 );
-export default mongoose.model("MasterRecord", masterRecordSchema);
+export default createTenantModel("MasterRecord", masterRecordSchema);

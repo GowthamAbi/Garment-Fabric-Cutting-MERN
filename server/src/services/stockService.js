@@ -7,8 +7,22 @@ import { transactionRepository } from "../repositories/transactionRepository.js"
 import { generateReferenceNo } from "../utils/generateReferenceNo.js";
 import Inward from "../models/Inward.js";
 import Item from "../models/Item.js";
+import StockLedger from "../models/StockLedger.js";
+import { positiveStockQuantity } from "../utils/stockQuantity.js";
+
+async function postLedger(transaction, unit, session) {
+  await StockLedger.create([{
+    sourceId: transaction._id, referenceNo: transaction.referenceNo,
+    itemCode: transaction.itemCode, unit, direction: transaction.kind,
+    quantity: transaction.quantity,
+    signedQuantity: transaction.kind === "INWARD" ? transaction.quantity : -transaction.quantity,
+    balanceAfter: transaction.balanceQty, postedAt: transaction.transactionDate,
+  }], { session });
+}
 
 export async function createInward(inwardData) {
+  inwardData = { ...inwardData, quantity: positiveStockQuantity(inwardData.quantity) };
+  await StockLedger.init();
   const session = await mongoose.startSession();
   let savedTransaction;
 
@@ -113,6 +127,7 @@ export async function createInward(inwardData) {
         ...transaction.toObject(),
         unit: item.unit,
       };
+      await postLedger(transaction, item.unit, session);
     });
 
     return savedTransaction;
@@ -122,6 +137,8 @@ export async function createInward(inwardData) {
 }
 
 export async function createOutward(outwardData) {
+  outwardData = { ...outwardData, quantity: positiveStockQuantity(outwardData.quantity) };
+  await StockLedger.init();
   const session = await mongoose.startSession();
   let savedTransaction;
 
@@ -150,6 +167,7 @@ export async function createOutward(outwardData) {
         },
         session,
       );
+      await postLedger(savedTransaction, item.unit, session);
     });
 
     return savedTransaction;

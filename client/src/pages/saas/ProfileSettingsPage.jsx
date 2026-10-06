@@ -83,7 +83,7 @@ export default function ProfileSettingsPage({ mode = "profile", notify }) {
             <span>New Password (optional)</span>
             <input
               type="password"
-              minLength="8"
+              minLength="12"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />

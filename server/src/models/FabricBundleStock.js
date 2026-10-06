@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const fabricBundleStockSchema = new mongoose.Schema(
   {
@@ -44,4 +45,4 @@ fabricBundleStockSchema.index({
 });
 fabricBundleStockSchema.index({ companyId: 1, factoryId: 1, batchNo: 1 });
 
-export default mongoose.model("FabricBundleStock", fabricBundleStockSchema);
+export default createTenantModel("FabricBundleStock", fabricBundleStockSchema);

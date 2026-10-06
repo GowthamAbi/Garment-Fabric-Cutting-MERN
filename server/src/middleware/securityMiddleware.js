@@ -41,7 +41,7 @@ export function trustedMutationOrigin(allowedOrigins) {
     const isCredentiallessAuthRequest =
       !origin &&
       !request.headers.cookie &&
-      /^\/api\/auth\/(login|register|forgot-password|reset-password)$/.test(
+      /^\/api\/auth\/(login|register|forgot-password|reset-password|verify-email)$/.test(
         request.originalUrl,
       );
 
@@ -58,7 +58,7 @@ export function trustedMutationOrigin(allowedOrigins) {
 }
 
 export function loginRateLimit(request, _response, next) {
-  const key = `${request.ip}:${String(request.body.email || "").toLowerCase()}`;
+  const key = `${request.ip}:${String(request.body.companyKey || request.get("x-company-key") || "platform").toLowerCase()}:${String(request.body.userId || request.body.email || "").toLowerCase()}`;
   const now = Date.now();
   const record = loginAttempts.get(key) || {
     count: 0,
@@ -78,7 +78,7 @@ export function loginRateLimit(request, _response, next) {
 }
 
 export function clearLoginAttempts(request) {
-  const key = `${request.ip}:${String(request.body.email || "").toLowerCase()}`;
+  const key = `${request.ip}:${String(request.body.companyKey || request.get("x-company-key") || "platform").toLowerCase()}:${String(request.body.userId || request.body.email || "").toLowerCase()}`;
   loginAttempts.delete(key);
 }
 

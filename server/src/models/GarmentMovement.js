@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const garmentMovementSchema = new mongoose.Schema(
   {
@@ -67,4 +68,4 @@ garmentMovementSchema.index({
   colour: 1,
   size: 1,
 });
-export default mongoose.model("GarmentMovement", garmentMovementSchema);
+export default createTenantModel("GarmentMovement", garmentMovementSchema);

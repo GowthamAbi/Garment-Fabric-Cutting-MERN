@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const fabricRollSchema = new mongoose.Schema(
   {
@@ -37,4 +38,4 @@ fabricRollSchema.index({
   colour: 1,
   lotNo: 1,
 });
-export default mongoose.model("FabricRoll", fabricRollSchema);
+export default createTenantModel("FabricRoll", fabricRollSchema);

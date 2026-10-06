@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="index,follow" />
+    <title>UG SaaS · Legal</title>
+    <link rel="stylesheet" href="/landing.css" />
+  </head>
+  <body class="legal-page">
+    <nav class="site-nav"><a class="brand" href="/"><span>UG</span><div><b>UG SaaS</b><small>GARMENT OPERATIONS PLATFORM</small></div></a><div class="links"><a href="/">Home</a><a href="/demo">Demo</a><a class="login" href="/login">Customer Login</a></div></nav>
+    <main class="legal-wrap"><a href="/">← Back to UG SaaS</a><article id="legal"></article></main>
+    <footer><p>UG SaaS · India</p><div><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/demo?open=sales">Contact</a></div></footer>
+    <script>
+      const privacy = location.pathname === "/privacy";
+      document.title = `UG SaaS · ${privacy ? "Privacy Policy" : "Terms of Service"}`;
+      document.getElementById("legal").innerHTML = privacy
+        ? `<p class="eyebrow">LEGAL</p><h1>Privacy Policy</h1><small>Last updated: 1 October 2026</small><h2>Information we collect</h2><p>UG SaaS collects account, company, contact and operational information required to provide the platform, respond to product enquiries and manage approved trials.</p><h2>How information is used</h2><p>Information is used to operate and secure customer workspaces, provide support, process subscription requests and improve the service. Public demonstration records are dummy data.</p><h2>Data protection</h2><p>Live business pages require authentication. Access is limited by company, factory, department and user role. We do not sell customer operational data.</p><h2>Contact</h2><p>Privacy questions can be submitted through the Contact Sales form on the UG SaaS demo site.</p>`
+        : `<p class="eyebrow">LEGAL</p><h1>Terms of Service</h1><small>Last updated: 1 October 2026</small><h2>Service access</h2><p>UG SaaS provides garment production management software under a selected subscription or approved trial. Customer access remains subject to account approval and assigned permissions.</p><h2>Customer responsibilities</h2><p>Customers must provide accurate account information, protect login credentials and use the platform only for lawful business operations.</p><h2>Demonstration environment</h2><p>The public demo is read-only and uses dummy records. Demo figures do not represent live customers, revenue or production commitments.</p><h2>Availability and changes</h2><p>Features, plans and limits may be updated. Commercial terms are confirmed in the applicable proposal or subscription agreement.</p><h2>Contact</h2><p>Questions can be submitted through the Contact Sales form on the UG SaaS demo site.</p>`;
+    </script>
+  </body>
+</html>

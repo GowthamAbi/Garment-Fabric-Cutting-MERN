@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const historySchema = new mongoose.Schema(
   {
@@ -50,4 +51,4 @@ const warehouseStockSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("WarehouseStock", warehouseStockSchema);
+export default createTenantModel("WarehouseStock", warehouseStockSchema);

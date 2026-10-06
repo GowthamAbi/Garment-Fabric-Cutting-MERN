@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const sizeLineSchema = new mongoose.Schema(
   {
@@ -74,4 +75,4 @@ productionPlanSchema.index(
   { companyId: 1, dcNo: 1, itemCode: 1 },
   { unique: true },
 );
-export default mongoose.model("ProductionPlan", productionPlanSchema);
+export default createTenantModel("ProductionPlan", productionPlanSchema);

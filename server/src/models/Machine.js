@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const machineSchema = new mongoose.Schema(
   {
@@ -38,4 +39,4 @@ const machineSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("Machine", machineSchema);
+export default createTenantModel("Machine", machineSchema);

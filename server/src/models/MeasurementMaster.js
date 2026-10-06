@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const measurementMasterSchema = new mongoose.Schema(
   {
@@ -16,4 +17,4 @@ measurementMasterSchema.index(
   { companyId: 1, factoryId: 1, itemName: 1, style: 1, size: 1 },
   { unique: true },
 );
-export default mongoose.model("MeasurementMaster", measurementMasterSchema);
+export default createTenantModel("MeasurementMaster", measurementMasterSchema);

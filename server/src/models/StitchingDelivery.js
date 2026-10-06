@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const stitchingDeliverySchema = new mongoose.Schema(
   {
@@ -25,4 +26,4 @@ stitchingDeliverySchema.index({
   dcNo: 1,
   deliveryDate: -1,
 });
-export default mongoose.model("StitchingDelivery", stitchingDeliverySchema);
+export default createTenantModel("StitchingDelivery", stitchingDeliverySchema);

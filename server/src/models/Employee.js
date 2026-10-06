@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const employeeSchema = new mongoose.Schema(
   {
@@ -20,4 +21,4 @@ const employeeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("Employee", employeeSchema);
+export default createTenantModel("Employee", employeeSchema);

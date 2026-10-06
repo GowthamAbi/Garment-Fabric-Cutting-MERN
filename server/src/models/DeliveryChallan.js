@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const line = new mongoose.Schema(
   {
@@ -32,4 +33,4 @@ const schema = new mongoose.Schema(
 );
 schema.index({ companyId: 1, factoryId: 1, challanNo: 1 }, { unique: true });
 schema.index({ companyId: 1, factoryId: 1, planNo: 1, deliveryDate: -1 });
-export default mongoose.model("DeliveryChallan", schema);
+export default createTenantModel("DeliveryChallan", schema);

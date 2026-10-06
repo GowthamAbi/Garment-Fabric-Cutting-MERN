@@ -2,6 +2,11 @@ import ApiError from "../utils/ApiError.js";
 export const allowRoles =
   (...roles) =>
   (req, _res, next) => {
+    if (req.user?.role === "support_viewer") {
+      const resource = req.originalUrl.split("?")[0].split("/").filter(Boolean)[1];
+      if (req.method === "GET" && req.user.supportScopes?.includes(resource)) return next();
+      return next(new ApiError(403, "Support access is read-only and limited to customer-approved scopes"));
+    }
     if (!roles.includes(req.user?.role))
       return next(new ApiError(403, "Access denied"));
 

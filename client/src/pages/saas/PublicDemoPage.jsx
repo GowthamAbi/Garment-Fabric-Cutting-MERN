@@ -270,7 +270,7 @@ export default function PublicDemoPage() {
                   ["companyName", "Company name"],
                   ["name", "Your name"],
                   ["email", "Work email", "email"],
-                  ["password", "Password (8+ characters)", "password"],
+                  ["password", "Strong Password (12+ characters)", "password"],
                   ["phone", "Phone"],
                   ["city", "City"],
                 ].map(([k, l, t]) => (

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 const schema = new mongoose.Schema(
   {
     outwardNo: { type: String, required: true, unique: true },
@@ -13,4 +14,4 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-export default mongoose.model("Outward", schema);
+export default createTenantModel("Outward", schema);

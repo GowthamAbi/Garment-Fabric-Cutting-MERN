@@ -288,7 +288,7 @@ export default function SuperAdminDashboardPage({ notify }) {
             />
             <input
               required
-              minLength="8"
+              minLength="12"
               type="password"
               placeholder="Temporary password"
               value={form.password}

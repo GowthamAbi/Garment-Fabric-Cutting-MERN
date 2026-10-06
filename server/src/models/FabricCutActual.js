@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 const line = new mongoose.Schema(
   {
     colour: { type: String, uppercase: true },
@@ -43,4 +44,4 @@ const schema = new mongoose.Schema(
 );
 schema.index({ companyId: 1, factoryId: 1, actualNo: 1 }, { unique: true });
 schema.index({ companyId: 1, factoryId: 1, planNo: 1 }, { unique: true });
-export default mongoose.model("FabricCutActual", schema);
+export default createTenantModel("FabricCutActual", schema);

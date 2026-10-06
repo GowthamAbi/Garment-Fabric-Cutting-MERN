@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const colourSchema = new mongoose.Schema(
   { name: { type: String, required: true, uppercase: true } },
@@ -52,4 +53,4 @@ garmentBomSchema.index(
   { unique: true },
 );
 garmentBomSchema.index({ companyId: 1, factoryId: 1, style: 1 });
-export default mongoose.model("GarmentBom", garmentBomSchema);
+export default createTenantModel("GarmentBom", garmentBomSchema);

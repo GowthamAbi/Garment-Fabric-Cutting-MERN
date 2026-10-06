@@ -1,5 +1,15 @@
 # UG SaaS corrected build
 
+## Buyer-ready public website
+
+- Added a dedicated public landing page at `/` with product positioning,
+  department coverage, security details, packages, founder context and buyer
+  calls-to-action.
+- Kept the operational application protected at `/login`.
+- Kept `/demo` public and read-only, using dummy data only.
+- Connected trial, demo and sales requests to the public SaaS request API.
+- Added `/privacy` and `/terms`, responsive styling and custom-domain routes.
+
 ## Runtime fixes
 
 - Fixed seven React effects that returned promises as cleanup callbacks. This

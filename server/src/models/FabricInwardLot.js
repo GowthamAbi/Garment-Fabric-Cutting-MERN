@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 const detail = new mongoose.Schema(
   {
     dia: { type: String, required: true, trim: true },
@@ -67,4 +68,4 @@ schema.index({
   fabricCode: 1,
   "colours.colour": 1,
 });
-export default mongoose.model("FabricInwardLot", schema);
+export default createTenantModel("FabricInwardLot", schema);

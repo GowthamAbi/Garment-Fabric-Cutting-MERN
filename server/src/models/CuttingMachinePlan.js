@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const eventSchema = new mongoose.Schema(
   {
@@ -52,4 +53,4 @@ const schema = new mongoose.Schema(
 
 schema.index({ machineCode: 1, status: 1, queuePosition: 1 });
 schema.index({ planNo: 1, createdAt: -1 });
-export default mongoose.model("CuttingMachinePlan", schema);
+export default createTenantModel("CuttingMachinePlan", schema);

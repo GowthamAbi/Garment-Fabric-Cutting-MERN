@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { controlDatabase } from "../config/tenantDatabase.js";
 
 const schema = new mongoose.Schema(
   {
@@ -26,4 +27,5 @@ const schema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("SaasPlan", schema);
+const connection = controlDatabase();
+export default connection.models.SaasPlan || connection.model("SaasPlan", schema);

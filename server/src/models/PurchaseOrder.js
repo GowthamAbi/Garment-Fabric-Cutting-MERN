@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const purchaseOrderSchema = new mongoose.Schema(
   {
@@ -39,4 +40,4 @@ purchaseOrderSchema.virtual("pendingQty").get(function () {
 });
 purchaseOrderSchema.set("toJSON", { virtuals: true });
 
-export default mongoose.model("PurchaseOrder", purchaseOrderSchema);
+export default createTenantModel("PurchaseOrder", purchaseOrderSchema);

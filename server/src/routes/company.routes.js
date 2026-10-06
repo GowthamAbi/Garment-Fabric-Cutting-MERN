@@ -19,12 +19,12 @@ router.get(
 router.post("/", allowRoles("saas_super_admin"), asyncHandler(createCompany));
 router.get(
   "/:id/workspace",
-  allowRoles("saas_super_admin"),
+  allowRoles("company_admin"),
   asyncHandler(getCompanyWorkspace),
 );
 router.patch(
   "/:id/users/:userId",
-  allowRoles("saas_super_admin"),
+  allowRoles("company_admin"),
   asyncHandler(updateCompanyUser),
 );
 router.put("/:id", allowRoles("saas_super_admin"), asyncHandler(updateCompany));

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const pendingIssueSchema = new mongoose.Schema(
   {
@@ -69,4 +70,4 @@ const pendingIssueSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model("PendingIssue", pendingIssueSchema);
+export default createTenantModel("PendingIssue", pendingIssueSchema);

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const sizePlanSchema = new mongoose.Schema(
   {
@@ -41,4 +42,4 @@ cuttingOrderSchema.index({
   style: 1,
   colour: 1,
 });
-export default mongoose.model("CuttingOrder", cuttingOrderSchema);
+export default createTenantModel("CuttingOrder", cuttingOrderSchema);

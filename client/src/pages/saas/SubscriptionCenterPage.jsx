@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { api } from "../../api.js";
 import DataTable from "../../components/DataTable.jsx";
+import { jsPDF } from "jspdf";
 
 const content = {
   "Subscription Plan": [
@@ -35,6 +36,7 @@ const content = {
 };
 export default function SubscriptionCenterPage({ mode }) {
   const [data, setData] = useState(null),
+    [paymentNotice, setPaymentNotice] = useState(""),
     [error, setError] = useState(""),
     [form, setForm] = useState({
       plan: "Professional",
@@ -69,10 +71,11 @@ export default function SubscriptionCenterPage({ mode }) {
       });
       if (form.paymentMethod === "RAZORPAY") {
         await openRazorpay(result, data.razorpayKeyId, async (payload) => {
-          await api("/saas/subscription/verify-razorpay", {
+          const verification = await api("/saas/subscription/verify-razorpay", {
             method: "POST",
             body: JSON.stringify(payload),
           });
+          setPaymentNotice(verification.pending ? verification.message : "Payment confirmed. Subscription activated.");
           await load();
         });
       } else await load();
@@ -80,6 +83,12 @@ export default function SubscriptionCenterPage({ mode }) {
     } catch (x) {
       setError(x.message);
     }
+  }
+  async function sendInvoice(invoice) {
+    try {
+      await api(`/saas/invoices/${invoice._id}/email`, { method: "POST" });
+      await load();
+    } catch (e) { setError(e.message); }
   }
   if (error && !data)
     return (
@@ -100,6 +109,7 @@ export default function SubscriptionCenterPage({ mode }) {
   const company = data.company || {};
   return (
     <section className="classic-page">
+      {paymentNotice && <p role="status">{paymentNotice}</p>}
       <div className="classic-title">
         <div>
           <small>COMPANY ADMIN · SUBSCRIPTION</small>
@@ -221,6 +231,23 @@ export default function SubscriptionCenterPage({ mode }) {
       )}
       {mode === "Subscription Bills" && (
         <div className="classic-card">
+          <h3>Tax Invoices</h3>
+          <DataTable
+            rows={data.invoices || []}
+            columns={[
+              { key: "invoiceNumber", label: "Invoice" },
+              { key: "invoiceDate", label: "Date", render: (r) => new Date(r.invoiceDate).toLocaleDateString() },
+              { key: "grandTotal", label: "Total ₹" },
+              { key: "status", label: "Status" },
+              { key: "actions", label: "Actions", render: (r) => (
+                <span className="row-actions">
+                  <button type="button" onClick={() => downloadInvoice(r)}>PDF</button>
+                  <button type="button" onClick={() => sendInvoice(r)}>Email</button>
+                </span>
+              ) },
+            ]}
+          />
+          <h3>Payment History</h3>
           <DataTable
             rows={data.payments || []}
             columns={[
@@ -263,6 +290,36 @@ export default function SubscriptionCenterPage({ mode }) {
       )}
     </section>
   );
+}
+
+function downloadInvoice(invoice) {
+  const doc = new jsPDF();
+  const item = invoice.lineItems?.[0] || {};
+  doc.setFontSize(18);
+  doc.text("UG SaaS - TAX INVOICE", 105, 18, { align: "center" });
+  doc.setFontSize(10);
+  doc.text(`Invoice No: ${invoice.invoiceNumber}`, 15, 32);
+  doc.text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`, 15, 39);
+  doc.text(`Supplier: ${invoice.supplier?.legalName || "UG SaaS"}`, 15, 52);
+  doc.text(`GSTIN: ${invoice.supplier?.gstin || "Not configured"}`, 15, 59);
+  doc.text(`Bill To: ${invoice.customer?.companyName || "Customer"}`, 15, 72);
+  doc.text(`Customer GSTIN: ${invoice.customer?.gstin || "Not provided"}`, 15, 79);
+  doc.line(15, 88, 195, 88);
+  doc.text("Description", 15, 97);
+  doc.text("Taxable", 125, 97);
+  doc.text("Total", 170, 97);
+  doc.text(item.description || "SaaS Subscription", 15, 108);
+  doc.text(`INR ${Number(invoice.subtotal || 0).toFixed(2)}`, 125, 108);
+  doc.text(`INR ${Number(invoice.grandTotal || 0).toFixed(2)}`, 170, 108);
+  doc.line(15, 116, 195, 116);
+  doc.text(`CGST: INR ${Number(invoice.cgstAmount || 0).toFixed(2)}`, 125, 128);
+  doc.text(`SGST: INR ${Number(invoice.sgstAmount || 0).toFixed(2)}`, 125, 135);
+  doc.text(`IGST: INR ${Number(invoice.igstAmount || 0).toFixed(2)}`, 125, 142);
+  doc.setFontSize(12);
+  doc.text(`Grand Total: INR ${Number(invoice.grandTotal || 0).toFixed(2)}`, 125, 154);
+  doc.setFontSize(9);
+  doc.text("Computer-generated invoice. Tax configuration must be verified by the business accountant.", 15, 180);
+  doc.save(`${invoice.invoiceNumber.replaceAll("/", "-")}.pdf`);
 }
 
 async function openRazorpay(order, key, verified) {

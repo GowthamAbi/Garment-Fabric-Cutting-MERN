@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const orderLineSchema = new mongoose.Schema(
   {
@@ -38,4 +39,4 @@ garmentPoSchema.index(
   { companyId: 1, factoryId: 1, poNo: 1, style: 1, colour: 1 },
   { unique: true },
 );
-export default mongoose.model("GarmentPo", garmentPoSchema);
+export default createTenantModel("GarmentPo", garmentPoSchema);

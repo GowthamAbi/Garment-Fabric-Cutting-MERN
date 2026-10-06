@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { createTenantModel } from "../config/tenantDatabase.js";
 
 const garmentMasterSchema = new mongoose.Schema(
   {
@@ -31,4 +32,4 @@ garmentMasterSchema.index(
   { unique: true },
 );
 
-export default mongoose.model("GarmentMaster", garmentMasterSchema);
+export default createTenantModel("GarmentMaster", garmentMasterSchema);
