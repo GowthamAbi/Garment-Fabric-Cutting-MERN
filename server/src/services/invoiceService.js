@@ -2,8 +2,6 @@ import SubscriptionInvoice from "../models/SubscriptionInvoice.js";
 import Company from "../models/Company.js";
 import User from "../models/User.js";
 import InvoiceSequence from "../models/InvoiceSequence.js";
-import { runWithTenant } from "../utils/tenantContext.js";
-import { queueInvoice } from "../automation/queue.js";
 
 function financialYear(date = new Date()) {
   const year = date.getFullYear();
@@ -11,31 +9,26 @@ function financialYear(date = new Date()) {
   return `${start}-${String(start + 1).slice(-2)}`;
 }
 
-async function nextInvoiceNumber(session) {
+async function nextInvoiceNumber() {
   const fy = financialYear();
-  const sequence = await runWithTenant(
-    { companyKey: "platform", databaseName: process.env.CONTROL_DB_NAME || "ugs_control" },
-    () => InvoiceSequence.findOneAndUpdate(
+  const sequence = await InvoiceSequence.findOneAndUpdate(
     { financialYear: fy },
     { $inc: { value: 1 } },
-    { new: true, upsert: true, session },
-    ),
+    { new: true, upsert: true },
   );
   return `UGS/${fy}/${String(sequence.value).padStart(4, "0")}`;
 }
 
-export async function createInvoiceForPayment(payment, issuedBy = "System", session = null) {
-  const existing = await SubscriptionInvoice.findOne({ paymentId: payment._id }).session(session);
+export async function createInvoiceForPayment(payment, issuedBy = "System") {
+  const existing = await SubscriptionInvoice.findOne({ paymentId: payment._id });
   if (existing) return existing;
-  const company = await Company.findById(payment.companyId).session(session).lean();
-  const admin = await User.findOne({ companyId: payment.companyId, role: "company_admin" }).session(session).lean();
+  const company = await Company.findById(payment.companyId).lean();
+  const admin = await User.findOne({ companyId: payment.companyId, role: "company_admin" }).lean();
   const taxTotal = Number(payment.taxAmount || 0);
   const subtotal = Number((Number(payment.amount || 0) - taxTotal).toFixed(2));
   const sameState = Boolean(process.env.UG_SAAS_STATE_CODE && company?.stateCode === process.env.UG_SAAS_STATE_CODE);
-  const taxRate = Number(payment.taxPercent ?? (subtotal > 0 ? Number((taxTotal / subtotal * 100).toFixed(2)) : 0));
-  const [invoice] = await SubscriptionInvoice.create([{
-    companyId: payment.companyId, factoryId: payment.factoryId,
-    invoiceNumber: await nextInvoiceNumber(session),
+  return SubscriptionInvoice.create({
+    invoiceNumber: await nextInvoiceNumber(),
     financialYear: financialYear(),
     paymentId: payment._id,
     supplier: {
@@ -65,18 +58,16 @@ export async function createInvoiceForPayment(payment, issuedBy = "System", sess
       taxableValue: subtotal,
     }],
     taxType: taxTotal === 0 ? "NO_TAX" : sameState ? "CGST_SGST" : "IGST",
-    cgstRate: taxTotal && sameState ? taxRate / 2 : 0,
+    cgstRate: taxTotal && sameState ? 9 : 0,
     cgstAmount: taxTotal && sameState ? taxTotal / 2 : 0,
-    sgstRate: taxTotal && sameState ? taxRate / 2 : 0,
+    sgstRate: taxTotal && sameState ? 9 : 0,
     sgstAmount: taxTotal && sameState ? taxTotal / 2 : 0,
-    igstRate: taxTotal && !sameState ? taxRate : 0,
+    igstRate: taxTotal && !sameState ? 18 : 0,
     igstAmount: taxTotal && !sameState ? taxTotal : 0,
     subtotal,
     taxTotal,
     grandTotal: Number(payment.amount || 0),
     paymentReference: payment.providerPaymentId || payment.referenceNo,
     issuedBy,
-  }], { session });
-  await queueInvoice(invoice, session);
-  return invoice;
+  });
 }

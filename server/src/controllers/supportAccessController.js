@@ -52,11 +52,7 @@ export async function exchangeSupportGrant(request, response) {
   const codeHash = crypto.createHash("sha256").update(String(request.body.supportCode || "")).digest("hex");
   const grant = await runWithTenant(
     { companyKey: registry.companyKey, databaseName: registry.databaseName },
-    () => SupportGrant.findOneAndUpdate(
-      { codeHash, status: "ACTIVE", expiresAt: { $gt: new Date() }, firstUsedAt: { $exists: false } },
-      { $set: { firstUsedAt: new Date(), usedByOwnerId: request.user.userId } },
-      { new: true },
-    ).select("+codeHash"),
+    () => SupportGrant.findOne({ codeHash, status: "ACTIVE", expiresAt: { $gt: new Date() } }).select("+codeHash"),
   );
   if (!grant) throw new ApiError(403, "Support grant is invalid, expired or revoked");
   const company = await runWithTenant(
@@ -90,3 +86,4 @@ export async function exchangeSupportGrant(request, response) {
     warning: "Read-only support token. Every request is audited.",
   });
 }
+

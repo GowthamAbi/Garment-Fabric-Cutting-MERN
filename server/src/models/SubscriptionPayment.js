@@ -24,7 +24,6 @@ const subscriptionPaymentSchema = new mongoose.Schema(
     notes: String,
     approvedBy: String,
     taxAmount: { type: Number, default: 0 },
-    taxPercent: { type: Number, min: 0, max: 100 },
     setupFee: { type: Number, default: 0 },
   },
   { timestamps: true },

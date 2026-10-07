@@ -89,8 +89,56 @@ export async function getSetupStatus(_request, response) {
   response.json({ setupRequired: (await User.countDocuments()) === 0 });
 }
 
-export async function register(_request, _response) {
-  throw new ApiError(403, "Public owner registration is disabled. Run the private owner bootstrap command.");
+export async function register(request, response) {
+  const {
+    name,
+    email,
+    password,
+    companyName = "UG SaaS",
+    factoryName = "Main Factory",
+  } = request.body;
+
+  if (!name || !email || !password) {
+    throw new ApiError(400, "Name, email and password are required");
+  }
+  assertStrongPassword(password, { name, email, userId: "UGS-OWN" });
+
+  const userCount = await User.countDocuments();
+  if (userCount > 0) {
+    throw new ApiError(
+      403,
+      "Company setup is complete. Ask the admin to create your account",
+    );
+  }
+  if (await User.exists({ email: email.toLowerCase() })) {
+    throw new ApiError(409, "Email already registered");
+  }
+
+  let company = await Company.findOne();
+  if (company) {
+    company.companyName = companyName;
+    company.factories = [{ name: factoryName, code: "MAIN" }];
+    await company.save();
+  } else {
+    company = await Company.create({
+      companyName,
+      subscriptionStartsAt: new Date(),
+      subscriptionEndsAt: new Date(Date.now() + 14 * 86400000),
+      factories: [{ name: factoryName, code: "MAIN" }],
+    });
+  }
+  const userId = "GOWTHAM2131";
+  const user = await User.create({
+    userId,
+    name,
+    email,
+    password: await bcrypt.hash(password, 12),
+    role: "saas_super_admin",
+    companyId: company._id,
+    factoryId: company.factories[0]._id,
+  });
+
+  response.status(201).json(startSession(response, user, company.companyName));
 }
 
 export async function getUsers(_request, response) {
@@ -341,15 +389,6 @@ export async function getProfile(request, response) {
     .lean();
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
-}
-export async function updateUserPermissions(request, response) {
-  const allowed = ["erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
-  const permissions = request.body.permissions;
-  if (!Array.isArray(permissions) || permissions.some(p => !allowed.includes(p))) throw new ApiError(400, "Invalid ERP permissions");
-  const user = await User.findOne({ _id: request.params.id, companyId: request.user.companyId, factoryId: request.user.factoryId }).select("+sessionVersion");
-  if (!user || user.role === "saas_super_admin") throw new ApiError(404, "Customer user not found");
-  user.permissions = [...new Set(permissions)]; user.sessionVersion = Number(user.sessionVersion || 0) + 1;
-  await user.save(); response.json({ message: "ERP permissions updated; user must sign in again" });
 }
 
 export async function updateProfile(request, response) {

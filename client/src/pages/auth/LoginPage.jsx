@@ -35,10 +35,7 @@ export default function LoginPage({ initialMode = false }) {
     api("/auth/setup-status")
       .then((data) => {
         setSetupRequired(data.setupRequired);
-        if (data.setupRequired) {
-          setRegisterMode(false);
-          setError("Owner setup must be completed privately by the deployment administrator.");
-        }
+        if (data.setupRequired) setRegisterMode(true);
       })
       .catch(() => undefined);
   }, []);

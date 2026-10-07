@@ -1,5 +1,4 @@
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
-import AutomationPage from "../pages/erp/AutomationPage.jsx";
 import HistoryPage from "../pages/history/HistoryPage.jsx";
 import InwardPage from "../pages/inward/InwardPage.jsx";
 import ItemMasterPage from "../pages/master/ItemMasterPage.jsx";
@@ -54,8 +53,6 @@ import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
   switch (page) {
-    case "Integrated ERP": return <ErpWorkspace notify={notify} />;
-    case "Subscription Automation": return <AutomationPage notify={notify} />;
     case "Fabric Dashboard":
       return (
         <DepartmentOverviewPage
