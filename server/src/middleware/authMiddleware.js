@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import { runWithTenant } from "../utils/tenantContext.js";
 import { requestCompanyKey } from "./tenantResolver.js";
 import SupportGrant from "../models/SupportGrant.js";
+import { supportRequestAllowed } from "../utils/supportPolicy.js";
 
 const SESSION_COOKIE_NAMES = ["__Host-ug_session", "ug_session"];
 
