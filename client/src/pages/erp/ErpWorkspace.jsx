@@ -2,15 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../../api.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import "./erp.css";
-<<<<<<< HEAD
 import Departments from "./Departments.jsx";
 import ShopFloor from "./ShopFloor.jsx";
 import Approvals from "./Approvals.jsx";
 import CommercialReports from "./CommercialReports.jsx";
 import Workforce from "./Workforce.jsx";
 import BankReconciliation from "./BankReconciliation.jsx";
-=======
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
 const amount = n => n === null || n === undefined ? "—" : new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(Number(n || 0) / 100);
 const q = n => (Number(n || 0) / 1000).toLocaleString("en-IN", { maximumFractionDigits: 3 });
 const label = s => String(s || "").replaceAll("_", " ");
@@ -47,7 +44,6 @@ export default function ErpWorkspace({ notify }) {
   }
   async function submitDoc(event) {
     event.preventDefault();
-<<<<<<< HEAD
     const approval = event.nativeEvent.submitter?.value === "approval";
     await execute(async () => {
       const body = { ...form };
@@ -56,11 +52,6 @@ export default function ErpWorkspace({ notify }) {
         await api("/erp/approvals", { method:"POST",headers:{"Idempotency-Key":requestKey.current},body:JSON.stringify(body) });
         requestKey.current=crypto.randomUUID();setForm(blankDoc());setTab("Approvals");notify("Document submitted for independent approval");return;
       }
-=======
-    await execute(async () => {
-      const body = { ...form };
-      if (["RECEIPT", "PAYMENT", "WORK_COST", "JOURNAL"].includes(body.type)) body.lines = [];
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
       const posted = await api("/erp/documents", { method: "POST", headers: { "Idempotency-Key": requestKey.current }, body: JSON.stringify(body) });
       setSelected(posted); requestKey.current = crypto.randomUUID(); setForm(blankDoc()); await load(); setTab("Documents"); notify("ERP document posted with stock/accounting entries");
     });
@@ -75,7 +66,6 @@ export default function ErpWorkspace({ notify }) {
   const activeDocs = docs.filter(d => !d.reversedBy && (sourceTypes[form.type] || []).includes(d.type));
   return <div className="erp-shell">
     <header className="erp-header"><div><span className="erp-eyebrow">UG SAAS · {workspace.company.name}</span><h1>Integrated ERP</h1><p>{workspace.company.factory} · Stock, production and accounts in one posting flow</p></div><span className={`erp-badge ${workspace.settings.enabled ? "on" : ""}`}>{workspace.settings.enabled ? "ERP active · legacy entries locked" : "Opening balance review"}</span></header>
-<<<<<<< HEAD
     <nav className="erp-tabs">{["Overview", "Masters", "Departments", ...(workspace.features?.includes("ERP_SHOP_FLOOR")?["Shop floor"]:[]), "New document", "Approvals", "Documents", "Stock", "Ledger", ...(canFinance&&workspace.features?.includes("ERP_FINANCE") ? ["Financials", "Commercial reports", "Bank matching"] : []),...(canFinance&&workspace.features?.includes("ERP_HR")?["Workforce"]:[])].map(t => <button className={tab === t ? "active" : ""} key={t} onClick={() => { setTab(t); if (t === "Ledger") execute(async () => setEntries(await api("/erp/ledger"))); }}>{t}</button>)}</nav>
     {tab === "Departments" && <Departments notify={notify} />}
     {tab === "Shop floor" && <ShopFloor notify={notify} />}
@@ -86,12 +76,6 @@ export default function ErpWorkspace({ notify }) {
     {error && <p className="erp-error" role="alert">{error}</p>}
     {tab === "Overview" && <>
       <div className="erp-stats"><article><span>Current stock value</span><strong>{amount(canFinance&&workspace.features?.includes("ERP_FINANCE")?stock.reduce((s, b) => s + b.value, 0):null)}</strong></article><article><span>Stock positions</span><strong>{stock.length}</strong></article><article><span>Recent documents</span><strong>{docs.length}</strong></article><article><span>Variant SKUs</span><strong>{workspace.skus.length}</strong></article></div>
-=======
-    <nav className="erp-tabs">{["Overview", "Masters", "New document", "Documents", "Stock", "Ledger", ...(canFinance ? ["Financials"] : [])].map(t => <button className={tab === t ? "active" : ""} key={t} onClick={() => { setTab(t); if (t === "Ledger") execute(async () => setEntries(await api("/erp/ledger"))); }}>{t}</button>)}</nav>
-    {error && <p className="erp-error" role="alert">{error}</p>}
-    {tab === "Overview" && <>
-      <div className="erp-stats"><article><span>Current stock value</span><strong>{amount(stock.reduce((s, b) => s + b.value, 0))}</strong></article><article><span>Stock positions</span><strong>{stock.length}</strong></article><article><span>Recent documents</span><strong>{docs.length}</strong></article><article><span>Variant SKUs</span><strong>{workspace.skus.length}</strong></article></div>
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
       <section className="erp-card"><h2>Set up your factory</h2><ol><li>Create customer/supplier and variant SKU masters. Use separate codes for batch, colour, size and unit.</li><li>Create BOM versions for finished goods.</li><li>Review existing department stock; post OPENING documents with quantities and unit costs.</li><li>Activate once opening quantities and valuation match. Legacy entry screens then become read-only.</li></ol>
         {canAdmin && <button disabled={busy} onClick={() => execute(async () => { const snapshot = await api("/erp/migration-snapshot"); const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" })); const a = document.createElement("a"); a.href = url; a.download = "legacy-stock-review.json"; a.click(); URL.revokeObjectURL(url); })}>Download legacy stock review snapshot</button>}
         {!workspace.settings.enabled && canAdmin && <><Field name="Migration/reconciliation notes"><textarea value={notes} onChange={e => setNotes(e.target.value)} /></Field><button disabled={busy || !notes.trim()} onClick={() => execute(async () => { await api("/erp/activate", { method: "POST", body: JSON.stringify({ confirm: "OPENING BALANCES REVIEWED", notes }) }); await load(); })}>Activate ERP after reviewed opening balances</button></>}
@@ -100,11 +84,7 @@ export default function ErpWorkspace({ notify }) {
     </>}
     {tab === "Masters" && <section className="erp-card"><h2>Company / factory masters</h2><Select value={masterKind} onChange={v => { setMasterKind(v); setMaster({}); }} options={[{ value: "skus", label: "Variant SKUs" }, { value: "parties", label: "Customers / Suppliers" }, { value: "boms", label: "BOM versions" }]} />
       <form onSubmit={e => { e.preventDefault(); execute(async () => { await api(`/erp/masters/${masterKind}`, { method: "POST", body: JSON.stringify({ ...master, ...(masterKind === "boms" ? { components: master.components || [] } : {}) }) }); setMaster({}); await load(); notify("Master saved"); }); }}>
-<<<<<<< HEAD
         <div className="erp-grid">{(masterKind === "skus" ? ["code", "name", "unit", "batch", "colour", "size", "minimumQty"] : masterKind === "parties" ? ["code", "name", "email", "phone", "address", "gstin", "paymentTermDays", "creditLimit", "qcContact", "suppliedItems"] : ["code", "outputQuantity"]).map(k => <Field name={label(k)} key={k}><input placeholder={k==="paymentTermDays"?"Default 30 days":k==="creditLimit"?"INR · blank = no limit":""} required={["code", "name", "unit", "outputQuantity"].includes(k)} value={master[k] ?? ""} onChange={e => setMaster({ ...master, [k]: e.target.value })} /></Field>)}
-=======
-        <div className="erp-grid">{(masterKind === "skus" ? ["code", "name", "unit", "batch", "colour", "size", "minimumQty"] : masterKind === "parties" ? ["code", "name", "email", "phone", "address", "gstin"] : ["code", "outputQuantity"]).map(k => <Field name={label(k)} key={k}><input required={["code", "name", "unit", "outputQuantity"].includes(k)} value={master[k] || ""} onChange={e => setMaster({ ...master, [k]: e.target.value })} /></Field>)}
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
           {masterKind !== "boms" && <Field name="Type"><Select value={master.kind || ""} onChange={v => setMaster({ ...master, kind: v })} options={masterKind === "skus" ? ["RAW", "FINISHED", "CONSUMABLE"] : ["CUSTOMER", "SUPPLIER", "BOTH"]} /></Field>}
           {masterKind === "skus" && <Field name="Default store"><Select value={master.location || ""} onChange={v => setMaster({ ...master, location: v })} options={workspace.locations.filter(l => l !== "WIP")} /></Field>}
           {masterKind === "boms" && <><Field name="Finished output SKU"><Select value={master.outputSku || ""} onChange={v => setMaster({ ...master, outputSku: v })} options={workspace.skus.filter(s => s.kind === "FINISHED").map(s => ({ value: s.code, label: `${s.code} · ${s.name}` }))} /></Field><fieldset><legend>BOM material quantities per output quantity</legend>{(master.components || [{ sku: "", quantity: "" }]).map((c, i) => <div className="erp-grid" key={i}><Select value={c.sku} options={workspace.skus.filter(s => s.code !== master.outputSku).map(s => ({ value: s.code, label: `${s.code} · ${s.unit}` }))} onChange={v => setMaster({ ...master, components: (master.components || [{ sku: "", quantity: "" }]).map((row, n) => n === i ? { ...row, sku: v } : row) })} /><input aria-label="Component quantity" type="number" required min="0.001" step="0.001" value={c.quantity} onChange={e => setMaster({ ...master, components: (master.components || [{ sku: "", quantity: "" }]).map((row, n) => n === i ? { ...row, quantity: e.target.value } : row) })} /><button type="button" onClick={() => setMaster({ ...master, components: (master.components || []).filter((_, n) => n !== i) })}>Remove</button></div>)}<button type="button" onClick={() => setMaster({ ...master, components: [...(master.components || [{ sku: "", quantity: "" }]), { sku: "", quantity: "" }] })}>Add material</button></fieldset></>}
@@ -114,27 +94,17 @@ export default function ErpWorkspace({ notify }) {
     {tab === "New document" && <section className="erp-card"><h2>Post document</h2><form onSubmit={submitDoc}>
       <div className="erp-grid"><Field name="Document type"><Select value={form.type} options={workspace.types} onChange={v => { update({ ...blankDoc(), type: v }); setSourceId(""); }} /></Field><Field name="Posting date"><input type="date" required value={form.date} onChange={e => update({ date: e.target.value })} /></Field><Field name="Customer / Supplier"><Select value={form.partyCode} options={workspace.parties.map(p => ({ value: p.code, label: `${p.code} · ${p.name}` }))} onChange={v => update({ partyCode: v })} /></Field>
         {sourceTypes[form.type] && <Field name="Source document"><Select value={form.sourceId} options={activeDocs.map(d => ({ value: d._id, label: d.number }))} onChange={v => execute(() => chooseSource(v))} /><input aria-label="Older source document ID" placeholder="Older document ID (from history)" value={sourceId} onChange={e => setSourceId(e.target.value)} /><button type="button" onClick={() => execute(() => chooseSource(sourceId))}>Load source</button></Field>}
-<<<<<<< HEAD
         {form.type === "WORK_ORDER" && <Field name="Approved replenishment demand ID (optional)"><input value={form.demandId||""} onChange={e=>update({demandId:e.target.value})}/></Field>}
-=======
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
         {form.type === "WORK_ORDER" && <Field name="BOM version"><Select value={form.bomCode} options={workspace.boms.map(b => b.code)} onChange={v => { const b = workspace.boms.find(b => b.code === v); update({ bomCode: v, lines: [{ ...emptyLine, sku: b?.outputSku || "", quantity: b?.outputQty / 1000 || 1, location: "FINISHED" }] }); }} /></Field>}
         {["RECEIPT", "PAYMENT", "WORK_COST"].includes(form.type) && <><Field name="Amount (INR)"><input type="number" min="0.01" step="0.01" required value={form.amount} onChange={e => update({ amount: e.target.value })} /></Field><Field name="Payment account"><Select value={form.cashAccount} onChange={v => update({ cashAccount: v })} options={form.type === "WORK_COST" ? ["BANK", "CASH", "AP"] : ["BANK", "CASH"]} /></Field></>}
       </div>
       {!noItems && <><div className="erp-table"><table><thead><tr><th>Variant SKU</th><th>Quantity</th><th>Unit rate INR</th><th>Tax %</th><th>From / Store</th><th>Transfer to</th><th /></tr></thead><tbody>{form.lines.map((l, i) => <tr key={i}><td><Select value={l.sku} options={workspace.skus.map(s => ({ value: s.code, label: `${s.code} · ${s.unit}` }))} onChange={v => updateLine(i, { sku: v, location: workspace.skus.find(s => s.code === v)?.location || "FABRIC" })} /></td><td><input type="number" step="0.001" min="0.001" required value={l.quantity} onChange={e => updateLine(i, { quantity: e.target.value })} /></td><td><input type="number" step="0.01" min="0" value={l.rate} onChange={e => updateLine(i, { rate: e.target.value })} /></td><td><input type="number" step="0.01" min="0" max="100" value={l.taxPercent} onChange={e => updateLine(i, { taxPercent: e.target.value })} /></td><td><Select value={l.location} options={workspace.locations.filter(l => l !== "WIP")} onChange={v => updateLine(i, { location: v })} /></td><td><Select value={l.target} options={workspace.locations.filter(l => l !== "WIP")} onChange={v => updateLine(i, { target: v })} /></td><td><button type="button" onClick={() => update({ lines: form.lines.filter((_, n) => n !== i) })}>Remove</button></td></tr>)}</tbody></table></div><button type="button" onClick={() => update({ lines: [...form.lines, { ...emptyLine }] })}>Add item line</button></>}
       {form.type === "JOURNAL" && <><div className="erp-table"><table><thead><tr><th>Account</th><th>Debit INR</th><th>Credit INR</th><th>Party code</th><th /></tr></thead><tbody>{form.journalLines.map((l, i) => <tr key={i}><td><Select value={l.account} options={Object.keys(workspace.accounts)} onChange={v => update({ journalLines: form.journalLines.map((j, n) => n === i ? { ...j, account: v } : j) })} /></td>{["debit", "credit", "party"].map(k => <td key={k}><input value={l[k]} onChange={e => update({ journalLines: form.journalLines.map((j, n) => n === i ? { ...j, [k]: e.target.value } : j) })} /></td>)}<td><button type="button" onClick={() => update({ journalLines: form.journalLines.filter((_, n) => n !== i) })}>Remove</button></td></tr>)}</tbody></table></div><button type="button" onClick={() => update({ journalLines: [...form.journalLines, { account: "BANK", debit: "0", credit: "0", party: "" }] })}>Add journal line</button></>}
       <div className="erp-grid"><Field name="Narration"><textarea value={form.notes} onChange={e => update({ notes: e.target.value })} /></Field>{form.type.startsWith("QC_") && <Field name="QC findings / inspection result"><textarea required value={form.qcNotes} onChange={e => update({ qcNotes: e.target.value })} /></Field>}</div>
-<<<<<<< HEAD
       <p>Rates/taxes are inherited for linked receipts and invoices. Work-order material quantities follow the frozen BOM version. Check all fields before posting.</p><button disabled={busy}>{busy ? "Posting…" : "Post document"}</button> <button type="submit" value="approval" disabled={busy}>Submit for independent approval</button>
     </form></section>}
     {tab === "Documents" && <section className="erp-card"><h2>Posted documents</h2><button onClick={() => execute(load)}>Refresh</button><Table headings={["Number", "Date", "Party", "Amount", "Status", "Actions"]} rows={docs.map(d => [d.number, new Date(d.date).toLocaleDateString("en-IN"), d.partyCode || "—", amount(d.totals.gross), d.reversedBy ? "Reversed" : "Posted", <button onClick={() => setSelected(d)}>View / Print</button>])} /><button disabled={!docs.length || busy} onClick={() => execute(async () => { const more = await api(`/erp/documents?before=${docs[docs.length - 1]._id}`); setDocs([...docs, ...more]); })}>Load older documents</button></section>}
     {tab === "Stock" && <section className="erp-card"><h2>Department / work-order stock</h2><Table headings={["SKU", "Location", "Qty", "Value", "Avg unit cost"]} rows={stock.map(b => [b.sku, b.location, q(b.qty), amount(b.value), amount(b.value===null?null:b.qty ? b.value * 1000 / b.qty : 0)])} /></section>}
-=======
-      <p>Rates/taxes are inherited for linked receipts and invoices. Work-order material quantities follow the frozen BOM version. Check all fields before posting.</p><button disabled={busy}>{busy ? "Posting…" : "Post document"}</button>
-    </form></section>}
-    {tab === "Documents" && <section className="erp-card"><h2>Posted documents</h2><button onClick={() => execute(load)}>Refresh</button><Table headings={["Number", "Date", "Party", "Amount", "Status", "Actions"]} rows={docs.map(d => [d.number, new Date(d.date).toLocaleDateString("en-IN"), d.partyCode || "—", amount(d.totals.gross), d.reversedBy ? "Reversed" : "Posted", <button onClick={() => setSelected(d)}>View / Print</button>])} /><button disabled={!docs.length || busy} onClick={() => execute(async () => { const more = await api(`/erp/documents?before=${docs[docs.length - 1]._id}`); setDocs([...docs, ...more]); })}>Load older documents</button></section>}
-    {tab === "Stock" && <section className="erp-card"><h2>Department / work-order stock</h2><Table headings={["SKU", "Location", "Qty", "Value", "Avg unit cost"]} rows={stock.map(b => [b.sku, b.location, q(b.qty), amount(b.value), amount(b.qty ? b.value * 1000 / b.qty : 0)])} /></section>}
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
     {tab === "Ledger" && <section className="erp-card"><h2>Stock & general ledger · latest 1,000 rows</h2><Table headings={["Date", "Document", "Account / Stock", "Movement", "Debit", "Credit"]} rows={entries.map(e => [new Date(e.date).toLocaleDateString("en-IN"), e.documentNo, e.kind === "STOCK" ? `${e.sku} @ ${e.location}` : e.account, e.kind === "STOCK" ? q(e.delta) : e.party, amount(e.debit), amount(e.credit)])} /></section>}
     {tab === "Financials" && <section className="erp-card"><h2>Financial reports</h2><div className="erp-grid">{["from", "to"].map(k => <Field name={label(k)} key={k}><input type="date" value={reportDates[k]} onChange={e => setReportDates({ ...reportDates, [k]: e.target.value })} /></Field>)}</div><button disabled={busy} onClick={report}>Run report</button>{financials && <>
       <div className="erp-stats"><article><span>Revenue</span><strong>{amount(financials.profitAndLoss.revenue)}</strong></article><article><span>Expenses</span><strong>{amount(financials.profitAndLoss.expenses)}</strong></article><article><span>Profit</span><strong>{amount(financials.profitAndLoss.profit)}</strong></article><article><span>Trial balance difference</span><strong>{amount(financials.trialDifference)}</strong></article></div>

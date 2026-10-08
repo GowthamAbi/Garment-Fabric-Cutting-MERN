@@ -12,6 +12,7 @@ import {
   getSession,
   logout,
   verifyEmail,
+  updateUserPermissions,
 } from "../controllers/authController.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
@@ -42,6 +43,7 @@ router.post(
   asyncHandler(createUser),
 );
 router.get("/profile", requireAuth, asyncHandler(getProfile));
+router.post("/users/:id/permissions", requireAuth, allowRoles("company_admin", "admin"), asyncHandler(updateUserPermissions));
 router.patch("/profile", requireAuth, asyncHandler(updateProfile));
 
 export default router;

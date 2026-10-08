@@ -31,7 +31,7 @@ test("browser session uses a hardened HttpOnly cookie", async () => {
 });
 
 test("frontend API calls require cookie credentials and avoid cache", async () => {
-  const api = await read("../../client/src/api.js");
+  const api = await read("../../client/src/api/axiosInstance.js");
 
   assert.match(api, /credentials:\s*"include"/);
   assert.match(api, /cache:\s*"no-store"/);

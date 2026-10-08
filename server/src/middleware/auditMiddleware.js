@@ -1,4 +1,5 @@
 import AuditLog from "../models/AuditLog.js";
+import { getTenant, runWithTenant } from "../utils/tenantContext.js";
 
 const cleanBody = (body = {}) =>
   Object.fromEntries(
@@ -13,8 +14,9 @@ export function auditMutations(request, response, next) {
     !request.user
   )
     return next();
+  const tenant = { ...getTenant() };
   response.on("finish", () => {
-    AuditLog.create({
+    runWithTenant(tenant, () => AuditLog.create({
       actorId: request.user.id,
       actorName: request.user.name,
       actorUserId: request.user.userId,
@@ -30,7 +32,7 @@ export function auditMutations(request, response, next) {
       ip: request.ip,
       userAgent: request.get("user-agent") || "",
       changes: cleanBody(request.body),
-    }).catch((error) => console.error("Audit write failed", error.message));
+    })).catch(() => console.error("Audit write failed; inspect database availability"));
   });
   next();
 }

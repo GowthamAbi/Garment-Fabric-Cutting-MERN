@@ -48,12 +48,8 @@ export async function settleSubscription(billing, { actor, capturedPayment = nul
         });
         await payment.save({ session });
         Object.assign(company, { subscriptionPlan: payment.plan, subscriptionStatus: "Active",
-<<<<<<< HEAD
           subscriptionStartsAt: payment.periodStart, subscriptionEndsAt: payment.periodEnd, active: true,
           entitlements: fresh.entitlements?.maxUsers ? fresh.entitlements : {maxUsers:plan.maxUsers,maxDepartments:plan.maxDepartments,modules:plan.modules} });
-=======
-          subscriptionStartsAt: payment.periodStart, subscriptionEndsAt: payment.periodEnd, active: true });
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
         await company.save({ session });
         const registry = await TenantRegistry.updateOne({ companyKey: fresh.companyKey }, { $set: {
           status: "ACTIVE", subscriptionPlan: payment.plan, subscriptionEndsAt: payment.periodEnd,

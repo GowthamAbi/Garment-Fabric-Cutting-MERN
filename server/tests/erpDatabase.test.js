@@ -11,21 +11,13 @@ import { ErpSku, ErpSettings, ErpDocument, ErpBalance, ErpEntry } from "../src/e
 test("real replica-set: factory/company isolation, duplicate retries, concurrent issues and rollback", { skip: !process.env.TEST_MONGODB_URI }, async () => {
   // Only generated test databases are modified/dropped; never use production tenant names.
   await mongoose.connect(process.env.TEST_MONGODB_URI);
-<<<<<<< HEAD
-=======
-  const hello = await mongoose.connection.db.command({ hello: 1 });
-  assert.ok(hello.setName || hello.msg === "isdbgrid", "Use a replica set or transaction-capable sharded staging cluster");
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
   const nonce = crypto.randomBytes(6).toString("hex");
   const companyId = new mongoose.Types.ObjectId(), factoryId = new mongoose.Types.ObjectId();
   const a = { companyKey: `test-${nonce}-a`, databaseName: `ugs_tenant_test_${nonce}_a`, companyId, factoryId, role: "company_admin" };
   const b = { ...a, companyKey: `test-${nonce}-b`, databaseName: `ugs_tenant_test_${nonce}_b`, companyId: new mongoose.Types.ObjectId() };
   try {
-<<<<<<< HEAD
     const hello = await mongoose.connection.db.command({ hello: 1 });
     assert.ok(hello.setName || hello.msg === "isdbgrid", "Use a replica set or transaction-capable sharded staging cluster");
-=======
->>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
     for (const tenant of [a, b]) await runWithTenant(tenant, async () => {
       await ErpSku.create({ code: "RAW", name: "Test material", unit: "KG", kind: "RAW", location: "FABRIC", companyId: tenant.companyId, factoryId });
     });

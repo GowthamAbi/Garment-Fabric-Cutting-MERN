@@ -36,6 +36,7 @@ const content = {
 };
 export default function SubscriptionCenterPage({ mode }) {
   const [data, setData] = useState(null),
+    [paymentNotice, setPaymentNotice] = useState(""),
     [error, setError] = useState(""),
     [form, setForm] = useState({
       plan: "Professional",
@@ -70,10 +71,11 @@ export default function SubscriptionCenterPage({ mode }) {
       });
       if (form.paymentMethod === "RAZORPAY") {
         await openRazorpay(result, data.razorpayKeyId, async (payload) => {
-          await api("/saas/subscription/verify-razorpay", {
+          const verification = await api("/saas/subscription/verify-razorpay", {
             method: "POST",
             body: JSON.stringify(payload),
           });
+          setPaymentNotice(verification.pending ? verification.message : "Payment confirmed. Subscription activated.");
           await load();
         });
       } else await load();
@@ -107,6 +109,7 @@ export default function SubscriptionCenterPage({ mode }) {
   const company = data.company || {};
   return (
     <section className="classic-page">
+      {paymentNotice && <p role="status">{paymentNotice}</p>}
       <div className="classic-title">
         <div>
           <small>COMPANY ADMIN · SUBSCRIPTION</small>
