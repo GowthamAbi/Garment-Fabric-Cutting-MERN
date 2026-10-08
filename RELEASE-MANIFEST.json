@@ -1,13 +1,13 @@
 {
-  "release": "UG SaaS Department ERP \u2014 Company Activation Update",
+  "release": "UG SaaS Department ERP \u2014 Companies API Fix",
   "date": "2026-10-09",
   "tests": {
-    "total": 71,
-    "pass": 68,
+    "total": 73,
+    "pass": 70,
     "fail": 0,
     "skip": 3
   },
-  "build": "passed",
+  "build": "not rerun; frontend unchanged",
   "deployed": false,
   "files": {
     ".gitignore": "214d38920a4755fe3cc52ab8dcd332f55bf7898296fa6b811da224781a79d9b5",
@@ -413,6 +413,8 @@
     "server/tests/subscriptionPeriod.test.js": "f4e540f406ae781221b434632dd19e72b2781873fc8b6165d29897c9dbbb684c",
     "server/tests/supportPaymentPolicy.test.js": "278a55923dd2cf0f2f1952504404fb7f978068e2cd6c38913a220107e42b2a36",
     "server/tests/tenantSecurity.test.js": "02a229f5b4f1fe5d183a0a30f5863e03f352c8002c559de1e883bfbd25eb7f18",
-    "server/tests/workspaceContext.test.js": "a63e48797cfd36671eb30dcfeaaa049e434d7eb85aa725c550ce74622a009f19"
+    "server/tests/workspaceContext.test.js": "a63e48797cfd36671eb30dcfeaaa049e434d7eb85aa725c550ce74622a009f19",
+    "COMPANIES-API-FIX.md": "ef55b40dddcb3f4ea1faccbfe52e93a596bc6120598c44ea8a7bcf842077f1ee",
+    "server/tests/companyList.test.js": "69454972ca6c86c80a59c229a6bb1616e759af5cd5e1518c3267ac979d3fbb80"
   }
 }
