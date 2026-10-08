@@ -35,11 +35,7 @@ export function databaseForName(databaseName) {
 }
 
 export function currentDatabase() {
-  const tenant = getTenant();
-  if (!tenant.databaseName || !tenant.companyKey) {
-    throw new Error("Explicit workspace context is required for tenant data");
-  }
-  return databaseForName(tenant.databaseName);
+  return databaseForName(getTenant().databaseName || CONTROL_DATABASE);
 }
 
 export function createTenantModel(modelName, schema) {
@@ -67,3 +63,4 @@ export function createTenantModel(modelName, schema) {
     },
   });
 }
+

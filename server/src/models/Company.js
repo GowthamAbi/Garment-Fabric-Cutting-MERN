@@ -22,6 +22,15 @@ const companySchema = new mongoose.Schema(
     address: { type: String, default: "" },
     subscriptionPlan: {
       type: String,
+      enum: [
+        "Trial",
+        "Starter",
+        "Basic",
+        "Professional",
+        "Business",
+        "Enterprise",
+        "Setup & Training",
+      ],
       default: "Trial",
     },
     subscriptionStatus: {

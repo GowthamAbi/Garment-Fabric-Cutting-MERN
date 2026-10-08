@@ -1,7 +1,3 @@
-import { settleSubscription } from "../services/subscriptionSettlementService.js";
-import { PaymentInbox } from "../automation/models.js";
-import { capturedPaymentMatches } from "../utils/paymentPolicy.js";
-import InvoiceSequence from "../models/InvoiceSequence.js";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
@@ -68,7 +64,7 @@ export async function getSubscription(request, response) {
     invoices,
     razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
     razorpayEnabled: Boolean(
-      process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET && process.env.RAZORPAY_WEBHOOK_SECRET && process.env.AUTOMATION_ENABLED === "true",
+      process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET,
     ),
   });
 }
@@ -83,8 +79,6 @@ export async function createSubscription(request, response) {
     active: true,
   });
   const method = request.body.paymentMethod || "MANUAL";
-  if (method === "RAZORPAY" && (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET || !process.env.RAZORPAY_WEBHOOK_SECRET || process.env.AUTOMATION_ENABLED !== "true"))
-    throw new ApiError(503, "Configure payment keys, verified webhook and automation worker before accepting online payments");
   if (!planRecord || !["MANUAL", "RAZORPAY"].includes(method))
     throw new ApiError(400, "Valid plan and payment method are required");
   if(planRecord.taxPercent>0&&!process.env.UG_SAAS_GSTIN)throw new ApiError(409,"Configure supplier GSTIN before selling a GST subscription plan");
@@ -94,7 +88,7 @@ export async function createSubscription(request, response) {
       100
     ).toFixed(2),
   );
-  const total = Number((planRecord.price + planRecord.setupFee + taxAmount).toFixed(2));
+  const total = planRecord.price + planRecord.setupFee + taxAmount;
   const payment = await SubscriptionPayment.create({
     companyId: request.user.companyId,
     referenceNo: generateReferenceNo("SUB"),
@@ -102,7 +96,6 @@ export async function createSubscription(request, response) {
     amount: total,
     setupFee: planRecord.setupFee,
     taxAmount,
-    taxPercent: planRecord.taxPercent,
     paymentMethod: method,
     status: method === "MANUAL" ? "PENDING_APPROVAL" : "CREATED",
     notes: request.body.notes || "",
@@ -115,8 +108,11 @@ export async function createSubscription(request, response) {
     referenceNo: payment.referenceNo,
     plan: payment.plan,
     amount: payment.amount,
+<<<<<<< HEAD
     validityDays: planRecord.validityDays,
     entitlements: { maxUsers:planRecord.maxUsers,maxDepartments:planRecord.maxDepartments,modules:planRecord.modules },
+=======
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
     paymentMethod: method,
     status: payment.status,
     notes: payment.notes,
@@ -161,35 +157,77 @@ export async function createSubscription(request, response) {
 }
 
 export async function approveSubscription(request, response) {
-  const billing = await BillingRequest.findById(request.params.id).lean();
-  if (!billing) throw new ApiError(404, "Billing request not found");
-  const result = await settleSubscription(billing, {
-    actor: request.user.userId || request.user.name, manual: true,
-  });
+  const billingRequest = await BillingRequest.findById(request.params.id);
+  if (!billingRequest) throw new ApiError(404, "Billing request not found");
+  if (billingRequest.status === "PAID") throw new ApiError(409, "Billing request is already paid");
+  const plan = await SaasPlan.findOne({ name: billingRequest.plan }).lean();
+  const result = await runWithTenant(
+    { companyKey: billingRequest.companyKey, databaseName: billingRequest.databaseName },
+    async () => {
+      const payment = await SubscriptionPayment.findById(billingRequest.tenantPaymentId);
+      if (!payment) throw new ApiError(404, "Tenant payment record not found");
+      payment.status = "PAID";
+      payment.approvedBy = request.user.userId || request.user.name;
+      payment.periodStart = new Date();
+      payment.periodEnd = addDays(plan?.validityDays || 30);
+      await payment.save();
+      await Company.findByIdAndUpdate(payment.companyId, {
+        subscriptionPlan: payment.plan,
+        subscriptionStatus: "Active",
+        subscriptionStartsAt: payment.periodStart,
+        subscriptionEndsAt: payment.periodEnd,
+        active: true,
+      });
+      const invoice = await createInvoiceForPayment(payment, request.user.userId || request.user.name);
+      return { payment, invoice };
+    },
+  );
+  billingRequest.status = "PAID";
+  billingRequest.approvedBy = request.user.userId || request.user.name;
+  billingRequest.approvedAt = new Date();
+  await billingRequest.save();
+  await TenantRegistry.findOneAndUpdate(
+    { companyKey: billingRequest.companyKey },
+    { status: "ACTIVE", subscriptionPlan: billingRequest.plan, subscriptionEndsAt: result.payment.periodEnd },
+  );
   response.json(result);
 }
 
 export async function verifyRazorpayPayment(request, response) {
-  const secret = process.env.RAZORPAY_KEY_SECRET;
-  if (!secret) throw new ApiError(503, "Payment verification is not configured");
-  const payment = await SubscriptionPayment.findOne({ providerOrderId: request.body.razorpay_order_id });
+  const payment = await SubscriptionPayment.findOne({
+    providerOrderId: request.body.razorpay_order_id,
+  });
   if (!payment) throw new ApiError(404, "Payment order not found");
-  const expected = crypto.createHmac("sha256", secret)
-    .update(`${request.body.razorpay_order_id}|${request.body.razorpay_payment_id}`).digest("hex");
-  const signature = request.body.razorpay_signature || "";
-  if (!/^[a-f0-9]{64}$/i.test(signature) ||
-      !crypto.timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex")))
+  const expected = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
+    .update(
+      `${request.body.razorpay_order_id}|${request.body.razorpay_payment_id}`,
+    )
+    .digest("hex");
+  if (
+    !request.body.razorpay_signature ||
+    expected !== request.body.razorpay_signature
+  )
     throw new ApiError(401, "Invalid Razorpay signature");
-  // Checkout signature proves authenticity, not capture. Only the signed
-  // payment.captured webhook can activate an online subscription.
-  if (payment.status === "PAID") {
-    if (payment.providerPaymentId !== request.body.razorpay_payment_id)
-      throw new ApiError(409, "Order was settled using another payment");
-    const invoice = await SubscriptionInvoice.findOne({ paymentId: payment._id });
-    return response.json({ payment, invoice, pending: false });
-  }
-  response.status(202).json({ payment, pending: true,
-    message: "Payment received. Subscription activation awaits verified payment capture." });
+  const plan = await SaasPlan.findOne({ name: payment.plan }).lean();
+  payment.status = "PAID";
+  payment.providerPaymentId = request.body.razorpay_payment_id;
+  payment.periodStart = new Date();
+  payment.periodEnd = addDays(plan?.validityDays || 30);
+  await payment.save();
+  await BillingRequest.findOneAndUpdate(
+    { tenantPaymentId: payment._id },
+    { status: "PAID", approvedBy: request.user.userId || request.user.name, approvedAt: new Date() },
+  );
+  await Company.findByIdAndUpdate(payment.companyId, {
+    subscriptionPlan: payment.plan,
+    subscriptionStatus: "Active",
+    subscriptionStartsAt: payment.periodStart,
+    subscriptionEndsAt: payment.periodEnd,
+    active: true,
+  });
+  const invoice = await createInvoiceForPayment(payment, request.user.userId || request.user.name);
+  response.json({ payment, invoice });
 }
 
 export async function listPlans(_request, response) {
@@ -552,14 +590,6 @@ export async function updateSubscriptionStatus(request, response) {
   const states = { ACTIVATE: "Active", PAUSE: "Suspended", REMOVE: "Expired" };
   if (!states[action])
     throw new ApiError(400, "Action must be ACTIVATE, PAUSE or REMOVE");
-  if (action === "ACTIVATE") {
-    const current = await Company.findById(request.user.companyId).lean();
-    const now = new Date();
-    if (!current?.subscriptionEndsAt || current.subscriptionEndsAt <= now) throw new ApiError(402, "Renew an expired subscription before activation");
-    const paid = await SubscriptionPayment.exists({ companyId: request.user.companyId, status: "PAID", periodStart: { $lte: now }, periodEnd: current.subscriptionEndsAt });
-    const registry = await TenantRegistry.findOne({ companyKey: getTenant().companyKey }).lean();
-    if (!paid && !(current.subscriptionPlan === "Trial" && registry?.status === "ACTIVE")) throw new ApiError(403, "No paid or approved trial entitlement permits activation");
-  }
   const company = await Company.findByIdAndUpdate(
     request.user.companyId,
     { subscriptionStatus: states[action], active: action !== "REMOVE" },
@@ -570,25 +600,49 @@ export async function updateSubscriptionStatus(request, response) {
 }
 
 export async function razorpayWebhook(request, response) {
-  const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
-  if (!secret || !request.rawBody) throw new ApiError(503, "Webhook verification is not configured");
   const signature = request.get("x-razorpay-signature") || "";
-  const expected = crypto.createHmac("sha256", secret).update(request.rawBody).digest("hex");
-  if (!/^[a-f0-9]{64}$/i.test(signature) ||
-      !crypto.timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex")))
+  const expected = crypto
+    .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET || "missing")
+    .update(request.rawBody || JSON.stringify(request.body))
+    .digest("hex");
+  if (
+    !signature ||
+    signature.length !== expected.length ||
+    !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  )
     throw new ApiError(401, "Invalid payment signature");
   const entity = request.body.payload?.payment?.entity;
-  if (request.body.event !== "payment.captured" || !entity?.order_id)
-    return response.json({ received: true });
-  const billing = await BillingRequest.findOne({ providerOrderId: entity.order_id }).lean();
-  if (!billing) throw new ApiError(404, "Payment order is not recognized");
-  if (!capturedPaymentMatches(entity, billing)) throw new ApiError(409, "Payment does not match the order");
-  await PaymentInbox.findOneAndUpdate({ key: `capture-${entity.id}` }, { $setOnInsert: {
-    key: `capture-${entity.id}`, billingId: String(billing._id),
-    entity: { id: entity.id, order_id: entity.order_id, amount: entity.amount, currency: entity.currency, status: entity.status },
-    status: "PENDING", nextAttemptAt: new Date(), attempts: 0,
-  } }, { upsert: true });
-  response.status(202).json({ received: true, queued: true });
+  if (request.body.event === "payment.captured" && entity?.order_id) {
+    const billing = await BillingRequest.findOne({ providerOrderId: entity.order_id });
+    if (billing && billing.status !== "PAID") {
+      const plan = await SaasPlan.findOne({ name: billing.plan }).lean();
+      await runWithTenant(
+        { companyKey: billing.companyKey, databaseName: billing.databaseName },
+        async () => {
+          const payment = await SubscriptionPayment.findById(billing.tenantPaymentId);
+          if (!payment || payment.status === "PAID") return;
+          payment.status = "PAID";
+          payment.providerPaymentId = entity.id;
+          payment.periodStart = new Date();
+          payment.periodEnd = addDays(plan?.validityDays || 30);
+          await payment.save();
+          await Company.findByIdAndUpdate(payment.companyId, {
+            subscriptionPlan: payment.plan,
+            subscriptionStatus: "Active",
+            subscriptionStartsAt: payment.periodStart,
+            subscriptionEndsAt: payment.periodEnd,
+            active: true,
+          });
+          await createInvoiceForPayment(payment, "Razorpay webhook");
+        },
+      );
+      billing.status = "PAID";
+      billing.approvedBy = "Razorpay webhook";
+      billing.approvedAt = new Date();
+      await billing.save();
+    }
+  }
+  response.json({ received: true });
 }
 
 export async function getAuditHistory(request, response) {
@@ -613,7 +667,6 @@ export async function downloadBackup(request, response) {
   const data = {};
   for (const collection of collections) {
     if (["companies", "system.version"].includes(collection.name)) continue;
-    if (["users", "supportgrants", "invoicesequences"].includes(collection.name)) continue;
     data[collection.name] = await tenantDb
       .collection(collection.name)
       .find({ companyId })

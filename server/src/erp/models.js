@@ -9,8 +9,12 @@ function immutable(schema) {
 }
 const party = new Schema({ code: { type: String, required: true }, name: { type: String, required: true },
   kind: { type: String, enum: ["CUSTOMER", "SUPPLIER", "BOTH"], required: true }, email: String,
+<<<<<<< HEAD
   phone: String, address: String, gstin: String, paymentTermDays: { type:Number,default:30,min:0,max:365 }, creditLimit: { type:Number,default:null,min:0 },
   qcContact: String, suppliedItems: String, active: { type: Boolean, default: true } }, { timestamps: true });
+=======
+  phone: String, address: String, gstin: String, active: { type: Boolean, default: true } }, { timestamps: true });
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
 scopedUnique(party, "code");
 export const ErpParty = createTenantModel("ErpParty", party);
 const sku = new Schema({ code: { type: String, required: true }, name: { type: String, required: true },
@@ -25,7 +29,11 @@ scopedUnique(bom, "code"); export const ErpBom = createTenantModel("ErpBom", bom
 const settings = new Schema({ key: { type: String, default: "ERP" }, enabled: { type: Boolean, default: false },
   revision: { type: Number, default: 0 },
   legacyWritesLocked: { type: Boolean, default: false }, activationAt: Date, activatedBy: String,
+<<<<<<< HEAD
   migrationNotes: String, approvalThreshold: { type: Number, default: null }, approvalTypes: [String] }, { timestamps: true });
+=======
+  migrationNotes: String }, { timestamps: true });
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
 scopedUnique(settings, "key"); export const ErpSettings = createTenantModel("ErpSettings", settings);
 const document = new Schema({ number: { type: String, required: true }, type: { type: String, required: true },
   date: { type: Date, required: true }, partyCode: String, sourceId: String, bomCode: String, notes: String,
@@ -53,8 +61,11 @@ export const ErpEntry = createTenantModel("ErpEntry", entry);
 const sequence = new Schema({ key: { type: String, required: true }, value: { type: Number, default: 0 } });
 scopedUnique(sequence, "key"); export const ErpSequence = createTenantModel("ErpSequence", sequence);
 export const ERP_MODELS = [ErpParty, ErpSku, ErpBom, ErpSettings, ErpDocument, ErpBalance, ErpEntry, ErpSequence];
+<<<<<<< HEAD
 const approval = new Schema({ key: { type: String, required: true }, requestHash: String, input: Schema.Types.Mixed,
   requestedBy: String, decidedBy: String, reason: String, documentId: String,
   status: { type: String, enum: ["PENDING","APPROVED","REJECTED","POSTED"], default: "PENDING" } }, { timestamps: true });
 scopedUnique(approval,"key");
 export const ErpApproval = createTenantModel("ErpApproval",approval);
+=======
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810

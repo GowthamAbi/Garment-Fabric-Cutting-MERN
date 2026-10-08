@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import mongoose from "mongoose";
 
 import apiRoutes from "./routes/index.js";
 
@@ -61,7 +60,7 @@ app.use(
 
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 
-    allowedHeaders: ["Content-Type", "Authorization", "X-Company-Key", "X-CSRF-Token", "Idempotency-Key"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Company-Key", "X-CSRF-Token"],
 
     credentials: true,
   }),
@@ -105,13 +104,6 @@ app.get("/health", (req, res) => {
     message: "UG SaaS multi-tenant ERP API is running",
     tenancy: "database-per-company",
   });
-});
-app.get("/ready", async (_req, res) => {
-  try {
-    if (mongoose.connection.readyState !== 1) throw new Error("Database unavailable");
-    await mongoose.connection.db.command({ ping: 1 });
-    res.json({ ready: true });
-  } catch { res.status(503).json({ ready: false }); }
 });
 
 // ==========================================

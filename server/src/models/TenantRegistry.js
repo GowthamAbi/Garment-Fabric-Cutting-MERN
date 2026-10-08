@@ -13,9 +13,8 @@ const tenantRegistrySchema = new mongoose.Schema({
   databaseName: { type: String, required: true, unique: true, immutable: true },
   loginPath: { type: String, required: true, unique: true },
   status: { type: String, enum: ["PROVISIONING", "ACTIVE", "SUSPENDED", "ARCHIVED"], default: "PROVISIONING" },
-  subscriptionPlan: { type: String, default: "Trial" },
+  subscriptionPlan: { type: String, enum: ["Trial", "Basic", "Professional", "Enterprise"], default: "Trial" },
   subscriptionEndsAt: Date,
-  renewalCancelledAt: Date,
   dataOwner: { type: String, default: "CUSTOMER" },
   ownerDataAccess: { type: Boolean, default: false },
   retentionLock: { type: Boolean, default: true },
@@ -27,3 +26,4 @@ tenantRegistrySchema.index({adminEmail:1},{unique:true,partialFilterExpression:{
 
 const connection = controlDatabase();
 export default connection.models.TenantRegistry || connection.model("TenantRegistry", tenantRegistrySchema);
+

@@ -7,6 +7,7 @@ import { postDocument, workspaceFilter } from "./service.js";
 import { ACCOUNTS, TYPES, LOCATIONS, quantity, money, authorizeErp, fail } from "./policy.js";
 import { financialReport } from "./reports.js";
 import { currentDatabase } from "../config/tenantDatabase.js";
+<<<<<<< HEAD
 import departmentRoutes from "./departmentRoutes.js";
 import operationsRoutes from "./operationsRoutes.js";
 import approvalRoutes from "./approvalRoutes.js";
@@ -16,17 +17,26 @@ import bankRoutes, {reconcileDocument} from "./bankRoutes.js";
 import {featureAllowed,featureForRequest,ERP_FEATURES} from "./featurePolicy.js";
 const router = Router();
 const finance = req => authorizeErp(req.user, "finance") && featureAllowed(req.erpModules,"ERP_FINANCE");
+=======
+const router = Router();
+const finance = req => authorizeErp(req.user, "finance");
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
 function visibleDocument(req, doc) {
   if (finance(req)) return doc;
   const pricing = authorizeErp(req.user, "post", doc.type);
   return { ...doc, journals: [], moves: doc.moves.map(m => ({ ...m, value: null, valueAfter: null })),
     totals: pricing ? doc.totals : { net: null, tax: null, gross: null },
+<<<<<<< HEAD
     metadata: { ...doc.metadata, cost: null, workCostAllocated: null },
+=======
+    metadata: { ...doc.metadata, cost: null },
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
     lines: doc.lines.map(l => pricing ? l : { ...l, rate: null, net: null, tax: null }) };
 }
 function gate(action, type = "") {
   return (req, _res, next) => authorizeErp(req.user, action, type || req.body?.type) ? next() : next(new ApiError(403, "ERP permission denied"));
 }
+<<<<<<< HEAD
 router.use((req,res,next)=>req.path.startsWith("/departments") && !["saas_super_admin","support_viewer"].includes(req.user?.role) && (req.user?.permissions||[]).some(p=>p.startsWith("department.")) ? next() : gate("read")(req,res,next));
 router.use(asyncHandler(async(req,_res,next)=>{
   const company=await (await import("../models/Company.js")).default.findById(workspaceFilter().companyId).select("entitlements").lean();
@@ -40,13 +50,21 @@ router.use("/approvals", approvalRoutes);
 router.use("/workforce", workforceRoutes);
 router.use("/bank", bankRoutes);
 router.get("/workspace", asyncHandler(async (req, res) => {
+=======
+router.use(gate("read"));
+router.get("/workspace", asyncHandler(async (_req, res) => {
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
   const scope = workspaceFilter();
   const [settings, skus, parties, boms, company] = await Promise.all([
     ErpSettings.findOne({ ...scope, key: "ERP" }).lean(), ErpSku.find(scope).limit(2000).lean(),
     ErpParty.find(scope).limit(2000).lean(), ErpBom.find(scope).limit(1000).lean(),
     (await import("../models/Company.js")).default.findById(scope.companyId).lean(),
   ]);
+<<<<<<< HEAD
   res.json({ features:ERP_FEATURES.filter(f=>featureAllowed(req.erpModules,f)),settings: settings || { enabled: false }, skus, parties, boms, accounts: ACCOUNTS, types: TYPES.filter(t=>featureAllowed(req.erpModules,featureForRequest("/documents",t))), locations: LOCATIONS,
+=======
+  res.json({ settings: settings || { enabled: false }, skus, parties, boms, accounts: ACCOUNTS, types: TYPES, locations: LOCATIONS,
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
     company: { name: company?.companyName, address: company?.address, factory: company?.factories?.find(f => String(f._id) === String(scope.factoryId))?.name } });
 }));
 router.get("/migration-snapshot", gate("masters"), asyncHandler(async (_req, res) => {
@@ -80,6 +98,7 @@ router.post("/masters/:kind", gate("masters"), asyncHandler(async (req, res) => 
     data = { code: code(body.code), name: String(body.name).slice(0, 120), unit: body.unit.toUpperCase(), kind: body.kind,
       location: body.location, batch: String(body.batch || "").slice(0, 60), colour: String(body.colour || "").slice(0, 60), size: String(body.size || "").slice(0, 30), minimumQty: quantity(body.minimumQty || 0.001) / 1000 };
   } else if (req.params.kind === "parties") {
+<<<<<<< HEAD
     const terms=Number(body.paymentTermDays??30);
     if(!Number.isInteger(terms)||terms<0||terms>365) fail("Payment terms must be 0–365 whole days");
     if (!String(body.name || "").trim() || !["CUSTOMER", "SUPPLIER", "BOTH"].includes(body.kind)) fail("Party name/type required");
@@ -87,6 +106,12 @@ router.post("/masters/:kind", gate("masters"), asyncHandler(async (req, res) => 
     data = { code: code(body.code), name: String(body.name).slice(0, 120), kind: body.kind,
       email: String(body.email || "").slice(0, 200), phone: String(body.phone || "").slice(0, 30), address: String(body.address || "").slice(0, 500), gstin: String(body.gstin || "").slice(0, 20),
       paymentTermDays:terms,creditLimit:body.creditLimit===""||body.creditLimit===undefined||body.creditLimit===null?null:money(body.creditLimit),qcContact:String(body.qcContact||"").slice(0,100),suppliedItems:String(body.suppliedItems||"").slice(0,500) };
+=======
+    if (!String(body.name || "").trim() || !["CUSTOMER", "SUPPLIER", "BOTH"].includes(body.kind)) fail("Party name/type required");
+    if (body.email && !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(body.email)) fail("Invalid billing email");
+    data = { code: code(body.code), name: String(body.name).slice(0, 120), kind: body.kind,
+      email: String(body.email || "").slice(0, 200), phone: String(body.phone || "").slice(0, 30), address: String(body.address || "").slice(0, 500), gstin: String(body.gstin || "").slice(0, 20) };
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
   } else {
     const components = (body.components || []).map(c => ({ sku: code(c.sku), qty: quantity(c.quantity) }));
     if (!components.length || components.length > 100 || new Set(components.map(c => c.sku)).size !== components.length) fail("Use 1–100 unique BOM components");
@@ -148,6 +173,7 @@ router.get("/financials", gate("finance"), asyncHandler(async (req, res) => {
   const [entries, balances, documents] = await Promise.all([ErpEntry.find({ ...scope, kind: "JOURNAL", date: { $lte: to } }).lean(), ErpBalance.find(scope).lean(), ErpDocument.find({ ...scope, type: { $in: ["WORK_COST", "PRODUCTION_RECEIPT"] } }).lean()]);
   res.json(financialReport(entries, balances, documents, from, to));
 }));
+<<<<<<< HEAD
 router.get("/commercial",gate("finance"),asyncHandler(async (_req,res)=>{
   const documents=await ErpDocument.find(workspaceFilter()).limit(10001).lean();
   if(documents.length>10000) fail("Commercial report exceeds current capacity");
@@ -155,5 +181,17 @@ router.get("/commercial",gate("finance"),asyncHandler(async (_req,res)=>{
 }));
 router.post("/documents/:id/reconcile", gate("finance"), gate("reconcile"), asyncHandler(async (req, res) => {
   res.json(await reconcileDocument(req.params.id,req.body,req.user.userId));
+=======
+router.post("/documents/:id/reconcile", gate("reconcile"), asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.id)) fail("Invalid document ID");
+  const doc = await ErpDocument.findOne({ ...workspaceFilter(), _id: req.params.id });
+  if (!doc || doc.reversedBy) fail("Posted bank document required");
+  const bank = doc.journals.filter(l => l.account === "BANK").reduce((s, l) => s + l.debit - l.credit, 0);
+  if (!bank || Math.abs(bank) !== money(req.body.amount) || !String(req.body.bankReference || "").trim()) fail("Bank statement amount/reference must match this document");
+  const clearedAt = new Date(req.body.clearedAt);
+  if (Number.isNaN(clearedAt.getTime()) || clearedAt < doc.date || clearedAt > new Date()) fail("Invalid bank clearance date");
+  if (doc.clearedAt) fail("Document is already reconciled");
+  doc.clearedAt = clearedAt; doc.bankReference = String(req.body.bankReference).slice(0, 100); await doc.save(); res.json(doc);
+>>>>>>> 50a2d22da23f6913de1a4c7a8fddee39543e5810
 }));
 export default router;

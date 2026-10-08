@@ -32,13 +32,13 @@ export default function AuditBackupPage({ notify }) {
     link.download = `accessories-flow-backup-${today}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    notify("Unencrypted business-data export downloaded. This is not a full recovery backup; store it privately.");
+    notify("Encrypted-location backup downloaded; keep it private");
   }
   return (
     <>
       <PageTitle
         title="Audit & Backup"
-        subtitle="Audit history and business-data export. Encrypted recovery backup is available through the maintenance tool."
+        subtitle="Who changed what, when, and downloadable company backup"
       />
       <Card>
         <div className="audit-toolbar">
@@ -60,7 +60,7 @@ export default function AuditBackupPage({ notify }) {
           </label>
           <button onClick={load}>Apply Date Range</button>
           <button className="primary" onClick={backup}>
-            Download Business Data (JSON)
+            Download Company Backup
           </button>
         </div>
       </Card>
