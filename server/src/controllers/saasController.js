@@ -87,6 +87,7 @@ export async function createSubscription(request, response) {
     throw new ApiError(503, "Configure payment keys, verified webhook and automation worker before accepting online payments");
   if (!planRecord || !["MANUAL", "RAZORPAY"].includes(method))
     throw new ApiError(400, "Valid plan and payment method are required");
+  if(planRecord.taxPercent>0&&!process.env.UG_SAAS_GSTIN)throw new ApiError(409,"Configure supplier GSTIN before selling a GST subscription plan");
   const taxAmount = Number(
     (
       ((planRecord.price + planRecord.setupFee) * planRecord.taxPercent) /
@@ -115,6 +116,7 @@ export async function createSubscription(request, response) {
     plan: payment.plan,
     amount: payment.amount,
     validityDays: planRecord.validityDays,
+    entitlements: { maxUsers:planRecord.maxUsers,maxDepartments:planRecord.maxDepartments,modules:planRecord.modules },
     paymentMethod: method,
     status: payment.status,
     notes: payment.notes,
@@ -226,6 +228,8 @@ export async function savePlan(request, response) {
     featured,
     sortOrder,
   }))(request.body);
+  if(!Number.isFinite(Number(payload.taxPercent))||Number(payload.taxPercent)<0||Number(payload.taxPercent)>28)throw new ApiError(400,"Tax rate must be 0–28; 0 means no GST charged");
+  if(!Array.isArray(payload.modules)||payload.modules.some(x=>typeof x!=="string"||x.length>60))throw new ApiError(400,"Module list required");
   const plan = request.params.id
     ? await SaasPlan.findByIdAndUpdate(request.params.id, payload, {
         new: true,

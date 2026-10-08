@@ -1,6 +1,10 @@
+# Current release: Production-to-retail extension
+
+Read **DEPARTMENT-RELEASE-START-HERE.md** and **RELEASE-VALIDATION.md** before the older overview below. New department screens, owner licensing, and GST/no-tax configuration are included; staging checks remain mandatory.
+
 # UG SaaS — Integrated ERP release candidate
 
-This source package includes milestones 1–4 and the combined integrated ERP and automation work. It is a staging candidate, not a certification of production readiness or feature parity with Zoho, ERPNext or Odoo. Read RELEASE-VALIDATION.md before deployment. Older milestone documents describe historical work; this README and the validation report take precedence.
+This consolidated source package includes milestones 1–4, the integrated ERP/automation work and the 7 October manufacturing, commercial and workforce extensions. It is a staging candidate, not a certification of production readiness or feature parity with Zoho, ERPNext or Odoo. Start with START-HERE.md, FINAL-ERP-SCOPE.md and RELEASE-VALIDATION.md. Older milestone documents describe historical work; these current documents take precedence.
 
 ## Included
 
@@ -15,6 +19,12 @@ This source package includes milestones 1–4 and the combined integrated ERP an
 - Printable ERP documents with company/party billing snapshots; subscription invoices and queued invoice emails.
 - Signed payment capture inbox, expiry/reminder jobs, cancellation and owner-approved full refunds, bounded retry/dead-letter monitoring.
 - Encrypted tenant backup export/validation/empty-database restore tools.
+- Work-order department routes, quantity-gated Cutting/Folding/Packing completion, machine assignments, overlap/active-machine protection, event timing, Gantt/weekly reports and maintenance holds.
+- Secure physical-roll QR tied to a distinct ledger SKU, fiscal-year batch/one-DC-one-set rules and receipt/stock trace.
+- BOM material shortage suggestions, actual work-order costing, sales-order margin indicators, vendor pending quantities, due-date ageing and customer credit limits.
+- Independent approval queue, immutable approved proposals, threshold enforcement and atomic approval/ledger posting.
+- Signed-amount bank CSV import and reviewed match/unmatch, employee/attendance records and immutable reviewed payslips.
+- Concurrent user/department quota enforcement, entitlement snapshots and explicit ERP feature tags for plan gating.
 
 ## Local setup
 
@@ -52,4 +62,4 @@ Inside server run `npm test`; inside client run `npm run build`. To run real con
 
 Application permissions isolate customer operational APIs and require approved support grants. Infrastructure administrators holding MongoDB credentials can still access databases: separate DB names alone cannot prevent that. Enforce least-privilege credentials, managed backups, access logging and operational approval controls. Retention protection in application routes is not immutable storage or a guarantee against administrator deletion.
 
-This release does not include statutory GST filing/e-invoicing, payroll, advanced MRP/capacity planning, serial/roll-level integration into the new ledger, multicurrency, a configurable chart of accounts, automatic bank feed reconciliation or automatic charge mandates. Existing roll/machine modules are historical/legacy after cutover. INR tax entries require accountant review. Post-sale support, data retention duration and backup policy need contractual definition.
+This release does not include statutory GST filing/e-invoicing, automatic payroll tax/PF/ESI computation, an automatic capacity optimizer, interchangeable-roll BOM substitution/FIFO picking, multicurrency, a configurable chart of accounts, automatic bank feeds or automatic charge mandates. Payroll figures require manual professional review and separate GL/payment posting. Roll tracking requires a distinct SKU per physical roll. Existing roll/machine forms are historical/legacy after cutover; use the new Shop floor and ERP document screens. INR tax entries require accountant review. Post-sale support, data retention duration and backup policy need contractual definition. See FINAL-ERP-SCOPE.md for exact implementation boundaries.

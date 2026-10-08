@@ -9,6 +9,9 @@ import { getTenant } from "../utils/tenantContext.js";
 import { assertStrongPassword } from "../utils/passwordPolicy.js";
 import { generateUserId } from "../utils/generateUserId.js";
 import { issueEmailVerification } from "../services/accountEmailService.js";
+import mongoose from "mongoose";
+import SaasPlan from "../models/SaasPlan.js";
+import { checkUserQuota } from "../utils/entitlementPolicy.js";
 
 function createToken(user) {
   const tenant = getTenant();
@@ -151,7 +154,7 @@ export async function createUser(request, response) {
       ? request.body.factoryId || request.user.factoryId
       : request.user.factoryId;
   const userId = await generateUserId({ name, department: request.body.department, role });
-  const user = await User.create({
+  const userData = {
     userId,
     name,
     email,
@@ -163,7 +166,21 @@ export async function createUser(request, response) {
     department: request.body.department || "",
     companyId: targetCompanyId,
     factoryId: targetFactoryId,
-  });
+  };
+  let user;
+  if(request.user.role==="saas_super_admin") user=await User.create(userData);
+  else {
+    await User.init();await Company.init();
+    const session=await mongoose.startSession();
+    try { await session.withTransaction(async()=>{
+      const company=await Company.findOneAndUpdate({_id:targetCompanyId},{$inc:{userProvisionRevision:1}},{new:true,session});
+      if(!company) throw new ApiError(409,"Company is unavailable");
+      const plan=company.entitlements?.maxUsers?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
+      const users=await User.collection.find({companyId:new mongoose.Types.ObjectId(targetCompanyId),active:{$ne:false}},{session,projection:{department:1}}).limit(10001).toArray();
+      checkUserQuota(plan,users,userData.department);
+      [user]=await User.create([userData],{session});
+    }); } finally {await session.endSession();}
+  }
   const activationUrl = await issueEmailVerification(user, getTenant().companyKey);
   response.status(201).json({
     _id: user._id,
@@ -297,11 +314,8 @@ export async function login(request, response) {
     throw new ApiError(403, "Verify your registered email before login");
   const company = await Company.findById(user.companyId).lean();
   if (user.role !== "saas_super_admin") {
-    const expired =
-      company?.subscriptionEndsAt &&
-      new Date(company.subscriptionEndsAt) < new Date();
-    if (!company?.active || company?.subscriptionStatus !== "Active" || expired)
-      throw new ApiError(402, "Company subscription is inactive or expired");
+    if (!company?.active) throw new ApiError(403, "Company account is inactive");
+    // Expired companies may sign in to billing. Operational routes remain subscription-gated.
   }
   clearLoginAttempts(request);
   user.failedLoginCount = 0;
@@ -343,9 +357,9 @@ export async function getProfile(request, response) {
   response.json(user);
 }
 export async function updateUserPermissions(request, response) {
-  const allowed = ["erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
+  const allowed = ["department.stitching.read","department.stitching.write","department.inward.read","department.inward.write","department.checking.read","department.checking.write","department.ironing.read","department.ironing.write","department.packing.read","department.packing.write","department.dispatch.read","department.dispatch.write","department.warehouse.read","department.warehouse.write","department.shop.read","department.shop.write","department.marketing.read","department.marketing.write", "erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
   const permissions = request.body.permissions;
-  if (!Array.isArray(permissions) || permissions.some(p => !allowed.includes(p))) throw new ApiError(400, "Invalid ERP permissions");
+  if (!Array.isArray(permissions) || permissions.some(p => !allowed.includes(p)&&!(typeof p==="string"&&/^shop\.[A-Za-z0-9_-]{2,60}$/.test(p)))) throw new ApiError(400, "Invalid ERP permissions");
   const user = await User.findOne({ _id: request.params.id, companyId: request.user.companyId, factoryId: request.user.factoryId }).select("+sessionVersion");
   if (!user || user.role === "saas_super_admin") throw new ApiError(404, "Customer user not found");
   user.permissions = [...new Set(permissions)]; user.sessionVersion = Number(user.sessionVersion || 0) + 1;

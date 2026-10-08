@@ -322,7 +322,7 @@ export default function SuperAdminDashboardPage({ notify }) {
                   "CUTTING",
                   "ACCESSORIES",
                   "ELASTIC",
-                  "STITCHING",
+                  "STITCHING", "INWARD", "CHECKING", "IRONING", "WAREHOUSE", "SHOP", "MARKETING",
                   "FINISHING",
                   "PACKING",
                   "DISPATCH",

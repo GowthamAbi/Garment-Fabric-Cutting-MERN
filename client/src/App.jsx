@@ -10,6 +10,9 @@ import { LanguageProvider } from "./context/LanguageContext.jsx";
 import PrivacyPage from "./pages/legal/PrivacyPage.jsx";
 import SuperAdminLayout from "./components/layout/SuperAdminLayout.jsx";
 import PublicDemoPage from "./pages/saas/PublicDemoPage.jsx";
+import { BundleTrace } from "./pages/erp/Departments.jsx";
+import { RollView } from "./pages/erp/ShopFloor.jsx";
+import "./pages/erp/erp.css";
 
 function Application() {
   const { token, user, checkingSession } = useAuth();
@@ -89,6 +92,10 @@ function Application() {
   }
 
   if (!token || !user) return <LoginPage />;
+  const erpBundle = window.location.pathname.match(/^\/c\/[a-z0-9-]{3,40}\/erp-bundle\/([a-f0-9]{24})$/i);
+  if(erpBundle) return <div className="erp-shell"><BundleTrace bundleId={erpBundle[1]}/></div>;
+  const erpRoll = window.location.pathname.match(/^\/c\/[a-z0-9-]{3,40}\/erp-roll\/([a-f0-9]{24})$/i);
+  if (erpRoll) return <div className="erp-shell"><RollView rollId={erpRoll[1]} /></div>;
 
   const inwardNo = new URLSearchParams(window.location.search).get("inwardNo");
 

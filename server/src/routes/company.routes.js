@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
   controlCompanySubscription,
+  configureCompanyDepartments,
+  resendCompanyActivation,
   createCompany,
   getCompanies,
   getCompanyWorkspace,
@@ -17,6 +19,8 @@ router.get(
   asyncHandler(getCompanies),
 );
 router.post("/", allowRoles("saas_super_admin"), asyncHandler(createCompany));
+router.patch('/:id/departments',allowRoles('saas_super_admin'),asyncHandler(configureCompanyDepartments));
+router.post('/:id/resend-activation',allowRoles('saas_super_admin'),asyncHandler(resendCompanyActivation));
 router.get(
   "/:id/workspace",
   allowRoles("company_admin"),

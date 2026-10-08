@@ -10,7 +10,7 @@ const blank = {
   price: 0,
   cost: 0,
   setupFee: 0,
-  taxPercent: 18,
+  taxPercent: 0,
   validityDays: 30,
   maxUsers: 5,
   maxDepartments: 3,
@@ -55,7 +55,7 @@ export default function OwnerPlansPage({ notify }) {
     <section className="classic-page">
       <PageTitle
         title="Plans & Pricing"
-        subtitle="Set price, validity, user limits, departments, modules and tax without changing code"
+        subtitle="Set price, validity, user limits and modules. GST 0 creates a no-tax plan. Full downstream workflow needs maxDepartments 9."
       />
       <form className="classic-card saas-plan-form" onSubmit={save}>
         <div className="table-toolbar">
@@ -79,7 +79,7 @@ export default function OwnerPlansPage({ notify }) {
             ["price", "Price ₹", "number"],
             ["cost", "Internal Cost ₹", "number"],
             ["setupFee", "Setup Fee ₹", "number"],
-            ["taxPercent", "Tax %", "number"],
+            ["taxPercent", "GST % (0 = without GST)", "number"],
             ["validityDays", "Validity Days", "number"],
             ["maxUsers", "Maximum Users", "number"],
             ["maxDepartments", "Maximum Departments", "number"],

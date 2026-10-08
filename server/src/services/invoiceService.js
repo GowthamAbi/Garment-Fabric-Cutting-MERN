@@ -31,7 +31,8 @@ export async function createInvoiceForPayment(payment, issuedBy = "System", sess
   const admin = await User.findOne({ companyId: payment.companyId, role: "company_admin" }).session(session).lean();
   const taxTotal = Number(payment.taxAmount || 0);
   const subtotal = Number((Number(payment.amount || 0) - taxTotal).toFixed(2));
-  const sameState = Boolean(process.env.UG_SAAS_STATE_CODE && company?.stateCode === process.env.UG_SAAS_STATE_CODE);
+  const factory=company?.factories?.find(f=>String(f._id)===String(payment.factoryId))||company?.factories?.[0];
+  const sameState = Boolean(process.env.UG_SAAS_STATE_CODE && factory?.stateCode === process.env.UG_SAAS_STATE_CODE);
   const taxRate = Number(payment.taxPercent ?? (subtotal > 0 ? Number((taxTotal / subtotal * 100).toFixed(2)) : 0));
   const [invoice] = await SubscriptionInvoice.create([{
     companyId: payment.companyId, factoryId: payment.factoryId,
@@ -48,10 +49,10 @@ export async function createInvoiceForPayment(payment, issuedBy = "System", sess
     },
     customer: {
       companyName: company?.companyName || "Customer",
-      address: company?.billingAddress || company?.address || "",
-      gstin: company?.gstin || "",
-      stateCode: company?.stateCode || "",
-      placeOfSupply: company?.placeOfSupply || "",
+      address: factory?.billingAddress || factory?.address || company?.address || "",
+      gstin: factory?.gstin || "",
+      stateCode: factory?.stateCode || "",
+      placeOfSupply: factory?.placeOfSupply || "",
       email: admin?.email || "",
     },
     lineItems: [{
