@@ -5,7 +5,7 @@ import User from "../models/User.js";
 import { runWithTenant } from "../utils/tenantContext.js";
 import { sanitizeTenantKey, tenantDatabaseName } from "../config/tenantDatabase.js";
 import { generateUserId } from "../utils/generateUserId.js";
-import { issueEmailVerification,activationEmailConfiguration } from "./accountEmailService.js";
+import { issueEmailVerification } from "./accountEmailService.js";
 import ApiError from '../utils/ApiError.js';
 
 async function availableCompanyKey(companyName) {
@@ -21,7 +21,9 @@ export async function provisionTenant({
   companyName, adminName, adminEmail, password, passwordHash, city = "",
   plan = "Trial", expiresAt, createdBy = "Platform", enabledDepartments=[],entitlements, factoryName,factoryCode,
 }) {
-  activationEmailConfiguration();
+  // Email configuration must not block tenant creation. The verification-email
+  // attempt below is intentionally isolated so a missing/invalid Resend setup
+  // marks activationEmailStatus as FAILED while still provisioning the company.
   adminEmail=String(adminEmail||'').trim().toLowerCase();
   if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(adminEmail))throw new ApiError(400,'Valid administrator email required');
   await TenantRegistry.init();
