@@ -53,3 +53,19 @@ test('production errors stay generic while logging server diagnostics', (t) => {
     else process.env.NODE_ENV = old;
   }
 });
+
+ test('one invalid legacy workspace does not break the owner company list', async (t) => {
+  t.mock.method(TenantRegistry, 'find', () => ({ select: () => ({ sort: () => ({ lean: async () => [
+    {companyKey:'broken',databaseName:'invalid/database',companyName:'Broken'},
+    {companyKey:'valid',databaseName:'ugs_tenant_valid',companyName:'Valid',adminUserId:'UGS-MGT-VAL-1234'},
+  ] }) }) }));
+  const log=t.mock.method(console,'error',()=>{});
+  let result;
+  await getCompanies({user:{role:'saas_super_admin'}},{json:value=>{result=value;}});
+  assert.equal(result.length,2);
+  assert.equal(result[0].adminLookupStatus,'UNAVAILABLE');
+  assert.equal(result[1].adminUserId,'UGS-MGT-VAL-1234');
+  assert.ok(result.every(row=>!('databaseName' in row)));
+  assert.equal(log.mock.calls.length,1);
+  assert.deepEqual(getTenant(),{});
+});

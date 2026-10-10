@@ -21,14 +21,23 @@ export async function getCompanies(request, response) {
 
     for (const row of tenants) {
       if (!row.adminUserId) {
+        try {
         const admin = await runWithTenant(
           { companyKey: row.companyKey, databaseName: row.databaseName },
-          () => User.findOne({ role: "company_admin" }).select("userId name email").lean(),
+          () => User.findOne({ role: "company_admin" }, null, { maxTimeMS: 3000 }).select("userId name email").lean(),
         );
         if (admin) {
           row.adminUserId = admin.userId;
           row.adminName = admin.name;
           row.adminEmail = admin.email;
+        }
+        } catch (error) {
+          // Optional legacy metadata must not take down the entire owner list.
+          row.adminLookupStatus = "UNAVAILABLE";
+          console.error("Legacy company administrator lookup failed", {
+            companyKey: row.companyKey,
+            code: error.code || error.name || "UNKNOWN",
+          });
         }
       }
 
