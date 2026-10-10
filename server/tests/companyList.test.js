@@ -69,3 +69,8 @@ test('production errors stay generic while logging server diagnostics', (t) => {
   assert.equal(log.mock.calls.length,1);
   assert.deepEqual(getTenant(),{});
 });
+
+test('safe mail error details are visible only to the owner',t=>{
+ const old=process.env.NODE_ENV;process.env.NODE_ENV='production';t.mock.method(console,'error',()=>{});
+ try {for(const role of ['saas_super_admin','company_admin']){let body;const error=new Error('Resend sender/domain is not verified');error.statusCode=502;error.exposeToOwner=true;errorHandler(error,{user:{role}},{status(){return this;},json(v){body=v;}},()=>{});assert.equal(body.message,role==='saas_super_admin'?error.message:'Unexpected server error');}}finally{if(old===undefined)delete process.env.NODE_ENV;else process.env.NODE_ENV=old;}
+});

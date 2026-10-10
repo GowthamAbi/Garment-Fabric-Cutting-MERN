@@ -62,7 +62,7 @@ export async function provisionTenant({
           factoryId: company.factories[0]._id,
         });
         let activationUrl,activationEmailStatus='ACCEPTED';
-        try{activationUrl=await issueEmailVerification(user,companyKey);}catch{activationEmailStatus='FAILED';}
+        try{activationUrl=await issueEmailVerification(user,companyKey);}catch(error){activationEmailStatus='FAILED'; console.error('Company activation email failed', {companyKey, reason:error.exposeToOwner?error.message:'Account activation storage failed'});}
         return { company, userId, userEmail: user.email, activationUrl,activationEmailStatus };
       },
     );

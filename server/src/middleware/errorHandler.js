@@ -4,14 +4,15 @@ export function notFoundHandler(request, _response, next) {
   next(error);
 }
 
-export function errorHandler(error, _request, response, _next) {
+export function errorHandler(error, request, response, _next) {
   const statusCode =
     error.statusCode || (error.name === "ValidationError" ? 400 : 500);
   if (statusCode >= 500) {
     console.error("API request failed", error.stack);
   }
   const message =
-    statusCode >= 500 && process.env.NODE_ENV === "production"
+    statusCode >= 500 && process.env.NODE_ENV === "production" &&
+      !(error.exposeToOwner === true && request.user?.role === "saas_super_admin")
       ? "Unexpected server error"
       : error.message || "Unexpected server error";
 

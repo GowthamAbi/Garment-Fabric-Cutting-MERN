@@ -12,3 +12,7 @@ test('activation saves a hashed token, sends company URL and reports provider re
   globalThis.fetch=async()=>({ok:false,status:403});await assert.rejects(()=>issueEmailVerification(user,'company-a'),/status 403/);
  }finally{globalThis.fetch=originalFetch;for(const k of ['RESEND_API_KEY','EMAIL_FROM','CLIENT_URL','NODE_ENV'])if(old[k]===undefined)delete process.env[k];else process.env[k]=old[k];}
 });
+
+test('production activation chooses HTTPS frontend from a CORS origin list',()=>{
+ const old={...process.env};try{process.env.RESEND_API_KEY='test';process.env.EMAIL_FROM='no-reply@example.com';process.env.NODE_ENV='production';process.env.CLIENT_URL='http://localhost:5173,https://ugsaas.com';assert.equal(activationEmailConfiguration(),'https://ugsaas.com');}finally{for(const k of ['RESEND_API_KEY','EMAIL_FROM','CLIENT_URL','NODE_ENV'])if(old[k]===undefined)delete process.env[k];else process.env[k]=old[k];}
+});
