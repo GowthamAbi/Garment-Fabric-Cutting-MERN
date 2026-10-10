@@ -7,11 +7,12 @@ import { sanitizeTenantKey, tenantDatabaseName } from "../config/tenantDatabase.
 import { generateUserId } from "../utils/generateUserId.js";
 import { issueEmailVerification } from "./accountEmailService.js";
 import ApiError from '../utils/ApiError.js';
+import { companyKeyBase } from "../utils/companyKey.js";
 
-async function availableCompanyKey(companyName) {
-  const base = sanitizeTenantKey(companyName).slice(0, 32);
+export async function availableCompanyKey(companyName) {
+  const base = companyKeyBase(companyName);
   for (let suffix = 0; suffix < 1000; suffix += 1) {
-    const key = suffix ? `${base}-${suffix + 1}` : base;
+    const key = sanitizeTenantKey(suffix ? `${base}-${suffix + 1}` : base);
     if (!(await TenantRegistry.exists({ companyKey: key }))) return key;
   }
   throw new Error("Unable to generate company workspace key");
