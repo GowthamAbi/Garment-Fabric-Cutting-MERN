@@ -15,13 +15,27 @@ import {checkUserQuota} from "../utils/entitlementPolicy.js";
 export async function getCompanies(request, response) {
   if (request.user.role === "saas_super_admin") {
     const tenants = await TenantRegistry.find()
-      .select("companyKey companyName adminUserId adminName adminEmail activationEmailStatus activationEmailAt enabledDepartments loginPath status subscriptionPlan subscriptionEndsAt dataOwner ownerDataAccess retentionLock createdAt")
+      .select("companyKey companyName databaseName adminUserId adminName adminEmail activationEmailStatus activationEmailAt enabledDepartments loginPath status subscriptionPlan subscriptionEndsAt dataOwner ownerDataAccess retentionLock createdAt")
       .sort({ companyName: 1 })
       .lean();
-    for(const row of tenants){if(row.adminUserId)continue;
-      const admin=await runWithTenant({companyKey:row.companyKey,databaseName:row.databaseName},()=>User.findOne({role:'company_admin'}).select('userId name email').lean());
-      if(admin){row.adminUserId=admin.userId;row.adminName=admin.name;row.adminEmail=admin.email;}
+
+    for (const row of tenants) {
+      if (!row.adminUserId) {
+        const admin = await runWithTenant(
+          { companyKey: row.companyKey, databaseName: row.databaseName },
+          () => User.findOne({ role: "company_admin" }).select("userId name email").lean(),
+        );
+        if (admin) {
+          row.adminUserId = admin.userId;
+          row.adminName = admin.name;
+          row.adminEmail = admin.email;
+        }
+      }
+
+      // The tenant database name is internal infrastructure and must not be exposed.
+      delete row.databaseName;
     }
+
     return response.json(tenants);
   }
   const companies = await Company.find(
