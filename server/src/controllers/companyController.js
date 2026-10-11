@@ -1,3 +1,4 @@
+import {trialExpiry} from "../utils/subscriptionAccess.js";
 import {DEPARTMENTS} from "../erp/departmentPolicy.js";
 import Company from "../models/Company.js";
 import User from "../models/User.js";
@@ -221,7 +222,7 @@ export async function createCompany(request, response) {
   if(selected.length>selectedPlan.maxDepartments)throw new ApiError(400,"Selected departments exceed subscription limit");
   const licensed=selectedPlan.modules.filter(d=>DEPARTMENTS.includes(d));
   if(licensed.length&&selected.some(d=>!licensed.includes(d)))throw new ApiError(400,"Department is not included in this plan");
-  const expiresAt = new Date(Date.now() + validityDays * 86400000);
+  const expiresAt = selectedPlan.code==="TRIAL" ? trialExpiry() : new Date(Date.now() + validityDays * 86400000);
   const provisioned = await provisionTenant({
     companyName, adminName, adminEmail, password: adminPassword,
     city: address, plan: subscriptionPlan || "Trial", expiresAt,factoryName,factoryCode:request.body.factoryCode,

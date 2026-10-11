@@ -1,3 +1,4 @@
+import {subscriptionAccess} from "../utils/subscriptionAccess.js";
 import Company from "../models/Company.js";
 import ApiError from "../utils/ApiError.js";
 
@@ -7,10 +8,7 @@ export async function requireActiveSubscription(request, _response, next) {
   const company = await Company.findById(request.user?.companyId).lean();
   if (!company || !company.active)
     return next(new ApiError(403, "Company account is inactive"));
-  const expired =
-    company.subscriptionEndsAt &&
-    new Date(company.subscriptionEndsAt) < new Date();
-  if (company.subscriptionStatus !== "Active" || expired)
+  if (!subscriptionAccess(company).accessAllowed)
     return next(
       new ApiError(402, "Subscription expired. Contact your administrator"),
     );

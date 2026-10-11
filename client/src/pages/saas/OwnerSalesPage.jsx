@@ -37,6 +37,8 @@ export default function OwnerSalesPage({ notify }) {
         subtitle="Manual approvals, Razorpay sales, revenue, plan mix and renewal risk"
       />
       <div className="overview-metrics">
+        <Metric icon={<Building2 />} label="Trials expiring within 3 days" value={m.expiringTrials || 0} />
+        <Metric icon={<Building2 />} label="Expired trials" value={m.expiredTrials || 0} />
         <Metric
           icon={<IndianRupee />}
           label="Total Revenue"

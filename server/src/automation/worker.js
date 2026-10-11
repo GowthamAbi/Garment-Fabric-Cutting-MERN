@@ -1,3 +1,4 @@
+import {reminderBucket} from "../utils/subscriptionAccess.js";
 import crypto from "node:crypto";
 import mongoose from "mongoose";
 import { EmailOutbox, PaymentInbox, SubscriptionAction } from "./models.js";
@@ -73,13 +74,13 @@ export async function scheduleRenewals() {
   const tenants = await TenantRegistry.find({ status: { $in: ["ACTIVE", "SUSPENDED"] } }).lean();
   for (const tenant of tenants) await runWithTenant({ companyKey: tenant.companyKey, databaseName: tenant.databaseName }, async () => {
     const company = await Company.findOne(); if (!company?.subscriptionEndsAt) return;
-    const days = Math.ceil((company.subscriptionEndsAt.getTime() - Date.now()) / 86400000);
+    const days = reminderBucket(company.subscriptionEndsAt);
     const admin = await User.findOne({ role: "company_admin", active: true }).lean();
-    if (!tenant.renewalCancelledAt && admin?.email && [7, 3, 1, 0, -1].includes(days)) {
+    if (!tenant.renewalCancelledAt && admin?.email && days!==null) {
       const dedupeKey = `renewal-${tenant.companyKey}-${company.subscriptionEndsAt.getTime()}-${days}`;
       await EmailOutbox.updateOne({ dedupeKey }, { $setOnInsert: { dedupeKey, companyKey: tenant.companyKey,
         databaseName: tenant.databaseName, companyId: company._id, factoryId: admin.factoryId,
-        payload: { to: [admin.email], subject: days > 0 ? `UG SaaS renewal in ${days} day(s)` : "UG SaaS subscription expired",
+        payload: { to: [admin.email], subject: days > 0 ? `UG SaaS ${company.subscriptionPlan==="Trial"?"trial ends":"renewal"} in ${days} day(s)` : "UG SaaS subscription expired",
           html: `<p>Your subscription ${days > 0 ? "expires" : "expired"} on ${company.subscriptionEndsAt.toISOString().slice(0, 10)}.</p><p>Login to your company workspace to review renewal options. Your company data is retained.</p>` },
         status: "PENDING", nextAttemptAt: new Date() } }, { upsert: true });
     }

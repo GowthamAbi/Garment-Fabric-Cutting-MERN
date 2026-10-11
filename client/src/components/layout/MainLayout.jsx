@@ -1,3 +1,4 @@
+import SubscriptionNotice from './SubscriptionNotice';
 import {
   AlertTriangle,
   ArrowDownToLine,
@@ -980,7 +981,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           </div>
         </header>
 
-        <div className="page">{children}</div>
+        <div className="page"><SubscriptionNotice user={user} onUpgrade={()=>selectPage("Subscription Purchase")}/>{children}</div>
       </main>
     </div>
   );

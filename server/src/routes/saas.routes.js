@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   addLeadActivity,
+  getAccessStatus,
   approveSubscription,
   createSubscription,
   downloadBackup,
@@ -21,6 +22,7 @@ import { emailInvoice, getInvoice, listInvoices } from "../controllers/invoiceCo
 import { createSupportGrant, exchangeSupportGrant, listSupportGrants, revokeSupportGrant } from "../controllers/supportAccessController.js";
 
 const router = Router();
+router.get("/access-status",asyncHandler(getAccessStatus));
 router.get("/support-grants", allowRoles("company_admin"), asyncHandler(listSupportGrants));
 router.post("/support-grants", allowRoles("company_admin"), asyncHandler(createSupportGrant));
 router.patch("/support-grants/:id/revoke", allowRoles("company_admin"), asyncHandler(revokeSupportGrant));

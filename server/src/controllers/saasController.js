@@ -22,9 +22,11 @@ import BillingRequest from "../models/BillingRequest.js";
 import { getTenant, runWithTenant } from "../utils/tenantContext.js";
 import { currentDatabase } from "../config/tenantDatabase.js";
 
+import {TRIAL_DAYS,trialExpiry,subscriptionAccess} from "../utils/subscriptionAccess.js";
+
 const addDays = (days) => new Date(Date.now() + days * 86400000);
 const defaultPlans = [
-  ["TRIAL", "Trial", 0, 14, 3, 2],
+  ["TRIAL", "Trial", 0, TRIAL_DAYS, 3, 2],
   ["STARTER", "Starter", 0, 30, 5, 3],
   ["PROFESSIONAL", "Professional", 0, 30, 20, 6],
   ["BUSINESS", "Business", 0, 30, 50, 10],
@@ -63,6 +65,7 @@ export async function getSubscription(request, response) {
   const invoices = await SubscriptionInvoice.find().sort({ invoiceDate: -1 }).limit(100).lean();
   response.json({
     company,
+    access: subscriptionAccess(company),
     payments,
     plans,
     invoices,
@@ -270,6 +273,8 @@ export async function getOwnerOverview(_request, response) {
       users: "Private",
       activeUsers: "Private",
       trials: companies.filter((c) => c.subscriptionPlan === "Trial").length,
+      expiredTrials:companies.filter(c=>c.subscriptionPlan==="Trial"&&subscriptionAccess(c).expired).length,
+      expiringTrials:companies.filter(c=>c.subscriptionPlan==="Trial"&&subscriptionAccess(c).alert==="EXPIRING").length,
       newRequests: leads.filter((lead) =>
         ["NEW", "TRIAL_PENDING"].includes(lead.status),
       ).length,
@@ -513,7 +518,8 @@ export async function decideLeadRequest(request, response) {
     throw new ApiError(409, "Trial credential is unavailable");
   await ensurePlans();
   const trial = await SaasPlan.findOne({ code: "TRIAL", active: true }).lean();
-  const expiry = addDays(trial?.validityDays || 14);
+  if(!trial)throw new ApiError(409,"Enable a Trial plan before approving trial requests");
+  const expiry = trialExpiry();
   const provisioned = await provisionTenant({
     companyName: lead.companyName,
     adminName: lead.contactName,
@@ -521,6 +527,7 @@ export async function decideLeadRequest(request, response) {
     passwordHash: lead.pendingPasswordHash,
     city: lead.city || "",
     plan: "Trial",
+    entitlements:{maxUsers:trial.maxUsers,maxDepartments:trial.maxDepartments,modules:trial.modules},
     expiresAt: expiry,
     createdBy: request.user.userId || request.user.name,
   });
@@ -538,7 +545,8 @@ export async function decideLeadRequest(request, response) {
   await lead.save();
 
   response.json({
-    message: "Trial approved. Customer can login now.",
+    message: "7-day trial approved. Verify activation email before login.",
+    activationEmailStatus: provisioned.activationEmailStatus,
     expiresAt: expiry,
     companyKey: provisioned.registry.companyKey,
     loginPath: provisioned.registry.loginPath,
@@ -625,4 +633,10 @@ export async function downloadBackup(request, response) {
     `attachment; filename=ug-saas-backup-${new Date().toISOString().slice(0, 10)}.json`,
   );
   response.json({ formatVersion: 1, exportedAt: new Date(), company, data });
+}
+
+export async function getAccessStatus(request,response){
+ const company=await Company.findById(request.user.companyId).lean();
+ if(!company)throw new ApiError(404,'Company not found');
+ response.json(subscriptionAccess(company));
 }
