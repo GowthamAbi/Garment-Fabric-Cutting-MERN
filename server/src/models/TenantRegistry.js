@@ -19,8 +19,12 @@ const tenantRegistrySchema = new mongoose.Schema({
   dataOwner: { type: String, default: "CUSTOMER" },
   ownerDataAccess: { type: Boolean, default: false },
   retentionLock: { type: Boolean, default: true },
+  trialEndsAt: Date,
+  customerDatabaseId: mongoose.Schema.Types.ObjectId,
+  databaseRoutingState: { type: String, enum: ["PLATFORM", "MIGRATING", "CUSTOMER"], default: "PLATFORM" },
+  operationalRequests: { type: Number, default: 0, min: 0 },
   createdBy: { type: String, default: "Platform" },
-}, { timestamps: true });
+}, { timestamps: true, platformRegistry: true });
 
 tenantRegistrySchema.index({ status: 1, subscriptionEndsAt: 1 });
 tenantRegistrySchema.index({adminEmail:1},{unique:true,partialFilterExpression:{adminEmail:{$type:'string'}}});

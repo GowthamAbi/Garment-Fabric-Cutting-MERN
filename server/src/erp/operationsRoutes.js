@@ -1,3 +1,4 @@
+import { currentDatabase } from "../config/tenantDatabase.js";
 import { Router } from "express";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -20,7 +21,7 @@ async function workOrder(scope, value, session) {
 }
 async function transaction(callback) {
   const scope = workspaceFilter(); await Promise.all(OPERATION_MODELS.map(m => m.init()));
-  const session = await mongoose.startSession(); let result;
+  const session = await currentDatabase().startSession(); let result;
   try {
     await session.withTransaction(async () => {
       const setting = await ErpSettings.findOneAndUpdate({ ...scope,key: "ERP",enabled: true }, { $inc: { revision: 1 } }, { session,new: true });

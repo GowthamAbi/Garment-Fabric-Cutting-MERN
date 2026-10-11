@@ -6,6 +6,7 @@ import { ErpParty, ErpSku, ErpBom, ErpDocument, ErpBalance, ErpEntry, ErpSetting
 import { planDocument, planReversal } from "./engine.js";
 import { fail } from "./policy.js";
 import Company from "../models/Company.js";
+import { currentDatabase } from "../config/tenantDatabase.js";
 import { ErpRoute, ErpOperation, ErpRoll, OPERATION_MODELS } from "./operationsModels.js";
 import { needsApproval } from "./commercialPolicy.js";
 
@@ -55,7 +56,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
   // Create configuration before the transaction; unique index protects races.
   try { await ErpSettings.updateOne({ ...scope, key: "ERP" }, { $setOnInsert: { ...scope, key: "ERP", revision: 0 } }, { upsert: true }); }
   catch (e) { if (e.code !== 11000) throw e; }
-  const session = await mongoose.startSession(); let result;
+  const session = await currentDatabase().startSession(); let result;
   try {
     await session.withTransaction(async () => {
       // Factory serialization prevents over-receipts, over-issues and overpayments.
@@ -105,7 +106,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
         if(allocated.reduce((n,d)=>n+d.lines[0].qty,0)+plan.lines[0].qty>demand.quantity*1000)fail("Production quantity exceeds approved demand");
         plan.metadata.demandId=input.demandId;plan.metadata.demandNumber=demand.number;plan.metadata.shop=demand.shop;
       }
-      const company = await Company.findById(scope.companyId).session(session).lean();
+      const company = await Company.findById(scope.companyId).lean();
       const party = parties.find(p => p.code === input.partyCode);
       const factory = company?.factories?.find(f => String(f._id) === String(scope.factoryId));
       plan.metadata.company = { name: company?.companyName || "Company", address: factory?.billingAddress || factory?.address || company?.address || "", gstin: factory?.gstin || "" };

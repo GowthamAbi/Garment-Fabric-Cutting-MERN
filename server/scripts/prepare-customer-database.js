@@ -1,38 +1,28 @@
 import "dotenv/config";
+import "../src/config/mongoosePlugins.js";
 import mongoose from "mongoose";
 import { pathToFileURL } from "node:url";
-import { sealDatabaseUri, validateCustomerDatabase } from "../src/utils/customerDatabaseSecret.js";
+import { saveCustomerDatabase } from "../src/services/customerDatabaseService.js";
+import TenantRegistry from "../src/models/TenantRegistry.js";
+import Company from "../src/models/Company.js";
+import { runWithTenant } from "../src/utils/tenantContext.js";
 
 export async function prepareCustomerDatabase(env = process.env) {
-  const { CUSTOMER_DATABASE_URI: uri, CUSTOMER_DATABASE_NAME: databaseName, CUSTOMER_COMPANY_KEY: companyKey, CUSTOMER_CONSENT_REFERENCE: consent } = env;
-  validateCustomerDatabase(uri, databaseName);
-  if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(companyKey || "") || !consent?.trim()) throw new Error("Company key and customer consent reference are required");
-  const encryptedUri = sealDatabaseUri(uri, companyKey, env.TENANT_CREDENTIAL_KEY);
-  let customer;
+  const key = env.CUSTOMER_COMPANY_KEY;
+  if (!env.CUSTOMER_CONSENT_REFERENCE?.trim()) throw new Error("Customer consent reference required");
   try {
     await mongoose.connect(env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
-    const { default: TenantRegistry } = await import("../src/models/TenantRegistry.js");
-    const registry = await TenantRegistry.findOne({ companyKey }).lean();
-    if (!registry || registry.status !== "ACTIVE") throw new Error("An active existing company is required");
-    customer = mongoose.createConnection(uri, { dbName: databaseName, serverSelectionTimeoutMS: 10000, connectTimeoutMS: 10000, maxPoolSize: 2, autoIndex: false, autoCreate: false });
-    await customer.asPromise();
-    await customer.db.command({ ping: 1 });
-    const collections = await customer.db.listCollections({}, { nameOnly: true }).toArray();
-    if (collections.length) throw new Error("Customer target database must be empty; existing data will not be overwritten");
-    const { default: Candidate } = await import("../src/models/CustomerDatabaseCandidate.js");
-    await Candidate.init();
-    await Candidate.create({ companyKey, databaseName, atlasHost: validateCustomerDatabase(uri, databaseName).host, encryptedUri, state: "VALIDATED_PENDING_MIGRATION", validatedAt: new Date(), customerConsentReference: consent.trim() });
-    console.log("Customer database candidate validated. Live routing unchanged; migration and cutover are still required.");
-  } finally {
-    if (customer) await customer.close();
-    await mongoose.disconnect();
-  }
+    const registry = await TenantRegistry.findOne({ companyKey: key }).lean();
+    if (!registry || !["ACTIVE", "SUSPENDED"].includes(registry.status)) throw new Error("Existing company required");
+    const company = await runWithTenant({ companyKey: key, databaseName: registry.databaseName }, () => Company.findOne().lean());
+    if (!company) throw new Error("Company metadata missing");
+    await saveCustomerDatabase({ companyKey: key, companyId: company._id, actor: `operator:${env.CUSTOMER_CONSENT_REFERENCE.trim()}`, connectionString: env.CUSTOMER_DATABASE_URI, databaseName: env.CUSTOMER_DATABASE_NAME, consent: true });
+    console.log("Customer Atlas candidate validated and encrypted. Live routing unchanged until transfer.");
+  } finally { await mongoose.disconnect(); }
 }
-
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   prepareCustomerDatabase().catch(() => {
-    // Driver errors can contain connection details. Do not print them or credentials.
-    console.error("Customer database preparation failed. Check configuration, Atlas permissions, target emptiness and existing candidate. Credentials were not logged.");
+    console.error("Customer database preparation failed. Check configuration, permissions, target emptiness and existing migration. Credentials were not logged.");
     process.exitCode = 1;
   });
 }

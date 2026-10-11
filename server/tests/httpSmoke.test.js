@@ -10,6 +10,9 @@ test("HTTP liveness, readiness, anonymous ERP denial and idempotency CORS header
     assert.equal((await health.json()).success, true);
     const ready = await fetch(`${base}/ready`); assert.equal(ready.status, 503);
     const anonymous = await fetch(`${base}/api/erp/documents`); assert.equal(anonymous.status, 401);
+    for (const [path, method] of [["customer-database", "GET"], ["customer-database", "POST"], ["customer-database/transfer", "POST"]]) {
+      const denied = await fetch(`${base}/api/saas/${path}`, { method, headers: { Origin: "http://localhost:5173" } }); assert.equal(denied.status, 401);
+    }
     for(const path of ["operations/dashboard","approvals","commercial","bank","workforce"]){
       const denied=await fetch(`${base}/api/erp/${path}`);assert.equal(denied.status,401);
     }

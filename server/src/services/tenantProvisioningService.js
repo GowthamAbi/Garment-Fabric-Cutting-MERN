@@ -39,7 +39,7 @@ export async function provisionTenant({
     companyKey, companyName, databaseName,enabledDepartments,adminEmail,adminName,
     loginPath: `/c/${companyKey}/login`,
     status: "PROVISIONING", subscriptionPlan: plan,
-    subscriptionEndsAt: expiresAt, createdBy,
+    subscriptionEndsAt: expiresAt, trialEndsAt: new Date(Date.now() + 7 * 86400000), createdBy,
   }).catch(error=>{if(error.code===11000)throw new ApiError(409,"Administrator email or company workspace already exists; refresh the companies list");throw error;});
 
   try {

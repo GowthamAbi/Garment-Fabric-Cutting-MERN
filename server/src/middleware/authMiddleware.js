@@ -7,6 +7,7 @@ import { requestCompanyKey } from "./tenantResolver.js";
 import SupportGrant from "../models/SupportGrant.js";
 import { supportRequestAllowed } from "../utils/supportPolicy.js";
 import AuditLog from "../models/AuditLog.js";
+import TenantRegistry from "../models/TenantRegistry.js";
 
 const SESSION_COOKIE_NAMES = ["__Host-ug_session", "ug_session"];
 
@@ -47,9 +48,13 @@ export async function requireAuth(request, _response, next) {
     const requestedCompanyKey = requestCompanyKey(request);
     if (requestedCompanyKey && requestedCompanyKey !== payload.companyKey)
       throw new Error("Cross-company session blocked");
+    // Resolve routing from the registry, never from an old or copied JWT.
+    const registry = payload.companyKey === "platform" ? null : await TenantRegistry.findOne({ companyKey: payload.companyKey }).lean();
+    if (payload.companyKey !== "platform" && (!registry || !["ACTIVE", "PROVISIONING", "SUSPENDED"].includes(registry.status))) throw new Error("Company inactive");
+    const resolvedDatabaseName = registry?.databaseName || process.env.CONTROL_DB_NAME || "ugs_control";
 
     return await runWithTenant(
-      { databaseName: payload.databaseName, companyKey: payload.companyKey },
+      { databaseName: resolvedDatabaseName, companyKey: payload.companyKey },
       async () => {
         if (payload.supportGrantId) {
           const grant = await SupportGrant.findOne({
@@ -62,7 +67,7 @@ export async function requireAuth(request, _response, next) {
           if (!supportRequestAllowed(request.method, request.originalUrl, grant.scopes))
             return next(new ApiError(403, "Request is outside customer-approved support access"));
           request.user = { ...payload, supportScopes: grant.scopes, role: "support_viewer", readOnly: true };
-          request.tenant = { databaseName: payload.databaseName, companyKey: payload.companyKey };
+          request.tenant = { databaseName: resolvedDatabaseName, companyKey: payload.companyKey, ...(request.operationalDatabaseEntered && registry?.databaseRoutingState === "CUSTOMER" && { customerDatabaseId: String(registry.customerDatabaseId) }) };
           // Audit the read before allowing any customer-data response.
           await AuditLog.create({
             actorId: payload.id, actorUserId: payload.userId, actorName: payload.name,
@@ -90,7 +95,7 @@ export async function requireAuth(request, _response, next) {
           permissions: activeUser.permissions || [],
           department: activeUser.department || "",
         };
-        request.tenant = { databaseName: payload.databaseName, companyKey: payload.companyKey };
+        request.tenant = { databaseName: resolvedDatabaseName, companyKey: payload.companyKey, ...(request.operationalDatabaseEntered && registry?.databaseRoutingState === "CUSTOMER" && { customerDatabaseId: String(registry.customerDatabaseId) }) };
         return tenantContext.run({ ...request.tenant, ...request.user }, next);
       },
     );

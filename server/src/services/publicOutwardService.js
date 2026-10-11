@@ -1,3 +1,4 @@
+import { currentDatabase } from "../config/tenantDatabase.js";
 import mongoose from "mongoose";
 import ApiError from "../utils/ApiError.js";
 import Inward from "../models/Inward.js";
@@ -28,7 +29,7 @@ export async function getInwardForQR(inwardNo) {
 }
 
 export async function issueFromExactInward(data) {
-  const session = await mongoose.startSession();
+  const session = await currentDatabase().startSession();
   let result;
 
   try {

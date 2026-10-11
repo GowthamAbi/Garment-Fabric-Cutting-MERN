@@ -18,6 +18,10 @@ const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 await mongoose.connect(process.env.MONGODB_URI);
 const legacy = mongoose.connection.useDb(legacyDatabaseName, { useCache: true }).db;
 const control = mongoose.connection.useDb(controlDatabaseName, { useCache: true }).db;
+if (apply && await control.collection("tenantregistries").findOne({ databaseRoutingState: { $in: ["CUSTOMER", "MIGRATING"] } })) {
+  await mongoose.disconnect();
+  throw new Error("Legacy migration is disabled while customer database routing exists. Use the customer transfer/recovery workflow; active registry bindings must not be overwritten.");
+}
 const companies = await legacy.collection("companies").find({}).toArray();
 const collections = await legacy.listCollections().toArray();
 

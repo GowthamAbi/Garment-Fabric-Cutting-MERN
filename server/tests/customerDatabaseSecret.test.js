@@ -16,7 +16,7 @@ test("credentials are randomized, authenticated and bound to a company", () => {
 });
 test("only credentialed Atlas SRV with a dedicated matching database is accepted", () => {
   assert.equal(validateCustomerDatabase(uri, "customer_db").databaseName, "customer_db");
-  for (const bad of [uri.replace("mongodb+srv:", "mongodb:"), uri.replace("cluster.example.mongodb.net", "localhost"), uri.replace("cluster.example.mongodb.net", "cluster.mongodb.net.attacker.com"), uri + "&tls=false", uri + "&tlsAllowInvalidCertificates=true", uri.replace("customer_db", "other_db")]) {
+  for (const bad of [uri.replace("mongodb+srv:", "mongodb:"), uri.replace("cluster.example.mongodb.net", "localhost"), uri.replace("cluster.example.mongodb.net", "cluster.mongodb.net.attacker.com"), uri + "&tls=false", uri + "&tlsAllowInvalidCertificates=true", uri + "&w=0", uri + "&retryWrites=false", uri.replace("customer_db", "other_db")]) {
     assert.throws(() => validateCustomerDatabase(bad, "customer_db"));
   }
   assert.throws(() => validateCustomerDatabase(uri, "ugs_control"));

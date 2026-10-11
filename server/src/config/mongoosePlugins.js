@@ -14,6 +14,7 @@ const scopedOperations = [
 ];
 
 function tenantPlugin(schema) {
+  if (schema.options.platformRegistry) return;
   schema.add({
     companyId: {
       type: mongoose.Schema.Types.ObjectId,

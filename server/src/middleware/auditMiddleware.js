@@ -4,7 +4,7 @@ import { getTenant, runWithTenant } from "../utils/tenantContext.js";
 const cleanBody = (body = {}) =>
   Object.fromEntries(
     Object.entries(body).filter(
-      ([key]) => !["password", "token", "adminPassword", "pendingPasswordHash", "razorpay_signature"].includes(key),
+      ([key]) => !["password", "token", "adminPassword", "pendingPasswordHash", "razorpay_signature", "connectionString", "databaseUri", "encryptedUri"].includes(key),
     ),
   );
 
@@ -24,14 +24,15 @@ export function auditMutations(request, response, next) {
       companyId: request.user.companyId,
       factoryId: request.user.factoryId,
       method: request.method,
-      path: request.originalUrl,
+      path: request.originalUrl.split("?")[0],
       action: `${request.method} ${request.path}`,
       entity: request.path.split("/").filter(Boolean)[1] || "unknown",
       entityId: request.params.id || "",
       statusCode: response.statusCode,
       ip: request.ip,
       userAgent: request.get("user-agent") || "",
-      changes: cleanBody(request.body),
+      // Database credentials must never reach audit logs, even on failure.
+      changes: request.originalUrl.startsWith("/api/saas/customer-database") ? { configurationRequest: true } : { fields: Object.keys(cleanBody(request.body)) },
     })).catch(() => console.error("Audit write failed; inspect database availability"));
   });
   next();

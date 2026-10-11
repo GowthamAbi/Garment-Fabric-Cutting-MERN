@@ -26,6 +26,8 @@ if (command !== "export") {
 }
 await mongoose.connect(process.env.MONGODB_URI);
 try {
+  const registry = await mongoose.connection.useDb(process.env.CONTROL_DB_NAME || "ugs_control", { useCache: true }).db.collection("tenantregistries").findOne({ companyKey });
+  if (registry?.databaseRoutingState === "CUSTOMER" || registry?.databaseRoutingState === "MIGRATING") throw new Error("This offline platform-only backup tool cannot target a customer database. Use the company backup API or customer Atlas snapshots; no platform fallback is allowed.");
   const db = mongoose.connection.useDb(databaseName, { useCache: true }).db;
   if (command === "export") {
     // Stop writes externally before exporting: this is NOT a concurrent snapshot.

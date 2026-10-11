@@ -1,3 +1,4 @@
+import { currentDatabase } from "../config/tenantDatabase.js";
 import mongoose from "mongoose";
 import ApiError from "../utils/ApiError.js";
 import { ORDER_STATUS } from "../constants/orderStatus.js";
@@ -23,7 +24,7 @@ async function postLedger(transaction, unit, session) {
 export async function createInward(inwardData) {
   inwardData = { ...inwardData, quantity: positiveStockQuantity(inwardData.quantity) };
   await StockLedger.init();
-  const session = await mongoose.startSession();
+  const session = await currentDatabase().startSession();
   let savedTransaction;
 
   try {
@@ -139,7 +140,7 @@ export async function createInward(inwardData) {
 export async function createOutward(outwardData) {
   outwardData = { ...outwardData, quantity: positiveStockQuantity(outwardData.quantity) };
   await StockLedger.init();
-  const session = await mongoose.startSession();
+  const session = await currentDatabase().startSession();
   let savedTransaction;
 
   try {

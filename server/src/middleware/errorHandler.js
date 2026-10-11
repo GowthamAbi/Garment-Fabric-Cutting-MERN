@@ -13,7 +13,7 @@ export function errorHandler(error, request, response, _next) {
   const message = error.code===11000 ? "An account or record with these details already exists" :
     error.name==="CastError" ? "Invalid record identifier or value" :
     statusCode >= 500 && process.env.NODE_ENV === "production" &&
-      !(error.exposeToOwner === true && request.user?.role === "saas_super_admin")
+      !error.safePublic && !(error.exposeToOwner === true && request.user?.role === "saas_super_admin")
       ? "Unexpected server error"
       : error.message || "Unexpected server error";
 

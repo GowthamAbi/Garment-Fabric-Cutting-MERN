@@ -11,6 +11,8 @@ import {
 import { api } from "../../api.js";
 import DataTable from "../../components/DataTable.jsx";
 import { jsPDF } from "jspdf";
+import CustomerDatabaseSetup from "../../components/CustomerDatabaseSetup.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const content = {
   "Subscription Plan": [
@@ -35,6 +37,7 @@ const content = {
   ],
 };
 export default function SubscriptionCenterPage({ mode }) {
+  const { user } = useAuth();
   const [data, setData] = useState(null),
     [paymentNotice, setPaymentNotice] = useState(""),
     [error, setError] = useState(""),
@@ -130,6 +133,7 @@ export default function SubscriptionCenterPage({ mode }) {
         </div>
       </div>
       {error && <p className="error-text">{error}</p>}
+      {mode === "Subscription Plan" && user?.role === "company_admin" && <CustomerDatabaseSetup />}
       <div className="overview-metrics">
         <article>
           <i>

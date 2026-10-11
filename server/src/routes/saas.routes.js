@@ -21,8 +21,15 @@ import { allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { emailInvoice, getInvoice, listInvoices } from "../controllers/invoiceController.js";
 import { createSupportGrant, exchangeSupportGrant, listSupportGrants, revokeSupportGrant } from "../controllers/supportAccessController.js";
+import { getCustomerDatabaseStatus, saveCustomerDatabaseConnection, startCustomerDatabaseTransfer } from "../controllers/customerDatabaseController.js";
+import { enterOperationalDatabase } from "../middleware/customerDatabaseMiddleware.js";
 
 const router = Router();
+// These controllers enforce exact company_admin identity and workspace. The
+// legacy operational-entry role guard must not block account configuration.
+router.get("/customer-database", asyncHandler(getCustomerDatabaseStatus));
+router.post("/customer-database", asyncHandler(saveCustomerDatabaseConnection));
+router.post("/customer-database/transfer", asyncHandler(startCustomerDatabaseTransfer));
 router.get("/subscription/payments/:id/status",allowRoles("company_admin","admin"),asyncHandler(getPaymentStatus));
 router.get("/access-status",asyncHandler(getAccessStatus));
 router.get("/support-grants", allowRoles("company_admin"), asyncHandler(listSupportGrants));
@@ -94,6 +101,7 @@ router.get(
 router.get(
   "/backup",
   allowRoles("saas_super_admin", "company_admin", "admin"),
+  enterOperationalDatabase,
   asyncHandler(downloadBackup),
 );
 export default router;

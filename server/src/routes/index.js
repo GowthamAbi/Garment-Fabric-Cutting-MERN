@@ -25,6 +25,7 @@ import { preventPermanentDeletion } from "../middleware/retentionMiddleware.js";
 import erpRoutes from "../erp/routes.js";
 import { legacyWriteGate } from "../erp/legacyGate.js";
 import automationRoutes from "../automation/routes.js";
+import { enterOperationalDatabase } from "../middleware/customerDatabaseMiddleware.js";
 
 const router = Router();
 
@@ -36,10 +37,11 @@ router.post("/webhooks/razorpay", asyncHandler(razorpayWebhook));
 
 router.use("/auth", authRoutes);
 router.use("/public/saas", publicSaasRoutes);
-router.use(requireAuth, preventPermanentDeletion, auditMutations, legacyWriteGate);
-router.use("/public", publicOutwardRoutes);
+router.use(requireAuth, preventPermanentDeletion, auditMutations);
 router.use("/saas", saasRoutes);
 router.use("/automation", automationRoutes);
+router.use(enterOperationalDatabase, legacyWriteGate);
+router.use("/public", publicOutwardRoutes);
 router.use(requireActiveSubscription);
 router.use("/erp", erpRoutes);
 router.use("/dashboard", requireAuth, dashboardRoutes);

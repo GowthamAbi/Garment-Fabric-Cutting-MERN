@@ -1,3 +1,4 @@
+import { currentDatabase } from "../config/tenantDatabase.js";
 import {Router} from "express";
 import mongoose from "mongoose";
 import {createTenantModel} from "../config/tenantDatabase.js";
@@ -11,7 +12,7 @@ const schema=new mongoose.Schema({date:String,reference:String,amount:Number,doc
 schema.index({companyId:1,factoryId:1,reference:1},{unique:true});
 export const ErpBankRow=createTenantModel("ErpBankRow",schema);
 async function bankTransaction(fn){
- const scope=workspaceFilter();await ErpBankRow.init();const session=await mongoose.startSession();let result;
+ const scope=workspaceFilter();await ErpBankRow.init();const session=await currentDatabase().startSession();let result;
  try{await session.withTransaction(async()=>{const setting=await ErpSettings.findOneAndUpdate({...scope,key:"ERP",enabled:true},{$inc:{revision:1}},{new:true,session});if(!setting)fail("ERP activation required");result=await fn(scope,session);});return result;}finally{await session.endSession();}
 }
 export async function reconcileDocument(id,input,actor){

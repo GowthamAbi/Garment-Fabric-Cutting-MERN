@@ -3,6 +3,19 @@ import { getTenant } from "../utils/tenantContext.js";
 
 const DATABASE_PREFIX = process.env.TENANT_DB_PREFIX || "ugs_tenant_";
 const CONTROL_DATABASE = process.env.CONTROL_DB_NAME || "ugs_control";
+// Identity and platform billing stay on the platform client. Operational
+// models can use a customer-owned Atlas client without cross-client sessions.
+export const PLATFORM_TENANT_MODELS = new Set(["Company", "User", "SupportGrant", "AuditLog", "SubscriptionPayment", "SubscriptionInvoice"]);
+export const tenantSchemas = new Map();
+const customerConnections = new Map();
+
+export function registerCustomerConnection(companyKey, candidateId, connection) {
+  customerConnections.set(`${companyKey}:${candidateId}`, connection);
+}
+export function customerConnection(companyKey, candidateId) {
+  return customerConnections.get(`${companyKey}:${candidateId}`);
+}
+export function customerConnectionCount() { return customerConnections.size; }
 
 export function sanitizeTenantKey(value) {
   const key = String(value || "")
@@ -39,12 +52,21 @@ export function currentDatabase() {
   if (!tenant.databaseName || !tenant.companyKey) {
     throw new Error("Explicit workspace context is required for tenant data");
   }
+  if (tenant.customerDatabaseId) {
+    const connection = customerConnection(tenant.companyKey, tenant.customerDatabaseId);
+    if (!connection || connection.readyState !== 1) throw new Error("Customer database connection unavailable");
+    return connection;
+  }
   return databaseForName(tenant.databaseName);
 }
 
 export function createTenantModel(modelName, schema) {
+  tenantSchemas.set(modelName, schema);
   const resolveModel = () => {
-    const connection = currentDatabase();
+    const tenant = getTenant();
+    // Keep the same explicit-context requirement for both data planes.
+    if (!tenant.databaseName || !tenant.companyKey) throw new Error("Explicit workspace context is required for tenant data");
+    const connection = PLATFORM_TENANT_MODELS.has(modelName) ? databaseForName(tenant.databaseName) : currentDatabase();
     return connection.models[modelName] || connection.model(modelName, schema);
   };
 

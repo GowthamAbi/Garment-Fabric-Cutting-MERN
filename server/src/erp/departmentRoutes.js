@@ -1,3 +1,4 @@
+import { currentDatabase } from "../config/tenantDatabase.js";
 import {Router} from 'express';
 import mongoose from 'mongoose';
 import {asyncHandler} from '../utils/asyncHandler.js';
@@ -18,7 +19,7 @@ router.use(asyncHandler(async(req,_res,next)=>{req.departmentCompany=await Compa
 async function transaction(req,kind,fn){
  const scope=workspaceFilter(),key=clean(req.body.key);if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))fail('A 16–100 character idempotency key is required');
  const hash=requestHash({kind,...req.body});await Promise.all([...DEPARTMENT_MODELS,ErpBalance,ErpEntry,ErpDocument,ErpSequence].map(m=>m.init()));
- const session=await mongoose.startSession();let result;
+ const session=await currentDatabase().startSession();let result;
  try{await session.withTransaction(async()=>{
   const lock=await ErpSettings.findOneAndUpdate({...scope,key:'ERP',enabled:true},{$inc:{revision:1}},{new:true,session});if(!lock)fail('ERP activation required');
   const old=await Event.findOne({...scope,key}).session(session);if(old){requireAccess(req,old.department);if(old.requestHash!==hash)fail('Retry key has different contents');result=old;return;}

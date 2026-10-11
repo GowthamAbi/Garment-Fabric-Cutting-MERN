@@ -38,7 +38,7 @@ export function validateCustomerDatabase(uri, databaseName) {
   const suppliedDatabase = parsed.pathname.slice(1);
   if (suppliedDatabase && suppliedDatabase !== databaseName) throw new Error("URI database name must match the customer database");
   for (const [name, value] of parsed.searchParams) {
-    if (!["retryWrites", "w", "appName", "tls"].includes(name) || (name === "tls" && value !== "true")) {
+    if (!["retryWrites", "w", "appName", "tls"].includes(name) || (["tls", "retryWrites"].includes(name) && value !== "true") || (name === "w" && value !== "majority")) {
       throw new Error("Unsupported MongoDB connection option");
     }
   }
