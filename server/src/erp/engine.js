@@ -21,7 +21,7 @@ export function planDocument(input, state) {
   }
   const plan = { type, lines, moves: [], journals: [], totals: { net: 0, tax: 0, gross: 0 }, metadata: {} };
   const wipLocation = source ? `WIP:${String(source.id || source._id)}` : "WIP";
-  const completions = source ? state.documents.filter(d => d.sourceId === String(source.id || source._id) && d.type === "PRODUCTION_RECEIPT" && !d.reversedBy) : [];
+  const completions = source ? state.documents.filter(d => d.sourceId === String(source.id || source._id) && ["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(d.type) && !d.reversedBy) : [];
   const completedQty = completions.reduce((s, d) => s + d.lines[0].qty, 0);
   if (["MATERIAL_ISSUE", "MATERIAL_RETURN", "WORK_COST"].includes(type) && source && completedQty >= source.lines[0].qty)
     fail("Work order is completed; reverse completion before changing materials or costs");
@@ -154,9 +154,10 @@ export function planDocument(input, state) {
         if (account === "AP") party("SUPPLIER");
         pair("WIP", account, amount); plan.totals.gross = amount;
       } break;
-    case "PRODUCTION_RECEIPT": {
-      linked(["WORK_ORDER"]); cap(["PRODUCTION_RECEIPT"]);
+    case "CUT_PANEL_RECEIPT": case "PRODUCTION_RECEIPT": {
+      linked(["WORK_ORDER"]); cap(["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"]);
       if (lines.length !== 1) fail("Receive one work-order output SKU");
+      if (type === "CUT_PANEL_RECEIPT" && (! ["PCS", "PC", "PIECE", "PIECES"].includes(lines[0].unit) || lines[0].qty % 1000)) fail("Cut-panel handoff requires whole garment pieces");
       const bom = source.metadata.bom; let totalCost = 0;
       for (const component of bom.components) {
         const totalRequired = ceilingRatio(component.qty, source.lines[0].qty, bom.outputQty);
@@ -171,7 +172,7 @@ export function planDocument(input, state) {
       const remainingCost = costs.reduce((s, d) => s + d.totals.gross, 0) - completions.reduce((s, d) => s + Number(d.metadata.workCostAllocated || 0), 0);
       const allocated = ratio(remainingCost, lines[0].qty, source.lines[0].qty - completedQty);
       totalCost += allocated;
-      move(lines[0], "QC", lines[0].qty, totalCost); pair("INVENTORY", "WIP", totalCost);
+      move(lines[0], type === "CUT_PANEL_RECEIPT" ? "CUTTING" : "QC", lines[0].qty, totalCost); pair("INVENTORY", "WIP", totalCost);
       plan.metadata.cost = totalCost; plan.metadata.workCostAllocated = allocated; break;
     }
     case "QC_RELEASE": case "QC_REJECT":
@@ -207,8 +208,8 @@ export function planDocument(input, state) {
 export function planReversal(original, state) {
   if (original.status !== "POSTED" || original.reversedBy) fail("Document already reversed");
   if (state.documents.some(d => d.sourceId === String(original.id || original._id) && !d.reversedBy && d.status === "POSTED")) fail("Reverse downstream documents first");
-  if (original.type === "WORK_COST" && state.documents.some(d => d.sourceId === original.sourceId && d.type === "PRODUCTION_RECEIPT" && !d.reversedBy)) fail("Reverse production receipts before reversing allocated work costs");
-  if (original.type === "PRODUCTION_RECEIPT" && state.documents.some(d => d.sourceId === original.sourceId && d.type === "PRODUCTION_RECEIPT" && !d.reversedBy && String(d.id || d._id) > String(original.id || original._id))) fail("Reverse later work-order completions first");
+  if (original.type === "WORK_COST" && state.documents.some(d => d.sourceId === original.sourceId && ["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(d.type) && !d.reversedBy)) fail("Reverse production receipts before reversing allocated work costs");
+  if (["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(original.type) && state.documents.some(d => d.sourceId === original.sourceId && ["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(d.type) && !d.reversedBy && String(d.id || d._id) > String(original.id || original._id))) fail("Reverse later work-order completions first");
   const current = new Map(state.balances.map(b => [b.key, { ...b }]));
   const moves = [...original.moves].reverse().map(m => {
     const before = current.get(m.key); if (!before) fail("Stock balance missing");

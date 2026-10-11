@@ -145,7 +145,7 @@ router.get("/ledger", asyncHandler(async (req, res) => {
 router.get("/financials", gate("finance"), asyncHandler(async (req, res) => {
   const scope = workspaceFilter(), from = new Date(req.query.from || "1970-01-01"), to = new Date(req.query.to || Date.now());
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) fail("Invalid report date range");
-  const [entries, balances, documents] = await Promise.all([ErpEntry.find({ ...scope, kind: "JOURNAL", date: { $lte: to } }).lean(), ErpBalance.find(scope).lean(), ErpDocument.find({ ...scope, type: { $in: ["WORK_COST", "PRODUCTION_RECEIPT"] } }).lean()]);
+  const [entries, balances, documents] = await Promise.all([ErpEntry.find({ ...scope, kind: "JOURNAL", date: { $lte: to } }).lean(), ErpBalance.find(scope).lean(), ErpDocument.find({ ...scope, type: { $in: ["WORK_COST", "PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"] } }).lean()]);
   res.json(financialReport(entries, balances, documents, from, to));
 }));
 router.get("/commercial",gate("finance"),asyncHandler(async (_req,res)=>{

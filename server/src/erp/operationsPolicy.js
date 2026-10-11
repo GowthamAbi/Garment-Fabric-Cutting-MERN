@@ -38,7 +38,7 @@ export function materialPlan(workOrders, documents, balances, skus) {
     const id = String(wo._id || wo.id);
     const components = wo.metadata?.bom?.components || [];
     const linked = documents.filter(d => d.sourceId === id && !d.reversedBy);
-    const complete = linked.filter(d => d.type === "PRODUCTION_RECEIPT").reduce((s,d) => s + d.lines[0].qty, 0);
+    const complete = linked.filter(d => ["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(d.type)).reduce((s,d) => s + d.lines[0].qty, 0);
     if (complete >= wo.lines[0].qty) continue;
     for (const c of components) {
       const consumed = linked.filter(d => d.type === "MATERIAL_ISSUE").flatMap(d => d.lines).filter(l => l.sku === c.sku).reduce((s,l) => s + l.qty, 0);

@@ -74,15 +74,15 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
       const state = { balances, documents, skus, parties, boms, openingAllowed: !settings.enabled };
       const original = reverseId ? await ErpDocument.findOne({ ...scope, _id: reverseId }).session(session) : null;
       if (original?.type === "WORK_ORDER" && await ErpOperation.exists({ ...scope,workOrderId: String(original._id),status: { $ne: "CANCELLED" } }).session(session)) fail("Work order has shop-floor operations; cancel unstarted jobs or complete reviewed corrections before reversal");
-      if (!reverseId && input.type === "PRODUCTION_RECEIPT") {
+      if (!reverseId && ["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(input.type)) {
         const route = await ErpRoute.findOne({ ...scope,workOrderId: input.sourceId }).session(session).lean();
         if(!route) fail("Create and complete shop-floor routing before a production receipt");
         if (route) {
-          const packed = await ErpOperation.find({ ...scope,workOrderId: input.sourceId,stage: "PACKING",status: "COMPLETE" }).session(session).lean();
+          const packed = await ErpOperation.find({ ...scope,workOrderId: input.sourceId,stage: input.type === "CUT_PANEL_RECEIPT" ? "FOLDING" : "PACKING",status: "COMPLETE" }).session(session).lean();
           const capacity = packed.reduce((s,j)=>s+j.qty,0);
-          const received = documents.filter(d=>d.sourceId===input.sourceId&&d.type==="PRODUCTION_RECEIPT"&&!d.reversedBy).reduce((s,d)=>s+d.lines[0].qty,0);
+          const received = documents.filter(d=>d.sourceId===input.sourceId&&["PRODUCTION_RECEIPT","CUT_PANEL_RECEIPT"].includes(d.type)&&!d.reversedBy).reduce((s,d)=>s+d.lines[0].qty,0);
           const requested = (input.lines || []).reduce((s,l)=>s+Math.round(Number(l.quantity)*1000),0);
-          if(received+requested>capacity) fail("Production receipt exceeds completed Packing quantity");
+          if(received+requested>capacity) fail("Receipt exceeds completed " + (input.type === "CUT_PANEL_RECEIPT" ? "Folding" : "Packing") + " quantity");
         }
       }
       if (reverseId && !original) fail("Original document not found");

@@ -16,7 +16,7 @@ export function financialReport(entries, balances, documents, from, to) {
   const assets = sum("ASSET"), liabilities = -sum("LIABILITY"), equity = -sum("EQUITY");
   const stockValue = balances.filter(b => !b.location.startsWith("WIP")).reduce((s, b) => s + b.value, 0);
   const wipStockValue = balances.filter(b => b.location.startsWith("WIP")).reduce((s, b) => s + b.value, 0);
-  const workCostValue = documents.filter(d => d.type === "WORK_COST" && !d.reversedBy).reduce((s, d) => s + d.totals.gross, 0) - documents.filter(d => d.type === "PRODUCTION_RECEIPT" && !d.reversedBy).reduce((s, d) => s + Number(d.metadata.workCostAllocated || 0), 0);
+  const workCostValue = documents.filter(d => d.type === "WORK_COST" && !d.reversedBy).reduce((s, d) => s + d.totals.gross, 0) - documents.filter(d => ["PRODUCTION_RECEIPT", "CUT_PANEL_RECEIPT"].includes(d.type) && !d.reversedBy).reduce((s, d) => s + Number(d.metadata.workCostAllocated || 0), 0);
   return { accounts, parties, profitAndLoss: { revenue: -sum("REVENUE", true), expenses: sum("EXPENSE", true), profit },
     balanceSheet: { assets, liabilities, equity, retainedEarnings, difference: assets - liabilities - equity - retainedEarnings },
     trialDifference: accounts.reduce((s, a) => s + a.balance, 0),

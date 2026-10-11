@@ -140,3 +140,25 @@ test("precise quantities, monetary integer arithmetic and stable request hashing
   assert.equal(requestHash({ b: 2, a: 1 }), requestHash({ a: 1, b: 2 }));
   assert.notEqual(requestHash({ a: 1 }), requestHash({ a: 2 }));
 });
+
+test("cut-panel handoff shares work-order cap, costs and reversal order with final receipts", () => {
+  const { state, post, reverse } = harness();
+  post({ type: "OPENING", lines: [line("FAB", 20, { rate: 10 })] });
+  state.boms.push({ code: "BOM", outputSku: "TEE", outputQty: 1000, components: [{ sku: "FAB", qty: 2000 }] });
+  const wo = post({ type: "WORK_ORDER", bomCode: "BOM", lines: [line("TEE", 10)] });
+  post({ type: "MATERIAL_ISSUE", sourceId: wo.id, lines: [line("FAB", 20)] });
+  const cost = post({ type: "WORK_COST", sourceId: wo.id, amount: 100 });
+  assert.throws(() => post({ type: "CUT_PANEL_RECEIPT", sourceId: wo.id, lines: [line("TEE", 0.5)] }), /whole garment/);
+  const cut = post({ type: "CUT_PANEL_RECEIPT", sourceId: wo.id, lines: [line("TEE", 6)] });
+  assert.equal(cut.moves.at(-1).location, "CUTTING");
+  assert.equal(cut.metadata.cost, 18000);
+  assert.throws(() => post({ type: "PRODUCTION_RECEIPT", sourceId: wo.id, lines: [line("TEE", 5)] }));
+  const finish = post({ type: "PRODUCTION_RECEIPT", sourceId: wo.id, lines: [line("TEE", 4)] });
+  assert.equal(finish.metadata.cost, 12000);
+  assert.throws(() => reverse(cut), /later work-order/);
+  assert.throws(() => reverse(cost), /receipts/);
+  const report = financialReport(state.entries, state.balances, state.documents, new Date("2026-01-01"), new Date("2026-12-31"));
+  assert.equal(report.currentReconciliation.wipValue, report.currentReconciliation.wipLedger);
+  reverse(finish); reverse(cut);
+  assert.equal(state.balances.find(b => b.location === "CUTTING").qty, 0);
+});

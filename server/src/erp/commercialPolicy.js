@@ -14,7 +14,7 @@ export function commercialReport(documents,asOf=new Date()) {
   const workOrders=active.filter(d=>d.type==="WORK_ORDER").map(wo=>{
     const children=active.filter(d=>d.sourceId===String(wo._id||wo.id));
     const materials=children.filter(d=>["MATERIAL_ISSUE","MATERIAL_RETURN"].includes(d.type)).flatMap(d=>d.moves).filter(m=>m.location.startsWith("WIP:")).reduce((s,m)=>s+m.value,0);
-    const workCosts=children.filter(d=>d.type==="WORK_COST").reduce((s,d)=>s+d.totals.gross,0),receipts=children.filter(d=>d.type==="PRODUCTION_RECEIPT");
+    const workCosts=children.filter(d=>d.type==="WORK_COST").reduce((s,d)=>s+d.totals.gross,0),receipts=children.filter(d=>["PRODUCTION_RECEIPT","CUT_PANEL_RECEIPT"].includes(d.type));
     const completed=receipts.reduce((s,d)=>s+d.lines[0].qty,0),allocated=receipts.reduce((s,d)=>s+(d.metadata?.cost||0),0);
     return { number:wo.number,sku:wo.lines[0].sku,planned:wo.lines[0].qty,completed,materials,workCosts,total:materials+workCosts,allocated,remainingWipCost:materials+workCosts-allocated,averageUnitCost:completed?Math.round(allocated*1000/completed):0 };
   });
