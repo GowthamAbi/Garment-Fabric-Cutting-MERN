@@ -38,3 +38,45 @@ export function dailyNetSales(rows, days, now = new Date()) {
   }
   return out;
 }
+
+// Stockout dates must be reviewed evidence: zero sales alone cannot establish
+// lost demand. Promotion uplift is a planner scenario, not a fitted causal claim.
+export function scenarioForecast(daily, options = {}, now = new Date()) {
+  forecastDemand(daily, options); // shared numeric validation
+  const { stockoutDates = [], promotionMultiplier = 1, seasonalMultiplier = 1 } = options;
+  for (const factor of [promotionMultiplier, seasonalMultiplier])
+    if (!Number.isFinite(factor) || factor < 0.1 || factor > 5) fail('Scenario multipliers must be 0.1–5');
+  if (!Array.isArray(stockoutDates) || stockoutDates.length > daily.length) fail('Invalid reviewed stockout dates');
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const first = today - (daily.length - 1) * 86400000;
+  const excluded = new Set();
+  for (const date of stockoutDates) {
+    const time = Date.parse(date + 'T00:00:00Z'), index = (time - first) / 86400000;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isInteger(index) || index < 0 || index >= daily.length || new Date(time).toISOString().slice(0,10) !== date) fail('Stockout date must be a valid date in the analysis window');
+    excluded.add(index);
+  }
+  const observed = daily.filter((_, i) => !excluded.has(i));
+  if (observed.length < 7) fail('At least seven non-stockout days required');
+  const average = observed.reduce((a,b) => a+b,0) / observed.length;
+  const adjusted = daily.map((n,i) => excluded.has(i) ? Math.ceil(average) : n);
+  const baseline = forecastDemand(adjusted, options);
+  const weekday = Array.from({ length: 7 }, () => []);
+  daily.forEach((n,i) => { if (!excluded.has(i)) weekday[new Date(first+i*86400000).getUTCDay()].push(n); });
+  const useWeekday = weekday.every(values => values.length >= 4) && average > 0;
+  const factors = weekday.map(values => useWeekday ? Math.min(3, Math.max(0.1, values.reduce((a,b)=>a+b,0)/values.length/average)) : 1);
+  // Normalize capped weekday factors to avoid changing the total weekly level.
+  const factorMean = factors.reduce((a,b)=>a+b,0)/7;
+  const horizon = Array.from({ length: baseline.leadDays }, (_,i) => {
+    const date = new Date(today+(i+1)*86400000);
+    return { date: date.toISOString().slice(0,10), expected: baseline.recentDailyRate * factors[date.getUTCDay()]/factorMean * promotionMultiplier * seasonalMultiplier };
+  });
+  const expected = Math.ceil(horizon.reduce((sum, row) => sum+row.expected, 0));
+  const statisticalSafety = Math.ceil(baseline.statisticalSafety * promotionMultiplier * seasonalMultiplier);
+  const target = expected + Math.max(options.safety || 0, statisticalSafety);
+  return { ...baseline, method: 'REVIEWED_SCENARIO_WEEKDAY', expected, statisticalSafety, target,
+    suggested: Math.max(0,target-(options.stock||0)-(options.inTransit||0)),
+    weekdaySeasonality: useWeekday, stockoutDays: excluded.size, imputedDailyDemand: Math.ceil(average),
+    promotionMultiplier, seasonalMultiplier,
+    horizon: horizon.map(row=>({...row,expected:Math.round(row.expected*100)/100})),
+    limitations: 'Weekday pattern requires four observed weeks. Annual seasonality and promotion uplift are reviewed scenario inputs; stockout imputation is an estimate, not recorded sales.' };
+}

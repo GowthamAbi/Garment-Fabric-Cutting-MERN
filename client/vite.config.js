@@ -1,8 +1,12 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { readFileSync } from 'node:fs';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), {name:'offline-pos-shared-modules',generateBundle(){
+    for(const [fileName,path] of [['offline-pos/drafts.js','./src/utils/offlinePos.js'],['offline-pos/receipt.js','./src/utils/offlineReceipt.js']])
+      this.emitFile({type:'asset',fileName,source:readFileSync(new URL(path,import.meta.url),'utf8')});
+  }}],
 
   build: {
     sourcemap: true,

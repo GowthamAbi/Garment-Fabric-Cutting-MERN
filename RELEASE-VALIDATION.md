@@ -1,3 +1,5 @@
+> Current increment: see [ADVANCED-ERP-RELEASE.md](ADVANCED-ERP-RELEASE.md) for forecasting, offline device POS, payroll review and remaining live acceptance. Earlier sections below describe previous increments.
+
 > Current release: read [PLANS-5-10-RELEASE.md](PLANS-5-10-RELEASE.md) for 11 October updates and current validation/limits. The content below describes an earlier release.
 
 # Release validation — 9 October 2026

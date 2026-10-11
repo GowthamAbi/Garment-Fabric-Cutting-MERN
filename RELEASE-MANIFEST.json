@@ -1,462 +1,1851 @@
 {
-  "release": "UG SaaS ERP Plans 5\u201310 \u2014 release candidate",
-  "date": "2026-10-11",
-  "baseCommit": "4db19f7569ff9feb363ae06fa6054168721afce0",
-  "tests": {
-    "total": 112,
-    "pass": 108,
-    "fail": 0,
-    "skip": 4
+  "release": "Advanced ERP release candidate",
+  "validation": {
+    "serverPassed": 117,
+    "serverFailed": 0,
+    "serverSkipped": 4,
+    "browserLiveAcceptance": "NOT_RUN"
   },
-  "build": "passed",
-  "deployed": false,
-  "productionAccepted": false,
-  "guide": "PLANS-5-10-RELEASE.md",
-  "limitations": [
-    "Live staging Atlas and Razorpay/provider tests pending",
-    "Offline POS is persisted cash-sale drafts in an already loaded workspace, not an offline cold-start PWA",
-    "Forecast is an explainable baseline, not promotion-aware machine learning",
-    "Payroll uses company-reviewed configuration; statutory filing/remittance is not automated"
-  ],
-  "files": {
-    ".gitignore": "214d38920a4755fe3cc52ab8dcd332f55bf7898296fa6b811da224781a79d9b5",
-    "COMPANIES-API-FIX.md": "ef55b40dddcb3f4ea1faccbfe52e93a596bc6120598c44ea8a7bcf842077f1ee",
-    "DEPARTMENT-RELEASE-START-HERE.md": "e05969071e49558136f68d49e6ccb3fcebd075f5731a704381f6d746f73ee1a9",
-    "FINAL-ERP-SCOPE.md": "684ffee3eac49c90f05b224d1b5a7e6a195b8bffbb18339e66f0e692749383c4",
-    "FIXES-AND-VALIDATION.md": "1338472d21f753792ef077f752cf1a2a3084222573115bbf98cfb52ae6ed0c57",
-    "FOLDER_STRUCTURE.md": "d5368c3457af4995dc5bfae28cfe9a78b0a4e747968ac8f7a9c6266d19bafd99",
-    "IMPLEMENTATION-SUMMARY.md": "a2b283c7ae7cd5e8871264f9f45cbc7136a7f30b9c31ef2083bfc5f427e871df",
-    "MILESTONE-2.md": "a3b4d740bb8ba598c9f23e8dc6f0bfd49d8e1d62741396974b9e162c5f3f7704",
-    "MILESTONE-3.md": "72a6a7c98f6a3ed7a95e6226a1c5ec89d6c4f18a3d680e754ff674d915e103fd",
-    "MILESTONE-4.md": "a8b17438ae206e1a1bb09cc7b65b0a10581f4e5ec734db57b27ea7574a2157f9",
-    "PHASE-1-PROGRESS.md": "ff228a1c702181556524e57a94e18ee47a3b17ab267806f526533d1a3a5e45a2",
-    "PLAN-1-VALIDATION.md": "e637b7741383058e48a9c37f3e482482cf7691e056c4988159efdfdb45036532",
-    "PLAN-2-VALIDATION.md": "7403bb4974cd3b4ad3cd8db9a198fef79a94b08f2ac52efc256e1788c78146c2",
-    "PLAN-3-VALIDATION.md": "2afdd14e7110b4c3664dcaae2e59bf007f9bae0284986a0c12489c07305bfed2",
-    "PLAN-4-VALIDATION.md": "6a056374714911b34aa10c6a61dc2e80411f6fab17f29f5615bf2d24ee60961d",
-    "PLANS-5-10-RELEASE.md": "19fccac7a0c1cae88badf1b28865bce7ebd116d09762ff81d85fdce338cbf201",
-    "PRODUCTION-UPGRADE-GUIDE.md": "46131699ae65f275966ca492583d2c34ad0bda9cc391e6ad129d5c3f7f7d42c7",
-    "README.md": "747fbf708e38e2fcc6a9ec592d7ca3da4cb62c518b2f5b510fd9efed5fedb7ba",
-    "RELEASE-VALIDATION.md": "0f8136e381d0db9f8436646b8f5164615cee85fbcfadac57f5bf50e4db172065",
-    "SECURITY-ARCHITECTURE.md": "5863fa45a58a4c18ca37f3a9b39e056d3d1179981eecafea333bb48f7ee72b74",
-    "SERVER-REVIEW.md": "82d9541cb8e71ad105b6f2ae51c962c5c448002b421f5a14dbef5db0632d9b61",
-    "START-HERE.md": "31a83e13c8486274d16f9031b000decb2c65f4613631005f795f9d406e4328ce",
-    "client/.env.example": "756e26b073ad7ed9da6a444d262f61ef222183cd19d57d1cda533c8af76544f2",
-    "client/index.html": "ba83d66bde72372ae3ed07af4292e606efe913e8b4e61ba038c0265b5de49c82",
-    "client/package-lock.json": "2286f124f21a9a533f6fea4eef3cc9fa15b393eea84de23ab19427c516a377eb",
-    "client/package.json": "df484032553ba57386286d5e3564ff4644f991c527e55577bfc1117d82411e61",
-    "client/public/_headers": "a1ea73f6cda1888e064e7bb2f448fd61207d7d4e2ddd19b265e60f19f829ef01",
-    "client/public/_redirects": "17dd287f00a525acd27cfd36effd851d197a568387428d4c3df23b01a03e9264",
-    "client/public/demo-app.css": "03542c06fe409391e4dc27d47dad5741bd1d4146942cb3ab623791a0d69711ad",
-    "client/public/demo-app.js": "40e4de1fdbc4ddab8653195dd098ac050d757297fe15289e6967985c36d7d222",
-    "client/public/demo.html": "4bbc34d5b786bf1408b914c7b2c1e316ae8cc4a2c59a47af5d978b803405650b",
-    "client/public/favicon.ico": "3b2a3a7fdde567fb2fd82a71cdb5fe45db065d7a5d33a64815cc369ac5881996",
-    "client/public/landing.css": "c365fdd2d4641f3e5821d90c5149aef257550f62fcb5fb34ab00559b4fc3a982",
-    "client/public/landing.html": "5a875b0cb89b8be05103edf3e65f1c37fd5c2bd4dca0b19dd9b03a91717cfd92",
-    "client/public/landing.js": "dafdf55bd674b5a1388789141877d37ec141c5f3239098093f188a2769f3f39c",
-    "client/public/legal.html": "727e762429c1c4ddb383b823b4e1a9fb99652666d14b833f3f6ae6591fff78a4",
-    "client/public/logo.png": "bf6e277ea4c8574e40247a737a20d47829ec6fd0ac44202f472d78e8506fa364",
-    "client/src/App.jsx": "a7804b6c97d1efc5cce77fcd289af62d694656f0b851b81210f4a0a0cd27d7cb",
-    "client/src/api.js": "47a1b46feab062c28409ba801c66931d2bff59ae2c98cced73dbb20ee94a9405",
-    "client/src/api/authApi.js": "97ef0f6e4e2eabb4288b6f4faf3ec393a895f8ec428897b8efef27efc3234515",
-    "client/src/api/axiosInstance.js": "729605237054144edc308dece4b898be8ea6fde82b54ed0ad3ee06a9dfb83456",
-    "client/src/api/dashboardApi.js": "db1b4bd3599272b6af7904c521f49b0923e7a2ae2569e817f81224cdd6af17da",
-    "client/src/api/deliveryApi.js": "52c8f9d5b47ccd063398c643881cb9dbe2ddf4a9f429385406b6581e6d52c548",
-    "client/src/api/fabricCuttingApi.js": "4cc67b61780955893ca017e097008d0ba1818e4308db7fe0a9a09b5a66ed8476",
-    "client/src/api/garmentApi.js": "bb046ad13f6d8af56aba5762f1df68ba3cbf54e389dc020131f568a89694b38a",
-    "client/src/api/historyApi.js": "75baded1ba118b2a10580350c4b7df39f04f829e7dcf3567b8c17ae327bc3b46",
-    "client/src/api/inwardApi.js": "cc031dd98712f2773fcd336830a6ddc4dcbb34830ca371418d909c43ee3edfa1",
-    "client/src/api/itemApi.js": "2ad2ff428b4dd93c454236c7da862c60ab76b5443afaac9e4fc8cf43bd87a6df",
-    "client/src/api/outwardApi.js": "e1b578c7bb6b68ed9dad790c54712d7ca660a555c1ea73c4c62ecc93cca7cee9",
-    "client/src/api/productionApi.js": "60fbe327fd1873a7821adac7e7bf399eff8940e1d56bc5896d71d0bf0e48518f",
-    "client/src/api/publicOutwardApi.js": "31c6e91a28f414b31614da2877cad0b39f03739119e5d46a4751c2992b062345",
-    "client/src/api/purchaseOrderApi.js": "6a7b7bad0af9165d5a1583f8631a63dab9fbf19518b17183866c85b03051b06d",
-    "client/src/components/CustomerDatabaseSetup.jsx": "cf3eb3d3f97ce804e06cf4b0f0c992f8121a81ff98c73f19342e5db1488b2e18",
-    "client/src/components/DataTable.jsx": "8ac68eb46b9a0b4f6b224d58da93ed19cb46e86a56648b911deb6aa59cc365db",
-    "client/src/components/Modal.jsx": "a1092aa2ea31de93a838e74d7d9dd842167b55180f74ee5ec9b6422aebef2bc6",
-    "client/src/components/common/AlertMessage.jsx": "7c0b82384fdcc4d3d55a5b063f6bba9ce1ba1bd7f76bc51ec002798747d6ba24",
-    "client/src/components/common/Button.jsx": "38c79290517c61636d99cc112c966d7ac06eb2669b7a25d161a3d0823dd16dc4",
-    "client/src/components/common/Card.jsx": "7f60b4661614e84b32f620326050fa039b0a1568c6dc0deb09baf16e03a88600",
-    "client/src/components/common/ConfirmDialog.jsx": "507fdbd19cb37f24fa03b32e741de0a5488175ecf233453d079d60e8a163fe31",
-    "client/src/components/common/EmptyState.jsx": "c6c448bfe78b350ecfb69ee731e4758c41b10d48fb711125b2821db7d969a19f",
-    "client/src/components/common/Field.jsx": "c4e40787fac1c0abdf0e44c185c0cdad08479602f36d6ce3a6dd8da8d934d9ef",
-    "client/src/components/common/FormActions.jsx": "02a826ce0d40c8054d78019bd7d4cd099585b54e9b68cf68555c6cbd473a792d",
-    "client/src/components/common/GlobalFeedback.jsx": "32a45df5ec638c764a6082f80ff1c49a63cad66b8a54c529510cad2921ec9424",
-    "client/src/components/common/GlobalLoader.jsx": "a2ee7cbfe2698f63ec5bee248df44d04c58217d4f7c3d2163e0af2650c999326",
-    "client/src/components/common/Input.jsx": "962aa84e9c6d8642e9e04a103dbfbab0816605aa4b8f719bb040d5a52b990370",
-    "client/src/components/common/Loader.jsx": "5f3d75cf2510ffc21fd24453979febed07d03b0b1894c7bfb9e9494033793dc6",
-    "client/src/components/common/PageTitle.jsx": "6adca463fa038735a892ca9687982d55639ad6ed0737d56c58bbdc5893f82c85",
-    "client/src/components/dashboard/CategoryStockChart.jsx": "475e0341ace1b2414159eb7624fc9eb10db0ba26f725c1732edade49a9a5c245",
-    "client/src/components/dashboard/MinimumStockAlert.jsx": "a1529d7f351bf8e340ab5939fda45fba9c688fc6917a40d8d5513ece42d1f7ae",
-    "client/src/components/dashboard/PODeliveryAlert.jsx": "189ac04bb5f9503e018ace5f909adea1ff75c7ea1ff8510a8a8b9c3c257aef46",
-    "client/src/components/dashboard/StatCard.jsx": "2fe1f5bd9d67871a0f1845956c21ff9a86bde32db3366583c354c14b20b0e702",
-    "client/src/components/layout/Header.jsx": "e12a050f9e88423c359af6db9053cec34ca42c3033301f2d255c276247637ff3",
-    "client/src/components/layout/MainLayout.jsx": "46123808e51b84d4d545ccc1d152bd70c7a2ffdbb8596beed780cc1fb79e89b4",
-    "client/src/components/layout/MobileMenu.jsx": "0304ea94247b2e82205cd21a1993fb50ed9a22e9b6c2a7a424373245fa2d5998",
-    "client/src/components/layout/Sidebar.jsx": "ebae059c89268c96769d358a34311c4ce22c23edeb87dfef146f24e95afd9637",
-    "client/src/components/layout/SubscriptionNotice.jsx": "98610faa7a1e01267056f8e23013b6be4b4de6e0e1e41d396dfad2055a37afcf",
-    "client/src/components/layout/SuperAdminLayout.jsx": "4ac36bc4c5e5f3bb1dffe058d245f2c659ef8accf2809e8d44ad78a0c191389f",
-    "client/src/components/qr/QRGenerator.jsx": "063afdd1dd8a24d39eb01c1c548fde84e85005290c4b5b159f3d8ca7a8732024",
-    "client/src/components/qr/QRPrintLayout.jsx": "22abe0aa2d3dbde123a003d3050ace4f5a9ebea7802fe541c87d634c86fa28cf",
-    "client/src/components/qr/QRScanInput.jsx": "297821e2bb9e3934b678f7f606e5d809e8e03ae552eae9c0d6b0754f5dedb7d2",
-    "client/src/components/qr/QRScanner.jsx": "b138561d61405248312daa000d18d58de93c14e652edcd2430b783cfd7cd6207",
-    "client/src/context/AuthContext.jsx": "e830c85230de5f1927b35d277be1a08e0512f0de1b212eb07c6d2def37a8ed9f",
-    "client/src/context/LanguageContext.jsx": "633a7c24ed6b8bd5f58059853d5c7e2087b9d78da76c92e6ea6857c9306f1b1c",
-    "client/src/context/NotificationContext.jsx": "52c66329543ff88d740a5cd4b01efbc1bc6059384fbdeadb04743134517d67e1",
-    "client/src/hooks/useAuth.js": "913e7ba9bdd83563c2de2bbc8e8fe442c755448e65e82d2884e52c65bc6e4560",
-    "client/src/hooks/useDebounce.js": "4014b7e5f373e05d60bd28e61e2997aa89d11df166c8fbf0815f01b40461d390",
-    "client/src/hooks/useFetch.js": "9c31341f828644f5b6edb17dc79928b208d647a0f08d9e0344be4cd9a5b9ed76",
-    "client/src/main.jsx": "35e9c2b9253c081e1f5dd6d57c93df54ee00a1e3ec91fe948cfa63c51c8d5767",
-    "client/src/pages/auth/CompanyManagementPage.jsx": "4d576a03f113da00ba0d4e0362afd43264dc47d32cf2bf616278a8d65ab70e46",
-    "client/src/pages/auth/ForgotPasswordPage.jsx": "8cc51e74807e9e1257e45055339b20f6d5412bff385b0a99ccdbed08698615a1",
-    "client/src/pages/auth/LoginPage.jsx": "6463eea34116b672eaf52707da528f95f313f5585056205310af0c093f544a5e",
-    "client/src/pages/auth/RegisterPage.jsx": "76c9570577d6c326d357422dc4b0bfd93ea3a83f638403ad1d114c1abee4fa13",
-    "client/src/pages/auth/UserManagementPage.jsx": "27837fef780e4ba433a7924b9e4ccafa9fa37b1653eb11dbbeff5a1f4b24e49d",
-    "client/src/pages/auth/company-management.css": "b7e50dab4dff4abbc40ce05ec1a23cb75ee438e26c12f7648c294109a88f9d6a",
-    "client/src/pages/dashboard/CompanyAdminDashboardPage.jsx": "8a3c1179d25392ffac47d28702a1e248057a72b25e5cc3a31c0cfda05cd1a2cc",
-    "client/src/pages/dashboard/CompanyInsightsPage.jsx": "d3fa044983523678b1672f5c1ff11c39954c4a588c8db52b709e2c0b8bf777b9",
-    "client/src/pages/dashboard/DashboardPage.jsx": "542d9e179a0fdbc50d02d41eaf301d5a0ab589a8911d075164feaef2c14a1d5c",
-    "client/src/pages/dashboard/DepartmentDashboardPage.jsx": "3cdcbec43bdb07d402f46cbb0921fcc44a11523f456798cf60a351c16e054c43",
-    "client/src/pages/dashboard/DepartmentOverviewPage.jsx": "f94821516eef2778351cad73e75f68e9fa843c6fb19b87c59cc6352008d5f1df",
-    "client/src/pages/dashboard/ModuleSelectionPage.jsx": "b2aafcef31449ac7865a8115b2579392560efb0f51fddfb3b740d3b41c118128",
-    "client/src/pages/delivery/DeliveryDepartmentPage.jsx": "fbfcf2718a0a1016494b19a33f80b495d217ee38ebbdbdd54ac4d60f6c3cb735",
-    "client/src/pages/erp/Approvals.jsx": "018d7467098cf08f3fea39b0500016b18e8b5e5922d15beb84893aa238564af1",
-    "client/src/pages/erp/AutomationPage.jsx": "6bbdcf21bb418c4f39d613bc6ca89eef3b1929c85b86e50262c803801b170f13",
-    "client/src/pages/erp/BankReconciliation.jsx": "cb495a227a6848b0678f5f7b8513d0d85b1dcb638e94b8787af87729f7e1a44c",
-    "client/src/pages/erp/CommercialReports.jsx": "4c67ecba62361ac2c04057f788d0890f1dd26aa444a8e20ee29e9c4b79e04253",
-    "client/src/pages/erp/Departments.jsx": "263cfcf24052f37273f92aebad2f84c612858efeae6c1b706ef7a0a11a960622",
-    "client/src/pages/erp/ErpWorkspace.jsx": "bc6cfa8cef03316e6082bc1e1a3debab87beb3aff36384205486cfa10390f6b5",
-    "client/src/pages/erp/Maintenance.jsx": "cf1ead17545391d60c5f8cd3104afaba0a13565de69884ef127a1be867a9bca0",
-    "client/src/pages/erp/OfflinePos.jsx": "add4ac36ca737747cd98b4891f7b1ee1e8fc3998cf2293c6b2f69289ab002b4d",
-    "client/src/pages/erp/PayrollCalculator.jsx": "62bea6ccc9b961bef6766ab20976999ec8f82fbd06288c8a04f1a38a51775bc7",
-    "client/src/pages/erp/ShopFloor.jsx": "d4a68b7e4a5c9d965fe3e8212a3e7758ce1805177ef99288ed813e7ef3836709",
-    "client/src/pages/erp/Workforce.jsx": "6bf6b5150fedf78bcb5277f3cd6b902d0646ee6790de44209531a97979b108a1",
-    "client/src/pages/erp/erp.css": "c25af4563393494dfaccfda19e292dc310bbca4c0175e4fee579d699939d7389",
-    "client/src/pages/fabric/CuttingActualMatrix.jsx": "0b5130838772968f5b98a0692ec09f1034b91fb62f9d80d16c30de639dfc669f",
-    "client/src/pages/fabric/CuttingStockPage.jsx": "da8725a85bb7e662c352c5f4217112666995ca816ac7318a47ed2e5d5889e345",
-    "client/src/pages/fabric/DepartmentPlanPrintPage.jsx": "f732b4732e033826e17bdd6d105f7df79dc378d225fb1c8b99ee1a50ec3a0b64",
-    "client/src/pages/fabric/DepartmentRecordPage.jsx": "fe0d1a3af8b91be87e9359a2223e14605f92c3d5f10907b934fd5eff2b4c81b8",
-    "client/src/pages/fabric/FabricCuttingPage.jsx": "948f3001ce5017429c2366b769d97b68ad0b3ee2760504fe228b240348081f35",
-    "client/src/pages/fabric/FabricInwardPage.jsx": "80af5b1ccca26ed588253623c11bc84b87d9135b9d022b611ecb003b56f264d2",
-    "client/src/pages/fabric/FabricMasterPage.jsx": "45aa8d26d0fa5f105aa22b278e3d95c06a96696b1819f7258ad34593733057d4",
-    "client/src/pages/fabric/FabricQrPrintPage.jsx": "3b00ecd4c7c301f8dfc40a53b132e6b1f8dbd83e407e5e9b0c4284755f035fe3",
-    "client/src/pages/fabric/FabricStockPage.jsx": "cb9b973d886e303debd2793f6d576528893053e2e9840cda73d1aa49d1109c3e",
-    "client/src/pages/fabric/FoldingEntryPage.jsx": "bbd4fd667ec72883726e97a3c59da5bbb49ea992747a56c0d95a7908868b4822",
-    "client/src/pages/fabric/ProductionPlanDocument.jsx": "4da17735ef526dd21d4cf77dfe13230242c8cb9bef86b4d7ff45461e52d3bcbf",
-    "client/src/pages/fabric/ProductionPlanEntryPage.jsx": "4ccc4b714e89fafd9906b44b18470e5154b5f8cd93f3ca891c0d69774d5e979a",
-    "client/src/pages/fabric/ProductionPlanHistoryPage.jsx": "46ef8b810260b2710071e8203bdd77cebf57d321c19bacfd6498c5151713b484",
-    "client/src/pages/fabric/ProductionPlanPrintPage.jsx": "2b40d87ec293c9647569176b391fdc32b33a4e64cd9a6560ca0429f6a137144b",
-    "client/src/pages/history/HistoryPage.jsx": "6c0cf89d72c18f25cd41b4326c18410907581cfe52d1ca37f2b9fe3f4cf5e5ad",
-    "client/src/pages/inward/InwardDetailsPage.jsx": "c8bad290ad2baef421dc54271393d6ed76fdc0f56b2a3c5f86c62c2bb189164a",
-    "client/src/pages/inward/InwardForm.jsx": "dcd7722355fc72a95084970f783102440c80162e820d1b3af0169027b782dfd2",
-    "client/src/pages/inward/InwardPage.jsx": "036c1c407757a5f0e4ded52933170a6bcdafe5faa552ed4bfe88c6a2dd71f9e7",
-    "client/src/pages/inward/QRLabelPage.jsx": "c999dba195d5f95ef9d998869af24af3825ce30db7ea901d653ba308e9697e05",
-    "client/src/pages/legal/PrivacyPage.jsx": "43796df0419a4516817301bb2a1978fc544558764774dfdd42ea92af570f9d30",
-    "client/src/pages/master/CategoryMasterPage.jsx": "40123f0f678dc5bfe48bb8755d2ab501d71034a2ee35281581c1e63cfb0123e9",
-    "client/src/pages/master/GarmentItemMasterPage.jsx": "ffe4e7982eec85072fb3148d135e4f6ebef154cad77fefabf9c1020e1bb4830c",
-    "client/src/pages/master/ItemForm.jsx": "82e138e76ad9351e2cafd42e58e952e51ec443eb4effb7ae3575c348c724914b",
-    "client/src/pages/master/ItemMasterPage.jsx": "94896abd837ddd6a0544820eb25987d0315cd38c73268339462eda02cc860e43",
-    "client/src/pages/master/ProductionMasterPage.jsx": "687780defbc8a98d166a27b619547410e40a4cd97c61bcd72a239b5ff54616aa",
-    "client/src/pages/master/SectionMasterPage.jsx": "07842a8f56a4ca1fd6b81799e1b9c4712d82bad359eb277ef7690c6fd2bcaa45",
-    "client/src/pages/master/SupplierMasterPage.jsx": "9f12bc58975570d3f0ba1b74f6bff107fe852a93806eebea46790fcc3d752e4b",
-    "client/src/pages/outward/OutwardForm.jsx": "71e095d486f6134ac7735a6e2bad2d396b74177a0afba25d39c10bd76a0b06c7",
-    "client/src/pages/outward/OutwardPage.jsx": "261d9b180c9d34d39a595723f170741ee1a2243635ac55d59880e32a4f925533",
-    "client/src/pages/outward/PublicOutwardPage.jsx": "b7971a40457ef0d93a7de1b26f58792c191648842dfae4323332585d90a7adbf",
-    "client/src/pages/outward/QRScanPage.jsx": "2a2551402068ff1a7d288ea2d1facb7f0c65528bdd415968f634b466da894a2f",
-    "client/src/pages/print/PrintPage.jsx": "f3d775aaa5f6bd4047cf4bd859138998a6eb34eaf06740024be72b1cb324e699",
-    "client/src/pages/production/CuttingDcPage.jsx": "2a22c1c6c0dae0c2862996c60230d9ba3b08f5fd27738859a0668a4ea7325d14",
-    "client/src/pages/production/CuttingMachinePlanPage.jsx": "6abe46d85ad41c88596f1337c63d0e048fd661ddc8180bb96e7dbac596438b38",
-    "client/src/pages/production/MachineStatusPage.jsx": "b3318b99fa7570f39358c6952a175321a5acb031d3c729839d519aee3af4a5ee",
-    "client/src/pages/production/PendingPage.jsx": "04b00f59c449269a5c4f5a15f1f694a9a6866660a3b650eb5d1e4c4d3ec4bc98",
-    "client/src/pages/production/ProductionControlPage.jsx": "2202d32098dd5d2657e6b262e5d2cc27b3a6c67a131755a79def846129bf5b61",
-    "client/src/pages/production/ProductionDashboardPage.jsx": "b527a8d06a935c2ef9fd0fbab108abffb76ca5315ca48758f1348d6cb2b7cb06",
-    "client/src/pages/production/ProductionPlanningPage.jsx": "9745f5de74f3c6390952bf50225e61c3c457043435a7bf5fa83f9e2d76da1522",
-    "client/src/pages/production/ProductionSetupPage.jsx": "e89cc3842b7fabeb91f5c6a7a3cef7cd978b0ba34a8659cfcc927ab60e48445c",
-    "client/src/pages/production/SewingDeliveryPage.jsx": "fcc455624bd7468e4641d2f39327319c5594001c7d9b34cb6029232e32e12ef7",
-    "client/src/pages/production/WarehousePage.jsx": "30e1920d004567af54a250989ec7f70561fe72749ee5d554f043a7ad1008f042",
-    "client/src/pages/purchase-order/POPendingPage.jsx": "8969b095cecfed929d28d9d53b46ad38fccd2573523ab986acdabe9f02526cba",
-    "client/src/pages/purchase-order/PurchaseOrderForm.jsx": "02f815ba25da082fd06ac11909e820a28d7fef0799a444f23da3bcf58b3a4f5d",
-    "client/src/pages/purchase-order/PurchaseOrderPage.jsx": "6ab2c5ce429a6191098e7e65c1383584c1f6fa6960b80b1e20d7a3bf9ff16695",
-    "client/src/pages/reports/ReportsPage.jsx": "57c7cf3a55f07773f00fb115a76157c90f07b66e6d468ff739080312662d3874",
-    "client/src/pages/saas/AuditBackupPage.jsx": "6156861bba573942e4a13f77070f689206b5e12301c85dc0d52959150c8526d0",
-    "client/src/pages/saas/LeadCrmPage.jsx": "29e9f28e9ad6b5d379f5d5ff98c4f8e9f04b12682ad25b4b995eaad08c60948b",
-    "client/src/pages/saas/OnboardingPage.jsx": "fa6e95fe701b1fea3e92231964b28d163a1aec4dea24c8d25c5558c2315e64e9",
-    "client/src/pages/saas/OwnerPlansPage.jsx": "f9360f83ba083131ed0392919351b7154463c010c29a1b711fe3af534896a2b2",
-    "client/src/pages/saas/OwnerSalesPage.jsx": "e67205d33fb901992027b2b226b6a1ea142bce1d4d623226ae1e07ab59079187",
-    "client/src/pages/saas/ProfileSettingsPage.jsx": "45b0edba3e4dac9ac71da77d59f5f1929728401348c2f2f77d93312bea1d65dd",
-    "client/src/pages/saas/PublicDemoPage.jsx": "df57576c23b343775825549aed15f602bd3058a4f67f6c54400f49adcc4f8064",
-    "client/src/pages/saas/SaasControlPage.jsx": "f0d3f96acbba7e77d42712906d1c2a46150de7927fcd7d2b57cb630a29c9aca8",
-    "client/src/pages/saas/SubscriptionCenterPage.jsx": "150635a97399e807d113917153e196b2849234544c6182d37390d99782397b2e",
-    "client/src/pages/saas/SuperAdminDashboardPage.jsx": "a07b86285dd2fa2afab8dce21f62afd06905cb9e035310e9267fc856fcc92dad",
-    "client/src/pages/saas/SupportAccessPage.jsx": "32579671b85f448670d31cb410fdee9523beea202ea7a27b67572b45e8b4e72e",
-    "client/src/pages/stock/StockDetailsPage.jsx": "696055f7ef17c6ef70a6298d4aeb152c4317307a685f77eac6ccd071ede96331",
-    "client/src/pages/stock/StockPage.jsx": "6b4b78058a9a19abae19a4213f328f18e8db2662f281426b088d4a2aff57349a",
-    "client/src/rich-theme.css": "25cee2ddea2440c5c7fa667c31f0da46a475c14f1312e97fbdf83361c6717040",
-    "client/src/routes/AppRoutes.jsx": "aeffe4d31bbeaa263f2c5f5e0ef243bc5c00c3c31c8860b94b0ead6f2ce02b50",
-    "client/src/routes/ProtectedRoute.jsx": "a551b0823238ba8270c0b55fa023501dbdd2aeb2b9573a49781ebd38d5b12676",
-    "client/src/services/csvService.js": "4cb956e8b7e30fae5b44aee5dad8a3a4aca8a03190d144a6dc490fd35687444d",
-    "client/src/services/loadingService.js": "46b542ad3f3711c7846c5927f2ecda0ff068204a5da18360a7760ecf7128bcb4",
-    "client/src/services/printService.js": "58c62d641a3033f52f61fb79b8781b5408fff513965638cd62e9c415c882673d",
-    "client/src/services/qrService.js": "bdd32301fd5c0e65cb52528bbb041c04fe147e7e0752c3bba448e88b2d0c2540",
-    "client/src/services/tokenService.js": "3c89921096f1e619bb3fa6df6204941f5c14fb537d8872b8e9bde6a6e21a599e",
-    "client/src/styles.css": "92feacb34d74503a159b6c2eebece4a80414b6a229c38af952a92eb809d8d56d",
-    "client/src/styles/forms.css": "18b0bc02f2a8fc8bb58bac37bf9893f78d18481a528acf71a341c48ddd5fb7af",
-    "client/src/styles/global.css": "079127df73d2c5aff626b3c448dced2b83095c10b634030f8b0e32305e530332",
-    "client/src/styles/responsive.css": "17ba71eaec9736f088e8816d9fc45973b0222721ee67134f91fe47d5d802ef3e",
-    "client/src/styles/tables.css": "a8c28472a5b50a19ec2a32efe9d9b025c36560f68d1745613c1029575f7c5fb7",
-    "client/src/styles/variables.css": "2c35e098ae276581ab71e906d7ab89a9fe09067f9d3c31e3c0c968e0070ada5e",
-    "client/src/utils/constants.js": "375754bb64da9d1d9872aabcf7d4366f79be271d4218cc0686355a026fc524e2",
-    "client/src/utils/dateFormatter.js": "0d599688c7a00827b21588ce5e933c10c39ed6a1a9f0ba12df21037efee2265e",
-    "client/src/utils/formatters.js": "818ca87e59f84f7027a44695d7b427a1d3152814a261b317067fe7b40bb8c29d",
-    "client/src/utils/numberFormatter.js": "68cc32dc1258b40539b1db2010edd9225c22f0a5a4e28c2d9954b0f89fa56f98",
-    "client/src/utils/offlinePos.js": "a4e996270ed2e42ae3ba0aa1ef790e2d8887083ed4fbeaff6a690c0ffe8d576b",
-    "client/src/utils/tenantClient.js": "fa79674ccd5f631989f169b8b118b31cf93b7b904713cd9203f1b09fc48d3e52",
-    "client/src/utils/validators.js": "660c10e68d36ae38aa3f216aef4672cc3cb87625ae1cb81490c4f15ace7bcd8c",
-    "client/vite.config.js": "670a45d0eed705faf8050993ff6551012e95c03326885426936f930978c0b430",
-    "netlify.toml": "fd0b633a81efb5e8b689d245a152f0f7d1fdac9a150258025c290811c267d115",
-    "package-lock.json": "9b34c7169ccae1cf9a70378f813c59c9083b2523035561f9c49d3c7a9f1151a1",
-    "package.json": "36d98fb94a01ae7c0322d327e1584dc940b03300576cbd6934ece27d54bffd98",
-    "server/.env.example": "08239453df840596e655fe76901af3714d7322190c567d33c3a508922b603f0b",
-    "server/.gitignore": "cf188000aaf42ee74be6e51766493445b3187d9ebae6b6e97efd30f24c883862",
-    "server/package-lock.json": "82698effe4bf240622034ee75021057f9717a9c09d8b42c1a6c2bbb86a44c279",
-    "server/package.json": "30f3e2507c2b514a0516b103535e1c9978488a2686f4b62983cbe3626e2412d9",
-    "server/scripts/bootstrap-owner.js": "9d7d2fb3d1c9df9e156a44feba53bcf9337cb693db79e7200e1cce1e33c66ba4",
-    "server/scripts/migrate-company-databases.js": "e07d9a1bef935f370549e4d71205fe5983c76898deb8cf74fa92ed93ad74a62e",
-    "server/scripts/prepare-customer-database.js": "a276e6e790e29449849def85a7955807f869c9666f5d023d1c5782c3520edcf7",
-    "server/scripts/recover-customer-database.js": "b947e001a8fed9637fcd5a62bd91d5bce20ca4d9f504195487a5b299ff468689",
-    "server/scripts/run-jobs.js": "bc893ea54090e5f4dea8aa5dbaf0235465d2d84e4349fbc9f2de8714f45f744f",
-    "server/scripts/tenant-backup.js": "05197178f96a01f383782ec50b7bef9d7cfead98d8297692ac284283aeaf3340",
-    "server/src/app.js": "f4aa0ba5aad6bf61bd78aec3556fe5204406b309043dd4eb2d3496ec1d3c303c",
-    "server/src/automation/models.js": "598140f4d21e2b99b50ed88a98da462d48cd1fe58463c9407785884cc7a7f2a4",
-    "server/src/automation/queue.js": "635b34494246db94f34f2a474de1bcb3634a2d30e16507fadaa83159d46e1f3a",
-    "server/src/automation/routes.js": "8c2670aad313da3402a9544815eb41349325acb0860fc3821da7c2b13b1107f3",
-    "server/src/automation/worker.js": "0e0e0ba7fe05782e8e4d15247c40a0674ccbcbdec4c3b181a8bde66b82fb8dab",
-    "server/src/config/cors.js": "94349bc5a8dc1d9dbb8ed1140c37ad3bd552f0f43b02d66a21afea5fc7fe7fe0",
-    "server/src/config/database.js": "c69eb3d4aad8b828e463bcc1e7c3eba9587592666de71eb56b67668cc22ff87e",
-    "server/src/config/environment.js": "16211b2de4954fa6aabde34d98f9f6b91091541e388b22b0bd33e89909d16cbc",
-    "server/src/config/mongoosePlugins.js": "b47a1d8e8a9f0c8555eaded4cd757523e1ad19edeb732552326b115317794843",
-    "server/src/config/tenantDatabase.js": "1a6d9b16b77fd197424eea20ddf42a62ef8ee2cd8cddd33c060cac8c16e49232",
-    "server/src/constants/orderStatus.js": "2c682536d724068972010913d1c44e963ec5d03c7fb87d253cf9d9fec5646e9f",
-    "server/src/constants/roles.js": "59a759fbbfee52532c616345c2a9b2941ecd0b99777c34da8495ae17d199ef08",
-    "server/src/constants/transactionTypes.js": "cdc9cb769e569dca2eca39a0ea5cbbbc01a631cea3ff56143989d89b42f997c4",
-    "server/src/controllers/authController.js": "3fd0ed4637d02381a5161b39fb90708f063acf54b0127a76ae57afb7b3684f08",
-    "server/src/controllers/categoryController.js": "36d1a418891ddd96392fa8c9f98a47be7220bf96f5cc815ccab790cc09569bc6",
-    "server/src/controllers/companyAdminController.js": "63251834716cd6aa61a0fba436867c5ba4847252b9139d621df3e87863f3ae7a",
-    "server/src/controllers/companyController.js": "cf945ce41e8ddcee8ec3714a8cb13f32db2b6fe50b1f9a72c00aa8f8d52fcf56",
-    "server/src/controllers/customerDatabaseController.js": "299df6015ed7a63c505ab49a0e53cc19d713554920ff11b369cd9d174528f351",
-    "server/src/controllers/cuttingDcController.js": "042aa8f94028015157adead753caf066088fcce7323c5c99f6acdbfff1836c00",
-    "server/src/controllers/cuttingMachinePlanController.js": "6b8e6ad1467f4934759dbf8ea7eae5e73476a18871e30b1221b03221260eccdc",
-    "server/src/controllers/dashboardController.js": "4ee880d6c496f98fb8290c55d40f4d9409c1da5622584833a1f5e14e5d6141ac",
-    "server/src/controllers/deliveryController.js": "a186dde5f814186acba97840250d9b2cd2f5087ed20a27001cd8eb934fac7be3",
-    "server/src/controllers/fabricCuttingController.js": "e5f37b60629c52b1ef94f9eba60642176b929b14f4e69c344d363b0bb42b2eb0",
-    "server/src/controllers/fabricMasterController.js": "9db5c6aa68d158b7125784d2e5aceb3c60542eba9ec0cc2af09c5a157f4b82c5",
-    "server/src/controllers/garmentController.js": "67405871c6be106d9b13a7bd485743acbd16f2bf7803eb37c806e979ebc90e3a",
-    "server/src/controllers/historyController.js": "fe58e1567be4e012ce72226a03c84407597d45fc6cd10a28e7cd90e15338bdee",
-    "server/src/controllers/invoiceController.js": "7604dd265b6027e211a3c21470852b2fac52f73475b93f1471c60f21305ad4d0",
-    "server/src/controllers/inwardController.js": "d5426b9c2ada2fe9afa2f94be29693bcda83a81e4c10ee2f9f76862039d8aa6a",
-    "server/src/controllers/itemController.js": "d73e036793516e9228f50214c9fbc638f5d657e2301a9536ff65ec952666f5e7",
-    "server/src/controllers/masterController.js": "c45fe4cdee0c4a4833103c7d03d93b8fd870e5cd76976b4b1ec39b6dc96e4e08",
-    "server/src/controllers/outwardController.js": "8229e30e7a0e86dd9a7360132272221c639e97d4c84549b3997053dcb23c5a2f",
-    "server/src/controllers/productionController.js": "ed293219d5c62ed0e9125c76a3dd9d596ae49a524cf5c08a3adecd332a7c4858",
-    "server/src/controllers/publicOutwardController.js": "de11e1187a32785b09a493f4fcc49b1be8e0c8447dbe92b3c24b40f41e57a793",
-    "server/src/controllers/purchaseOrderController.js": "5f34937f0ddfa287f026f3a077c5b2e791fef4a753879e6a9607e003a6757953",
-    "server/src/controllers/reportController.js": "abf68572bd45da5d94a9f31c5506ab85af8f4b4cdfcf32a6e5ab4e8f72a81f32",
-    "server/src/controllers/saasController.js": "dc6dc4dd3806a7a0daa2c81c6c56f3d6b7358b7a6c6647e9aeae4bfc08fefd87",
-    "server/src/controllers/sectionController.js": "c6fa5a4e2717502fb651b6353944bc52b8b73dea64358cfcdecdc1802dcc45db",
-    "server/src/controllers/supplierController.js": "76705b50bcaf52e1da56ab9c6208f1c2eb480f31023fae4d8668b86e393d9792",
-    "server/src/controllers/supportAccessController.js": "a925d55c19ce569dd1f1c48b7393c70179f7c7b24c29fee604550bb2bbceb1e1",
-    "server/src/controllers/transactionController.js": "154cfd54528c21cfd413af3f6cbb6c376cdd5e7276e47c596bb4cd58da577192",
-    "server/src/controllers/warehouseController.js": "dd27fc3d18e99005ea2e0eeef781e5db3dd6fc0906611d77469d2efbe3342c47",
-    "server/src/erp/approvalRoutes.js": "16817f5f206e8ac9d4411fb99aaae2dbbed80b00dbecb5987a7c31c677b2971a",
-    "server/src/erp/bankPolicy.js": "25a15f1be773eec0cad42c4424529b39d654937d5151d09a7b90c277c5cf3bf7",
-    "server/src/erp/bankRoutes.js": "4f3ed27f67832a2db3635bd55881a555e2208deb16bb4638f59941bdaa3fb1ea",
-    "server/src/erp/commercialPolicy.js": "d3f94dc5bb4b7b50a12830c91818e626a8c236ab5cb48585d2a03ec6c9dce954",
-    "server/src/erp/departmentModels.js": "c65dc40d7bc5457f33a1d5535d859379490aa10d69af3057d661230a66184cec",
-    "server/src/erp/departmentPolicy.js": "084a41bdcff5abaaf6529c49fa300dcfaca66464e92b4a9f733f41ea1869853a",
-    "server/src/erp/departmentReports.js": "bcc037ce4d11a32c2c520b3ea50dab4b91b363765ea9050ce56784af6df49282",
-    "server/src/erp/departmentRoutes.js": "184a50e5c043f9012a54c454159bc94e0005b29e253f3ac9b946a0f2aec5a031",
-    "server/src/erp/engine.js": "c75d8a7748867d57b1d4364a6abfc470237cb79d72feccee04b41e7460f6ac15",
-    "server/src/erp/featurePolicy.js": "6ecd7c7155113881e253d21601ac237ad24667900ff0290ea28837a137ab6fae",
-    "server/src/erp/forecastPolicy.js": "b8927fc65f65e7a709a2b435f38f10b39d3bc1ec492bfe9a675e796a5dd1e810",
-    "server/src/erp/legacyGate.js": "453e1cd7f3773bd8b5362e7aafbc96aa369bc8aca5ead27a6b7c67a5507b4ad5",
-    "server/src/erp/models.js": "26870e99fac24ae529454e15c4b0db62bd6276c7e3014b38fb4fc8e9fb05a6af",
-    "server/src/erp/operationsModels.js": "ed399b73713ecb3de5b109acd1ccf09e845f202f3dc6743c144dfcb3452cd57b",
-    "server/src/erp/operationsPolicy.js": "72ee48d24a9e43759c64d18e3263f2725036706f511c140abfbd91a6ef9b0269",
-    "server/src/erp/operationsRoutes.js": "cc6cb5398cd0422f1228c60ad1c5959ca9e6681c8a9eefee7e02bef67c24e613",
-    "server/src/erp/payrollPolicy.js": "97188f99285a69e6fc2e50f3773148eee6e38d0b7216e9c17109a7bcf4d1a99a",
-    "server/src/erp/policy.js": "13b5158270964317b6680609b61084c63c451d89a7f3b409622b4cce236bbeca",
-    "server/src/erp/reports.js": "a2643e05822d855945c1ddee4bd553d68404eb886c59c85635b31adee03481b6",
-    "server/src/erp/routes.js": "e3c76e89395cdd36031ef7184f68e6bcdeaa3a49317464fe070005e89a8108ed",
-    "server/src/erp/service.js": "5f9d4aee178789acced31381ab97e6ef58661369d756b1453a40dacb7253cd8b",
-    "server/src/erp/workforce.js": "de67f2849af89d5b3f42e7c638e55850cee35d9047be0af26038667e36fc1566",
-    "server/src/middleware/asyncHandler.js": "c3b7d9d3b5e5a037155fb4b4b718e6363dcb7e64af4489a67d241b376a7aee81",
-    "server/src/middleware/auditMiddleware.js": "5c6134ef98f286c085e5049b804a359ddf259bc7969a8cb735bb860a9325d0f6",
-    "server/src/middleware/authMiddleware.js": "d0eaa652cda3e1dfa42f00f2deaf9d4f0fd3b9bfac3a8ac35d4682b56f8d8982",
-    "server/src/middleware/customerDatabaseMiddleware.js": "c6e0f59061ee03d6fda17cb310c9de45286045e197a5e262bf29981c2fea921f",
-    "server/src/middleware/errorHandler.js": "99b30242c90f0aed0c64b0ad3ee32e4c4453299aaba1ec2437f116eac7270c89",
-    "server/src/middleware/notFoundHandler.js": "296b2a4b43fda18b52355356d53e70295a94ddb496efd4533cde1e222f11eb81",
-    "server/src/middleware/retentionMiddleware.js": "5fdfef6a351fd40e3c65300ecd83f2cb198f3abde65e76b6b362d2722a036f8a",
-    "server/src/middleware/roleMiddleware.js": "ff29bdc6af484de8e7800173db753aee6bfd7a898054a9cebc6963a33e7023c6",
-    "server/src/middleware/securityMiddleware.js": "1e239002f646e72344e7ce601b967719ee7ddcee42b391650d672662d5e2648b",
-    "server/src/middleware/subscriptionMiddleware.js": "f4d63e7ea1ec2843b14c4c7dfc529c873b69a58fbeee375601893861f88d48ce",
-    "server/src/middleware/tenantResolver.js": "02c067919904a884b9f2e8adef9fd7075a622d4a5ac56f85b4420735440358df",
-    "server/src/middleware/validateRequest.js": "b052c5dcfc843bf13894cf610b13d53d0f220292dff30b804db74f80797dbfb7",
-    "server/src/models/AuditLog.js": "a3da70e3c3cfd733257115e364e44a7cba6bd8a426d3acd5caeb59b913a48b13",
-    "server/src/models/BillingRequest.js": "6d28eb11074f9993a9a1115bdac80967e573349cccd7699461c7f914aa0c28b9",
-    "server/src/models/Category.js": "b829d27cbacb9284505dde5af9b96dada991c763a1fd36f0ed09065f86f0ff90",
-    "server/src/models/Company.js": "178654ceceeb3153b84b963799d8d07fbc8a06cc733bcd8b410a13b977588ff4",
-    "server/src/models/CustomerDatabaseCandidate.js": "00727059842aaa2f4cde8520f45ff4eb95d4c60112a3f111215ef7c812e94b25",
-    "server/src/models/CuttingDc.js": "e7964adc794589dc844d5285e8b01318d06cf7c78043b6d3a104229bfd616a9c",
-    "server/src/models/CuttingMachinePlan.js": "c4f2073298ce25334c979d122764f331759dab28dbd35755d799c34017b76e2e",
-    "server/src/models/CuttingOrder.js": "1dee7264857a1d491fa98750dbd8c8d9946aeef05f75d3f53a5d87df78fd8a31",
-    "server/src/models/DeliveryChallan.js": "17b8953276a9cc9ec079c36c718253764aa393503fc41310071aea1563de6a7a",
-    "server/src/models/DeliveryVendor.js": "ce9b043442f5b717463a23d4eae4a8062849e4ea479f7e7d1c769d831e463b87",
-    "server/src/models/Employee.js": "e0f453a15c721768ce058627e3e36c59a39c45d071dcdc23695f8e27e0734834",
-    "server/src/models/FabricBundleStock.js": "049c3f763128f5ad02f0e41d60e957038a1e91f1559409141f36f32338b7b910",
-    "server/src/models/FabricCutActual.js": "f64b80cb1698b7e503481ac9bb2a9a232a157fb2d9b76593283f0cfe431dd2e2",
-    "server/src/models/FabricCutPlan.js": "071d980d9d78f2ca25fd3707a38e78195520a6b40a09b2b4c7dbcf268cd1f1f6",
-    "server/src/models/FabricInwardLot.js": "5ca1e5303206e14afbfc7d57938ebdf990295ff08b58dcf6376bd1ef5685e30a",
-    "server/src/models/FabricMaster.js": "6965035eb7a2c67ab132bb76028a1a73ba68fc794fd97a0fe456f4252355593e",
-    "server/src/models/FabricRoll.js": "7c1b3f912fe1095b287c4660d4374137f920fcec59b00a5cdfb330b94f089bf5",
-    "server/src/models/FabricWaste.js": "94ae6780b5ff66f5a78ac5a51d1a5b5e42a433ba873e32da9e30793ba1163ea2",
-    "server/src/models/GarmentBom.js": "b195044bd5a60fb71f2e670ac161992300e3f479f05bb78bbed73796d6b90a65",
-    "server/src/models/GarmentBundle.js": "75f81caad42695f18a6f8ddf148c3fd72dc5b0572d1362ac68134f3c4db70034",
-    "server/src/models/GarmentItemMaster.js": "85ec468e0c2895e1c6e8f88cd624f9f653fbb0767ab6b86a4b00b3412e4ff5d5",
-    "server/src/models/GarmentMaster.js": "fbbb955a43843bd62e9a89b276aaf9cb47c04cd9e53c1faf772ed7919282a468",
-    "server/src/models/GarmentMovement.js": "8b8ed35d4fff5250006f9c94f2b96ef63c0d1ad62e09a72ed9ad7e12f52ccf17",
-    "server/src/models/GarmentPo.js": "19307f98327c7473aecef81e07564924e10bb041e90d3f88591f6aef888c21c5",
-    "server/src/models/InvoiceSequence.js": "a3cce1567ac3976730267c47f08e2e43c94440d8d468c1e6a67a1fec89cf7dbe",
-    "server/src/models/Inward.js": "50ff3a79bff57512b286daa44defd6630b003b461ac7d1a6140777a4fe025c4e",
-    "server/src/models/Item.js": "95c3042f6aa492b8632ea98d605fcddf0d2241427a685c600e688a0d9c911920",
-    "server/src/models/Machine.js": "a6122b07c80d89ca936b982509841cae3d6e99a6a3fa9b2e8fc6acee0e225b70",
-    "server/src/models/MasterRecord.js": "b6170fc582b128fffdc242960a88e593006ce7f931f874f77842baeb69788d66",
-    "server/src/models/MeasurementMaster.js": "9aefe58bf6a2b754e234687d71ff4d54646a4ab3009ea6d62726b12a91bc5840",
-    "server/src/models/Outward.js": "220b3bb57252cffa5f7363b1c325528393bd8a166dc63724d34315579a44c0c8",
-    "server/src/models/PendingIssue.js": "79295cfd6fd3748de43c4af1a9ebcf43b0d52d945aed6730f40b56a6a829680e",
-    "server/src/models/ProcessMaster.js": "ca3598f34c8e01a13564ce4dd67521c9094cdf9fffc8811cf443d58c5c62fa4e",
-    "server/src/models/ProductionJob.js": "e2163c7950702ad2324bf218168cd51b3529778d7f8e01583575504dffad9abb",
-    "server/src/models/ProductionPlan.js": "e6bc73d7b6a5bd73427d5a23be853f3922a1cade780c8fedab6bb4c538a94965",
-    "server/src/models/PurchaseOrder.js": "1392dfd54017a69e8b051e6326e5fa31e0b1dd3e3505b600f9e2f57158f74abf",
-    "server/src/models/SaasPlan.js": "bbb9c56fa4b8ba819dcd03a93c4c04e89685a5eda1e823b451884301f78f36df",
-    "server/src/models/SalesLead.js": "b21dc12fc89359d308541d1c34f59f29b0afeffecb7794e0a1bf8c1e98fe34ec",
-    "server/src/models/Section.js": "6f75eadfbde73977cd51de813315a127ce9a2aaf21f3ac3027963b87eb0c56b8",
-    "server/src/models/Sequence.js": "0fe21f1adc3026facaff276090f00782a834c3663b3c4fb87eee427eff80af45",
-    "server/src/models/SewingDelivery.js": "c47a5de5d53cb3fa5117b5912d32a48015476926ebb1366e3c800dd75c7d4adf",
-    "server/src/models/SewingHold.js": "f5199c781e1a0764158198b587b7c57782771735b5fed52feabdc49d1edffeca",
-    "server/src/models/StitchingDelivery.js": "dcda899769ed79f473aec1fef7ac41352268811d38a2b730eb4871d085cf3608",
-    "server/src/models/StockLedger.js": "11a0967ed6d706ea7b6460d32ec3cce2bbe854dcdccfffb86ce5173458929c1c",
-    "server/src/models/StockTransaction.js": "9632f3d63803966d2ae09691a11e3e5f2b6a1b1c6f77c61364d110bc5c92b22d",
-    "server/src/models/SubscriptionInvoice.js": "36994806eb0b00ab769a02c2c4655c1fc4495d33025d9ee98266822a387f1472",
-    "server/src/models/SubscriptionPayment.js": "bd5d297bf2c4604bbe033001a338c63791ff6ef246340d9f4502e32d982f0c74",
-    "server/src/models/Supplier.js": "8faced1f33d67a4f51ba3a0085cb12135218e1a50cedb45f5181b479c3ada468",
-    "server/src/models/SupportGrant.js": "56e18893489c78b63b98d474540e231fa983ec800a5c68bcb9777a1ee7b70031",
-    "server/src/models/TenantRegistry.js": "3eb029d31e4efa42d03b8c5b0fdcb6a3f0c679092f30723396e0a8567f0604bd",
-    "server/src/models/Transaction.js": "39b3b392221f38763e6c2b470e4877355cff64df6ca39c4b600399ee81ce81dd",
-    "server/src/models/User.js": "9d46228dd684133296d56137cfb5a553c522d1f88b96d551442ef1769dede3cd",
-    "server/src/models/WarehouseStock.js": "49b161ef245a791611a5d3420c20bf0bdb83a647f2c867dd6e08cd28c0790a4a",
-    "server/src/repositories/inwardRepository.js": "9e163c7e3215fcbe32c13ec554ae34804b99f3ace84b590a647072717cba1b93",
-    "server/src/repositories/itemRepository.js": "2684ccae9383fae41db4de0d8054dadae8e6a4fd86df46e83ca8d7b2627d8134",
-    "server/src/repositories/outwardRepository.js": "24936ef3bf80445e396748c01bde16d75a174d5d725bed10118c5c90d69c882e",
-    "server/src/repositories/purchaseOrderRepository.js": "b464cc547fd93a57b0794efab84c45c19cc93a11edf22d736dea455d05696e36",
-    "server/src/repositories/transactionRepository.js": "e8e7b9fa76bd4bc412019f1bf46681e7523f09c8d83de116d4e3eaf72ab35028",
-    "server/src/routes/auth.routes.js": "256098138bf6c634f3a905f0e467e1051f22a8576def34f4adb135182ed6ae2f",
-    "server/src/routes/authRoutes.js": "91e472c121b8bc99f67c157fe25231df3213361240d1c1203df9f2f15af9fe8a",
-    "server/src/routes/categoryRoutes.js": "427f271c459cfe96a27da976aa7213110f15c3fd7c987037ca100e08646d4a0b",
-    "server/src/routes/company.routes.js": "5b09365b103f8e3ad4a7292a65a3e40b632fc19ba5435dfcf9ead0c8225368fa",
-    "server/src/routes/dashboard.routes.js": "777a543483b2d530c64e244a2caa5183f1f5a9fb492fccbe35b324614c53a6be",
-    "server/src/routes/dashboardRoutes.js": "42dcddc3a5310b3c8969269174f22b750c5f5c3dd054fce5b6adb637a09d1570",
-    "server/src/routes/delivery.routes.js": "a05381f862051ab7034da926714a39a35669324cff1f843f1557700e48d3d5e2",
-    "server/src/routes/fabricCutting.routes.js": "f4db50e3ab4bbcdf8bbf6727b53f6d1c568792eaad86a80c69a455ac3fe0c807",
-    "server/src/routes/garment.routes.js": "7efa0cbeb8b4071db1d59c5b62d7f8a49914c38dac0b6a2616a1230a9c371004",
-    "server/src/routes/historyRoutes.js": "2a5f3e178090021b04797e70af87790a3c6d9c820213bb2a94fcfc833343448c",
-    "server/src/routes/index.js": "4df35641c33003ce1bc3ec22fdd12c331381ae3b4cfdf41217c538fa77ac9e1a",
-    "server/src/routes/inwardRoutes.js": "c84b644f4db88e37b9328054420817f890a504e80e415e7751423f00c1700d94",
-    "server/src/routes/itemRoutes.js": "ff21e530dc14ba9149dda2833724d1397943c8540d0a7b873bb9e1420fb44e60",
-    "server/src/routes/items.routes.js": "b19ba35a350eca89ebcd3c941eb3bc5b1d80845985f34162c48f2b3b073fe39e",
-    "server/src/routes/master.routes.js": "1de56af196efe34fa883f9369305a753b975a2a906ea3be583af0a5ac8300c5b",
-    "server/src/routes/outwardRoutes.js": "30667331b3b6a2799b564955df7301c8b22d10c159c3b6e0ed0e3c4499f4557d",
-    "server/src/routes/po.routes.js": "cc572580a0ed088f08a7c1dce1f148c4342018a6e7e2fdd5641461a8d1ed87c7",
-    "server/src/routes/production.routes.js": "d412f554f47fe55bfaa8b0222588651d3b1469f8bc4bab92c06c072e9113ba48",
-    "server/src/routes/publicOutwardRoutes.js": "4afff1c890734cd730dbe2d449fcbd7833734461efb3237d7f2fb1ee6aa4be5b",
-    "server/src/routes/publicSaas.routes.js": "825c5889138c5691c28e1a81bf8397850d026bc30795799dea3cd1cfb4378a05",
-    "server/src/routes/purchaseOrderRoutes.js": "2805c18ce8fb0153f630eac739ca67fbe5ac69a8823b0e0d8720d0f4106971f5",
-    "server/src/routes/report.routes.js": "93c3622c36cd8d368e96bb60da679b310d13e618790c0f9b4ceb230c6c945758",
-    "server/src/routes/saas.routes.js": "ef8266fc96aeb03ca6019432f3ac87acf38601f01ba38bbf585000e751689a98",
-    "server/src/routes/sectionRoutes.js": "b2f8622f95db6e9a156dbadc6ff12055119902061cf5aad756e2c9882938224d",
-    "server/src/routes/supplierRoutes.js": "82ccc99af6273f48ed93879c98cb9e2d737b1d23abe3c6e86863dd05d591ea53",
-    "server/src/routes/transactions.routes.js": "4dd39016c2c833f0a4b9c9521c922149bbe24cf88f48688ae0bf70b83e63a8c6",
-    "server/src/routes/warehouse.routes.js": "cf47e453ae782ea9b850bdc619c98e34e501a29b47077a6a8e8fac1b6a0916ce",
-    "server/src/server.js": "3278ca22e20a591de832467525a0a3074db15972db4b015d48fa34fe70691cac",
-    "server/src/services/accountEmailService.js": "dfc72a9cd4d653aa60f7e7c2e8f63f24aad9cc7a56618cfbbe845c75464988e3",
-    "server/src/services/authService.js": "9d93a35e739faf3c6c9c34a07bdbc0f5b0c7e7a0c6b6e38cc7040a6a33bc3c7d",
-    "server/src/services/customerDatabaseService.js": "aef3e95c5a404cad58e76798242be17e1ae777a55b47b203a53f832df2d90492",
-    "server/src/services/dashboardService.js": "06fe610525c7c48737227a1eaee73a23bad215461b89739384586f596d2aeeb3",
-    "server/src/services/fabricFlowCalculations.js": "97f380c21bd98dc552e5c0fd9b28c1356083070a1557d16e269caf48c19990c4",
-    "server/src/services/invoiceService.js": "6fa9f54c00a003b0f596099ebe796d1b8c6d94be5335e5a94f7c735b1dbec541",
-    "server/src/services/inwardService.js": "81b1a131fd853efb80e9bc512d8abb93f87ad7bd0d7dad28169be686a7ca8632",
-    "server/src/services/itemService.js": "d9850c1b4b5b157b896da341e1ee6d12eb5320738380095dc07ab76e45d707c2",
-    "server/src/services/outwardService.js": "5c3fc3548d7cf0dcf9bbd620fa53727f1e5fa11663eaf1112a89541d2350654c",
-    "server/src/services/publicOutwardService.js": "e6bda28b26623a433b315ebf76f3d7b3558128b7bcf83824a9eb700445ca1030",
-    "server/src/services/purchaseOrderService.js": "594f81a807b03c53ce8adc444756cbcd9622a60cd7d668fae62dbbcce5fda762",
-    "server/src/services/qrService.js": "01c871ae71ea48f1f21c9b8a2e30f9c4c1787c98bde644f1265384caf92753b5",
-    "server/src/services/stockService.js": "a888edff22855cd693b34dfa3c4fdd5b19605a83caa48e7215a6ff572742c4b2",
-    "server/src/services/subscriptionSettlementService.js": "363b04e1a988c027a8fd49eaee2f19495307141ec09ba4805fe7fa717d4bc4f8",
-    "server/src/services/tenantProvisioningService.js": "84c457bd474aa981b6cbf33179d4afb37af20176b9541a35bb8a626efd587cda",
-    "server/src/utils/ApiError.js": "17843204ebabbc9a420eaa95183e1302138e27ad1ea46dceecdddf42ed73dc6b",
-    "server/src/utils/ApiResponse.js": "258582a22ffaf7a3154d85a9be23db95cef7ebec8383c57649cff8243a094175",
-    "server/src/utils/asyncHandler.js": "371186938654d4a1fb4c01352ddfdd26711425d75009a421b1f72d1dcc876ccc",
-    "server/src/utils/backupCrypto.js": "7237881560b9e0c0d2bbfeb647d977b8b6c8448e7a1a219407633a6364d6e341",
-    "server/src/utils/companyKey.js": "781a81a0853591e6680bf25967cf68fb01b933b381947356efc10494cf65e168",
-    "server/src/utils/customerDatabasePolicy.js": "8a5bdee9b253f656c202dea9472939c7a505676b993bc76e6a6d776324786cc8",
-    "server/src/utils/customerDatabaseSecret.js": "f8cdac46d80d640925f0ebd4c2145a1bd516a5f37f113c03a64370e350885bf1",
-    "server/src/utils/dateHelper.js": "dc05964446435c889909f98acb3e277221b8d03c2dd0b9631b422c6dc0e885e0",
-    "server/src/utils/entitlementPolicy.js": "90c490cdacc7d98cc4486ef4485cab3b255133342aee976fc32cde8f3c6a5676",
-    "server/src/utils/generateReferenceNo.js": "3c346fca4d6d82eb71d3206e4c4addbddee122e280455f0ea6a28322468db769",
-    "server/src/utils/generateToken.js": "f469db721dc5bb29b701516066e455a269b0e58854a28d7d0f69d84b4e9fb814",
-    "server/src/utils/generateUserId.js": "e18481d62b81f528fc988e8b8504df3d4b633b2cac01f23299dd250b681ebc40",
-    "server/src/utils/passwordPolicy.js": "f1850f13cdb68e30ae0c1f087a86702c573fe724c3d2856d206a1b01eeb6da0d",
-    "server/src/utils/paymentPolicy.js": "073894d1287517e9fc97f974998f68a095dad163c555cd39ffc7bfc67f24bd86",
-    "server/src/utils/stockQuantity.js": "7b3096089aca65ea3f26ce72d1230784d01457e8bf264ecaed6cc6a401ee713e",
-    "server/src/utils/subscriptionAccess.js": "e6de0480f815f8ef0866b52133fe6be5fed25258a5f97296798f5727bad1dd66",
-    "server/src/utils/subscriptionPeriod.js": "a1488659fd0dcc25065be7b397ccd92dfafd03c193eb14848036efe63877d900",
-    "server/src/utils/supportPolicy.js": "ce34c3eeaeec0ddfefaa49dc5597ebbf3311691200d36d9ca14bce7211125eb6",
-    "server/src/utils/tenantContext.js": "ae4383bfadca33ca083dbca66a5d80507ee2e39530bd3932676313c6829ce3f8",
-    "server/src/validators/authValidator.js": "4a4868bdc55f919f470d4f69c8d226ead9f046857a4dcedeffdb3f6aa4afd9a5",
-    "server/src/validators/inwardValidator.js": "154bd027b94aba3f475f8d6c5aa8d488a3c199a32fcbb83558d991ea9328e0a9",
-    "server/src/validators/itemValidator.js": "9ec5b9e4babb087fa83397986328d233d39d664810c23806b12812034a25e204",
-    "server/src/validators/outwardValidator.js": "165b54e4de0a011be530ae0d7d36c94316a13e4cc9f60206f7881ea041c07599",
-    "server/src/validators/purchaseOrderValidator.js": "0b323aa7fb3f4e3b87c83c954250e8240e2c8ac29845c9bfd35a40f5e07bf7e9",
-    "server/tests/accountActivation.test.js": "62031e9dcfbeec7913bb95e18b223f30e5d1f43d7aada935144e623f44989042",
-    "server/tests/auth.test.js": "1ce6cf850ff235f9c062678819b6cbe3baff0f4b2fb14144602c6ab6b68310b5",
-    "server/tests/automation.test.js": "d6ba8c4c62c31a8635a9b10da54e16d7b3ca47ba6857d5ad6243d50516d3c887",
-    "server/tests/backupStock.test.js": "cd555d3933fe1c28cdac15dd341096667f4c5980548ec1b71f222e40d317a3c1",
-    "server/tests/companyKey.test.js": "a59fce678853f49eaf8f4dc130020947385c47a6545653e1250af3bd763e2275",
-    "server/tests/companyList.test.js": "e359c0e1c773c9eb0f5988abf4c6efe654bcdc98052bd5a4fef38119fcab4964",
-    "server/tests/customerDatabaseAtlas.test.js": "2161ba20de47054a7fe704425b22172b5da7f658a6c8bbb301d6f4698a9e708b",
-    "server/tests/customerDatabaseSecret.test.js": "dd61ef8ce47d68a3a0d47f7d6b00699abb968aeeaef6460085d8806524847b4b",
-    "server/tests/customerDatabaseWorkflow.test.js": "0ab76cf9b400fa0417a399955d362322afc2654e9cfac99a1cd1e422c30cde06",
-    "server/tests/departmentDatabase.test.js": "61eb81e11dd5dc2e07a8dfc2ebc7e22e0d85fdbfc66a6f2a5b3f86e9a4a3d958",
-    "server/tests/departmentPolicy.test.js": "1fe405c0bceb200c82f105688bec2882e5135f4ac03459394035f363b5773007",
-    "server/tests/erpDatabase.test.js": "e6702b373ab5ebbbf6f1d3cbc0dc0a64789f57623b3cca7866abdb01fbeaf20e",
-    "server/tests/erpOperations.test.js": "b454fa41704023cd1128ecf12f36c4c179453fb75fefe74ebb1d2321302771fb",
-    "server/tests/erpOperationsDatabase.test.js": "43b4a44d7fb4b7ea26dcc4c3b62d64555226d93f04acf77e0d324a0f8fa6f628",
-    "server/tests/erpReleasePolicies.test.js": "cb2b33957e2ea1d1d05de56caaf7fcfd48a33df1d2202ec50b92bdd8d4a729c4",
-    "server/tests/erpWorkflow.test.js": "bd1ce6f7dc780fcef619bb3ba1ec80e5fe57715e4ae39a8ae4d8d5417bdcd4fc",
-    "server/tests/fabricFlow.test.js": "c60004c73af01dc5d6b2918cad731dea7fd70ec7b3a58edb63ecdaf2bdbc590e",
-    "server/tests/httpSmoke.test.js": "7595ad2b96dabf4a75d076caf00b6768d3e9ad5909e20067308b33077e98cbe7",
-    "server/tests/inward.test.js": "b7385fb086697f652c5042cffdfd740a079c974e36ccb0e6fd3eb83a015ce0a1",
-    "server/tests/item.test.js": "bfa234062b4743f8119fbea0f6113360c94b8258a83b56154171a1ee82a45252",
-    "server/tests/outward.test.js": "72081a782009e5c7d4cb0c01c386943215c4fe3749491d5dd4bdc0ca57dab3f3",
-    "server/tests/plan1.test.js": "fd26437d5a91e802b5b0d6bddce5da6862f917ea061074682ce3366c30491874",
-    "server/tests/plan2.test.js": "a73fe160f746cdfb774f645382c872333bcd67c3acbab469b0ed9452b0a8fcf2",
-    "server/tests/plan3.test.js": "908b66241d3a25acdff3692eaa6d58fec3e9c6c139dab4084a4da6ff3ce1e442",
-    "server/tests/production.test.js": "2043096c73554fda203b036141916cd8984413ca0dae9370c05aab22c2188302",
-    "server/tests/purchaseOrder.test.js": "2a2d911798e574fa20c4be6a75cfb8d790957d20bda3859f9d65ccedb598e42e",
-    "server/tests/saas.test.js": "5f081155b6825acdcb2ab0ab4872f51545b16df249edf3734718eadc3b2ba25e",
-    "server/tests/securityLock.test.js": "263a9c6ba492b3a69809e83e94b6bae3497661af600947822aa44b849a750ced",
-    "server/tests/subscriptionPeriod.test.js": "f4e540f406ae781221b434632dd19e72b2781873fc8b6165d29897c9dbbb684c",
-    "server/tests/supportPaymentPolicy.test.js": "278a55923dd2cf0f2f1952504404fb7f978068e2cd6c38913a220107e42b2a36",
-    "server/tests/tenantSecurity.test.js": "02a229f5b4f1fe5d183a0a30f5863e03f352c8002c559de1e883bfbd25eb7f18",
-    "server/tests/workspaceContext.test.js": "a63e48797cfd36671eb30dcfeaaa049e434d7eb85aa725c550ce74622a009f19"
-  }
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "214d38920a4755fe3cc52ab8dcd332f55bf7898296fa6b811da224781a79d9b5"
+    },
+    {
+      "path": "ADVANCED-ERP-RELEASE.md",
+      "sha256": "e3f83892b30aa37e7f9331949b58f6989a3ed418ff6b37fd3b19f8285fd5944e"
+    },
+    {
+      "path": "COMPANIES-API-FIX.md",
+      "sha256": "ef55b40dddcb3f4ea1faccbfe52e93a596bc6120598c44ea8a7bcf842077f1ee"
+    },
+    {
+      "path": "DEPARTMENT-RELEASE-START-HERE.md",
+      "sha256": "e05969071e49558136f68d49e6ccb3fcebd075f5731a704381f6d746f73ee1a9"
+    },
+    {
+      "path": "ERP-REMAINING-WORK-RELEASE.md",
+      "sha256": "a70cef416ed126e65e19b06ae1785fa0d716d9c7f40b829af97c4b04482a7152"
+    },
+    {
+      "path": "FINAL-ERP-SCOPE.md",
+      "sha256": "684ffee3eac49c90f05b224d1b5a7e6a195b8bffbb18339e66f0e692749383c4"
+    },
+    {
+      "path": "FIXES-AND-VALIDATION.md",
+      "sha256": "1338472d21f753792ef077f752cf1a2a3084222573115bbf98cfb52ae6ed0c57"
+    },
+    {
+      "path": "FOLDER_STRUCTURE.md",
+      "sha256": "d5368c3457af4995dc5bfae28cfe9a78b0a4e747968ac8f7a9c6266d19bafd99"
+    },
+    {
+      "path": "IMPLEMENTATION-SUMMARY.md",
+      "sha256": "a2b283c7ae7cd5e8871264f9f45cbc7136a7f30b9c31ef2083bfc5f427e871df"
+    },
+    {
+      "path": "MILESTONE-2.md",
+      "sha256": "a3b4d740bb8ba598c9f23e8dc6f0bfd49d8e1d62741396974b9e162c5f3f7704"
+    },
+    {
+      "path": "MILESTONE-3.md",
+      "sha256": "72a6a7c98f6a3ed7a95e6226a1c5ec89d6c4f18a3d680e754ff674d915e103fd"
+    },
+    {
+      "path": "MILESTONE-4.md",
+      "sha256": "a8b17438ae206e1a1bb09cc7b65b0a10581f4e5ec734db57b27ea7574a2157f9"
+    },
+    {
+      "path": "PHASE-1-PROGRESS.md",
+      "sha256": "ff228a1c702181556524e57a94e18ee47a3b17ab267806f526533d1a3a5e45a2"
+    },
+    {
+      "path": "PLAN-1-VALIDATION.md",
+      "sha256": "e637b7741383058e48a9c37f3e482482cf7691e056c4988159efdfdb45036532"
+    },
+    {
+      "path": "PLAN-2-VALIDATION.md",
+      "sha256": "7403bb4974cd3b4ad3cd8db9a198fef79a94b08f2ac52efc256e1788c78146c2"
+    },
+    {
+      "path": "PLAN-3-VALIDATION.md",
+      "sha256": "2afdd14e7110b4c3664dcaae2e59bf007f9bae0284986a0c12489c07305bfed2"
+    },
+    {
+      "path": "PLAN-4-VALIDATION.md",
+      "sha256": "6a056374714911b34aa10c6a61dc2e80411f6fab17f29f5615bf2d24ee60961d"
+    },
+    {
+      "path": "PLANS-5-10-RELEASE.md",
+      "sha256": "19fccac7a0c1cae88badf1b28865bce7ebd116d09762ff81d85fdce338cbf201"
+    },
+    {
+      "path": "PRODUCTION-UPGRADE-GUIDE.md",
+      "sha256": "46131699ae65f275966ca492583d2c34ad0bda9cc391e6ad129d5c3f7f7d42c7"
+    },
+    {
+      "path": "README.md",
+      "sha256": "747fbf708e38e2fcc6a9ec592d7ca3da4cb62c518b2f5b510fd9efed5fedb7ba"
+    },
+    {
+      "path": "RELEASE-VALIDATION.md",
+      "sha256": "aaba107cf72a87ace059da445df192274ae4e1850a89cd151551d2c047cae545"
+    },
+    {
+      "path": "SECURITY-ARCHITECTURE.md",
+      "sha256": "5863fa45a58a4c18ca37f3a9b39e056d3d1179981eecafea333bb48f7ee72b74"
+    },
+    {
+      "path": "SERVER-REVIEW.md",
+      "sha256": "82d9541cb8e71ad105b6f2ae51c962c5c448002b421f5a14dbef5db0632d9b61"
+    },
+    {
+      "path": "START-HERE.md",
+      "sha256": "fcde23d10c8b58a004bb406d0c23c6d2b6657208865f169c6315377287ee32f1"
+    },
+    {
+      "path": "client/.env.example",
+      "sha256": "756e26b073ad7ed9da6a444d262f61ef222183cd19d57d1cda533c8af76544f2"
+    },
+    {
+      "path": "client/index.html",
+      "sha256": "ba83d66bde72372ae3ed07af4292e606efe913e8b4e61ba038c0265b5de49c82"
+    },
+    {
+      "path": "client/package-lock.json",
+      "sha256": "2286f124f21a9a533f6fea4eef3cc9fa15b393eea84de23ab19427c516a377eb"
+    },
+    {
+      "path": "client/package.json",
+      "sha256": "df484032553ba57386286d5e3564ff4644f991c527e55577bfc1117d82411e61"
+    },
+    {
+      "path": "client/public/_headers",
+      "sha256": "a1ea73f6cda1888e064e7bb2f448fd61207d7d4e2ddd19b265e60f19f829ef01"
+    },
+    {
+      "path": "client/public/_redirects",
+      "sha256": "17dd287f00a525acd27cfd36effd851d197a568387428d4c3df23b01a03e9264"
+    },
+    {
+      "path": "client/public/demo-app.css",
+      "sha256": "03542c06fe409391e4dc27d47dad5741bd1d4146942cb3ab623791a0d69711ad"
+    },
+    {
+      "path": "client/public/demo-app.js",
+      "sha256": "40e4de1fdbc4ddab8653195dd098ac050d757297fe15289e6967985c36d7d222"
+    },
+    {
+      "path": "client/public/demo.html",
+      "sha256": "4bbc34d5b786bf1408b914c7b2c1e316ae8cc4a2c59a47af5d978b803405650b"
+    },
+    {
+      "path": "client/public/favicon.ico",
+      "sha256": "3b2a3a7fdde567fb2fd82a71cdb5fe45db065d7a5d33a64815cc369ac5881996"
+    },
+    {
+      "path": "client/public/landing.css",
+      "sha256": "c365fdd2d4641f3e5821d90c5149aef257550f62fcb5fb34ab00559b4fc3a982"
+    },
+    {
+      "path": "client/public/landing.html",
+      "sha256": "5a875b0cb89b8be05103edf3e65f1c37fd5c2bd4dca0b19dd9b03a91717cfd92"
+    },
+    {
+      "path": "client/public/landing.js",
+      "sha256": "dafdf55bd674b5a1388789141877d37ec141c5f3239098093f188a2769f3f39c"
+    },
+    {
+      "path": "client/public/legal.html",
+      "sha256": "727e762429c1c4ddb383b823b4e1a9fb99652666d14b833f3f6ae6591fff78a4"
+    },
+    {
+      "path": "client/public/logo.png",
+      "sha256": "bf6e277ea4c8574e40247a737a20d47829ec6fd0ac44202f472d78e8506fa364"
+    },
+    {
+      "path": "client/public/offline-pos/app.js",
+      "sha256": "2607ff2387de25b2fef18ac21a822f2eb8836319815da775659bf8eb9ede32f6"
+    },
+    {
+      "path": "client/public/offline-pos/index.html",
+      "sha256": "6f69876f762e5dae1c7adb2f675f3ce583043154c9e553f700e62912c0feb3e7"
+    },
+    {
+      "path": "client/public/offline-pos/style.css",
+      "sha256": "4926964daf45041b4e73dd151da910a64548631e1f002512a85108edfd094644"
+    },
+    {
+      "path": "client/public/offline-pos/sw.js",
+      "sha256": "8853f1857b4e14deb5b6fd1000eb4c55a4a13502ccf8c479d08ef0b43b24db23"
+    },
+    {
+      "path": "client/src/App.jsx",
+      "sha256": "a7804b6c97d1efc5cce77fcd289af62d694656f0b851b81210f4a0a0cd27d7cb"
+    },
+    {
+      "path": "client/src/api/authApi.js",
+      "sha256": "97ef0f6e4e2eabb4288b6f4faf3ec393a895f8ec428897b8efef27efc3234515"
+    },
+    {
+      "path": "client/src/api/axiosInstance.js",
+      "sha256": "729605237054144edc308dece4b898be8ea6fde82b54ed0ad3ee06a9dfb83456"
+    },
+    {
+      "path": "client/src/api/dashboardApi.js",
+      "sha256": "db1b4bd3599272b6af7904c521f49b0923e7a2ae2569e817f81224cdd6af17da"
+    },
+    {
+      "path": "client/src/api/deliveryApi.js",
+      "sha256": "52c8f9d5b47ccd063398c643881cb9dbe2ddf4a9f429385406b6581e6d52c548"
+    },
+    {
+      "path": "client/src/api/fabricCuttingApi.js",
+      "sha256": "4cc67b61780955893ca017e097008d0ba1818e4308db7fe0a9a09b5a66ed8476"
+    },
+    {
+      "path": "client/src/api/garmentApi.js",
+      "sha256": "bb046ad13f6d8af56aba5762f1df68ba3cbf54e389dc020131f568a89694b38a"
+    },
+    {
+      "path": "client/src/api/historyApi.js",
+      "sha256": "75baded1ba118b2a10580350c4b7df39f04f829e7dcf3567b8c17ae327bc3b46"
+    },
+    {
+      "path": "client/src/api/inwardApi.js",
+      "sha256": "cc031dd98712f2773fcd336830a6ddc4dcbb34830ca371418d909c43ee3edfa1"
+    },
+    {
+      "path": "client/src/api/itemApi.js",
+      "sha256": "2ad2ff428b4dd93c454236c7da862c60ab76b5443afaac9e4fc8cf43bd87a6df"
+    },
+    {
+      "path": "client/src/api/outwardApi.js",
+      "sha256": "e1b578c7bb6b68ed9dad790c54712d7ca660a555c1ea73c4c62ecc93cca7cee9"
+    },
+    {
+      "path": "client/src/api/productionApi.js",
+      "sha256": "60fbe327fd1873a7821adac7e7bf399eff8940e1d56bc5896d71d0bf0e48518f"
+    },
+    {
+      "path": "client/src/api/publicOutwardApi.js",
+      "sha256": "31c6e91a28f414b31614da2877cad0b39f03739119e5d46a4751c2992b062345"
+    },
+    {
+      "path": "client/src/api/purchaseOrderApi.js",
+      "sha256": "6a7b7bad0af9165d5a1583f8631a63dab9fbf19518b17183866c85b03051b06d"
+    },
+    {
+      "path": "client/src/api.js",
+      "sha256": "47a1b46feab062c28409ba801c66931d2bff59ae2c98cced73dbb20ee94a9405"
+    },
+    {
+      "path": "client/src/components/CustomerDatabaseSetup.jsx",
+      "sha256": "cf3eb3d3f97ce804e06cf4b0f0c992f8121a81ff98c73f19342e5db1488b2e18"
+    },
+    {
+      "path": "client/src/components/DataTable.jsx",
+      "sha256": "8ac68eb46b9a0b4f6b224d58da93ed19cb46e86a56648b911deb6aa59cc365db"
+    },
+    {
+      "path": "client/src/components/Modal.jsx",
+      "sha256": "a1092aa2ea31de93a838e74d7d9dd842167b55180f74ee5ec9b6422aebef2bc6"
+    },
+    {
+      "path": "client/src/components/common/AlertMessage.jsx",
+      "sha256": "7c0b82384fdcc4d3d55a5b063f6bba9ce1ba1bd7f76bc51ec002798747d6ba24"
+    },
+    {
+      "path": "client/src/components/common/Button.jsx",
+      "sha256": "38c79290517c61636d99cc112c966d7ac06eb2669b7a25d161a3d0823dd16dc4"
+    },
+    {
+      "path": "client/src/components/common/Card.jsx",
+      "sha256": "7f60b4661614e84b32f620326050fa039b0a1568c6dc0deb09baf16e03a88600"
+    },
+    {
+      "path": "client/src/components/common/ConfirmDialog.jsx",
+      "sha256": "507fdbd19cb37f24fa03b32e741de0a5488175ecf233453d079d60e8a163fe31"
+    },
+    {
+      "path": "client/src/components/common/EmptyState.jsx",
+      "sha256": "c6c448bfe78b350ecfb69ee731e4758c41b10d48fb711125b2821db7d969a19f"
+    },
+    {
+      "path": "client/src/components/common/Field.jsx",
+      "sha256": "c4e40787fac1c0abdf0e44c185c0cdad08479602f36d6ce3a6dd8da8d934d9ef"
+    },
+    {
+      "path": "client/src/components/common/FormActions.jsx",
+      "sha256": "02a826ce0d40c8054d78019bd7d4cd099585b54e9b68cf68555c6cbd473a792d"
+    },
+    {
+      "path": "client/src/components/common/GlobalFeedback.jsx",
+      "sha256": "32a45df5ec638c764a6082f80ff1c49a63cad66b8a54c529510cad2921ec9424"
+    },
+    {
+      "path": "client/src/components/common/GlobalLoader.jsx",
+      "sha256": "a2ee7cbfe2698f63ec5bee248df44d04c58217d4f7c3d2163e0af2650c999326"
+    },
+    {
+      "path": "client/src/components/common/Input.jsx",
+      "sha256": "962aa84e9c6d8642e9e04a103dbfbab0816605aa4b8f719bb040d5a52b990370"
+    },
+    {
+      "path": "client/src/components/common/Loader.jsx",
+      "sha256": "5f3d75cf2510ffc21fd24453979febed07d03b0b1894c7bfb9e9494033793dc6"
+    },
+    {
+      "path": "client/src/components/common/PageTitle.jsx",
+      "sha256": "6adca463fa038735a892ca9687982d55639ad6ed0737d56c58bbdc5893f82c85"
+    },
+    {
+      "path": "client/src/components/dashboard/CategoryStockChart.jsx",
+      "sha256": "475e0341ace1b2414159eb7624fc9eb10db0ba26f725c1732edade49a9a5c245"
+    },
+    {
+      "path": "client/src/components/dashboard/MinimumStockAlert.jsx",
+      "sha256": "a1529d7f351bf8e340ab5939fda45fba9c688fc6917a40d8d5513ece42d1f7ae"
+    },
+    {
+      "path": "client/src/components/dashboard/PODeliveryAlert.jsx",
+      "sha256": "189ac04bb5f9503e018ace5f909adea1ff75c7ea1ff8510a8a8b9c3c257aef46"
+    },
+    {
+      "path": "client/src/components/dashboard/StatCard.jsx",
+      "sha256": "2fe1f5bd9d67871a0f1845956c21ff9a86bde32db3366583c354c14b20b0e702"
+    },
+    {
+      "path": "client/src/components/layout/Header.jsx",
+      "sha256": "e12a050f9e88423c359af6db9053cec34ca42c3033301f2d255c276247637ff3"
+    },
+    {
+      "path": "client/src/components/layout/MainLayout.jsx",
+      "sha256": "46123808e51b84d4d545ccc1d152bd70c7a2ffdbb8596beed780cc1fb79e89b4"
+    },
+    {
+      "path": "client/src/components/layout/MobileMenu.jsx",
+      "sha256": "0304ea94247b2e82205cd21a1993fb50ed9a22e9b6c2a7a424373245fa2d5998"
+    },
+    {
+      "path": "client/src/components/layout/Sidebar.jsx",
+      "sha256": "ebae059c89268c96769d358a34311c4ce22c23edeb87dfef146f24e95afd9637"
+    },
+    {
+      "path": "client/src/components/layout/SubscriptionNotice.jsx",
+      "sha256": "98610faa7a1e01267056f8e23013b6be4b4de6e0e1e41d396dfad2055a37afcf"
+    },
+    {
+      "path": "client/src/components/layout/SuperAdminLayout.jsx",
+      "sha256": "4ac36bc4c5e5f3bb1dffe058d245f2c659ef8accf2809e8d44ad78a0c191389f"
+    },
+    {
+      "path": "client/src/components/qr/QRGenerator.jsx",
+      "sha256": "063afdd1dd8a24d39eb01c1c548fde84e85005290c4b5b159f3d8ca7a8732024"
+    },
+    {
+      "path": "client/src/components/qr/QRPrintLayout.jsx",
+      "sha256": "22abe0aa2d3dbde123a003d3050ace4f5a9ebea7802fe541c87d634c86fa28cf"
+    },
+    {
+      "path": "client/src/components/qr/QRScanInput.jsx",
+      "sha256": "297821e2bb9e3934b678f7f606e5d809e8e03ae552eae9c0d6b0754f5dedb7d2"
+    },
+    {
+      "path": "client/src/components/qr/QRScanner.jsx",
+      "sha256": "b138561d61405248312daa000d18d58de93c14e652edcd2430b783cfd7cd6207"
+    },
+    {
+      "path": "client/src/context/AuthContext.jsx",
+      "sha256": "e830c85230de5f1927b35d277be1a08e0512f0de1b212eb07c6d2def37a8ed9f"
+    },
+    {
+      "path": "client/src/context/LanguageContext.jsx",
+      "sha256": "633a7c24ed6b8bd5f58059853d5c7e2087b9d78da76c92e6ea6857c9306f1b1c"
+    },
+    {
+      "path": "client/src/context/NotificationContext.jsx",
+      "sha256": "52c66329543ff88d740a5cd4b01efbc1bc6059384fbdeadb04743134517d67e1"
+    },
+    {
+      "path": "client/src/hooks/useAuth.js",
+      "sha256": "913e7ba9bdd83563c2de2bbc8e8fe442c755448e65e82d2884e52c65bc6e4560"
+    },
+    {
+      "path": "client/src/hooks/useDebounce.js",
+      "sha256": "4014b7e5f373e05d60bd28e61e2997aa89d11df166c8fbf0815f01b40461d390"
+    },
+    {
+      "path": "client/src/hooks/useFetch.js",
+      "sha256": "9c31341f828644f5b6edb17dc79928b208d647a0f08d9e0344be4cd9a5b9ed76"
+    },
+    {
+      "path": "client/src/main.jsx",
+      "sha256": "35e9c2b9253c081e1f5dd6d57c93df54ee00a1e3ec91fe948cfa63c51c8d5767"
+    },
+    {
+      "path": "client/src/pages/auth/CompanyManagementPage.jsx",
+      "sha256": "4d576a03f113da00ba0d4e0362afd43264dc47d32cf2bf616278a8d65ab70e46"
+    },
+    {
+      "path": "client/src/pages/auth/ForgotPasswordPage.jsx",
+      "sha256": "8cc51e74807e9e1257e45055339b20f6d5412bff385b0a99ccdbed08698615a1"
+    },
+    {
+      "path": "client/src/pages/auth/LoginPage.jsx",
+      "sha256": "6463eea34116b672eaf52707da528f95f313f5585056205310af0c093f544a5e"
+    },
+    {
+      "path": "client/src/pages/auth/RegisterPage.jsx",
+      "sha256": "76c9570577d6c326d357422dc4b0bfd93ea3a83f638403ad1d114c1abee4fa13"
+    },
+    {
+      "path": "client/src/pages/auth/UserManagementPage.jsx",
+      "sha256": "27837fef780e4ba433a7924b9e4ccafa9fa37b1653eb11dbbeff5a1f4b24e49d"
+    },
+    {
+      "path": "client/src/pages/auth/company-management.css",
+      "sha256": "b7e50dab4dff4abbc40ce05ec1a23cb75ee438e26c12f7648c294109a88f9d6a"
+    },
+    {
+      "path": "client/src/pages/dashboard/CompanyAdminDashboardPage.jsx",
+      "sha256": "8a3c1179d25392ffac47d28702a1e248057a72b25e5cc3a31c0cfda05cd1a2cc"
+    },
+    {
+      "path": "client/src/pages/dashboard/CompanyInsightsPage.jsx",
+      "sha256": "d3fa044983523678b1672f5c1ff11c39954c4a588c8db52b709e2c0b8bf777b9"
+    },
+    {
+      "path": "client/src/pages/dashboard/DashboardPage.jsx",
+      "sha256": "542d9e179a0fdbc50d02d41eaf301d5a0ab589a8911d075164feaef2c14a1d5c"
+    },
+    {
+      "path": "client/src/pages/dashboard/DepartmentDashboardPage.jsx",
+      "sha256": "3cdcbec43bdb07d402f46cbb0921fcc44a11523f456798cf60a351c16e054c43"
+    },
+    {
+      "path": "client/src/pages/dashboard/DepartmentOverviewPage.jsx",
+      "sha256": "f94821516eef2778351cad73e75f68e9fa843c6fb19b87c59cc6352008d5f1df"
+    },
+    {
+      "path": "client/src/pages/dashboard/ModuleSelectionPage.jsx",
+      "sha256": "b2aafcef31449ac7865a8115b2579392560efb0f51fddfb3b740d3b41c118128"
+    },
+    {
+      "path": "client/src/pages/delivery/DeliveryDepartmentPage.jsx",
+      "sha256": "fbfcf2718a0a1016494b19a33f80b495d217ee38ebbdbdd54ac4d60f6c3cb735"
+    },
+    {
+      "path": "client/src/pages/erp/Approvals.jsx",
+      "sha256": "018d7467098cf08f3fea39b0500016b18e8b5e5922d15beb84893aa238564af1"
+    },
+    {
+      "path": "client/src/pages/erp/AutomationPage.jsx",
+      "sha256": "6bbdcf21bb418c4f39d613bc6ca89eef3b1929c85b86e50262c803801b170f13"
+    },
+    {
+      "path": "client/src/pages/erp/BankReconciliation.jsx",
+      "sha256": "cb495a227a6848b0678f5f7b8513d0d85b1dcb638e94b8787af87729f7e1a44c"
+    },
+    {
+      "path": "client/src/pages/erp/CommercialReports.jsx",
+      "sha256": "4c67ecba62361ac2c04057f788d0890f1dd26aa444a8e20ee29e9c4b79e04253"
+    },
+    {
+      "path": "client/src/pages/erp/Departments.jsx",
+      "sha256": "5dc468c582d5a08b9fa4a51d21f273a320b1ceaa0d3e44b686e5dbb93965e9a8"
+    },
+    {
+      "path": "client/src/pages/erp/ErpWorkspace.jsx",
+      "sha256": "bc6cfa8cef03316e6082bc1e1a3debab87beb3aff36384205486cfa10390f6b5"
+    },
+    {
+      "path": "client/src/pages/erp/LegacyHandoff.jsx",
+      "sha256": "f5e5add6bfd7174f9ed8da760e98548fa7bf7df8dabb9f4a18c647634fe4ba5e"
+    },
+    {
+      "path": "client/src/pages/erp/Maintenance.jsx",
+      "sha256": "cf1ead17545391d60c5f8cd3104afaba0a13565de69884ef127a1be867a9bca0"
+    },
+    {
+      "path": "client/src/pages/erp/ManagementDashboard.jsx",
+      "sha256": "e264446c366f13d3ac466910e86f5a16031dbd56d8bb908dba9bf03d5f74aecd"
+    },
+    {
+      "path": "client/src/pages/erp/OfflinePos.jsx",
+      "sha256": "189fc8b4ff3b1dc24216fb4b6a9e33bb7b0157031b863c5947d448c148b44e53"
+    },
+    {
+      "path": "client/src/pages/erp/PayrollCalculator.jsx",
+      "sha256": "62bea6ccc9b961bef6766ab20976999ec8f82fbd06288c8a04f1a38a51775bc7"
+    },
+    {
+      "path": "client/src/pages/erp/ShopFloor.jsx",
+      "sha256": "d4a68b7e4a5c9d965fe3e8212a3e7758ce1805177ef99288ed813e7ef3836709"
+    },
+    {
+      "path": "client/src/pages/erp/StatutoryReview.jsx",
+      "sha256": "05c36640d0172152c0f70f1185dfb1c4f9fb7838af9bc12569f2e488a3c3de3f"
+    },
+    {
+      "path": "client/src/pages/erp/WarehouseControls.jsx",
+      "sha256": "cb0c2c6f1825611251c5bf74f117f6a5760475c931cc47f857bda4d4429b26d4"
+    },
+    {
+      "path": "client/src/pages/erp/Workforce.jsx",
+      "sha256": "6bb410154c6067b85cae6423a505b6b4ff45b6548db5b8e5e74966a1ffeee6b4"
+    },
+    {
+      "path": "client/src/pages/erp/erp.css",
+      "sha256": "c25af4563393494dfaccfda19e292dc310bbca4c0175e4fee579d699939d7389"
+    },
+    {
+      "path": "client/src/pages/fabric/CuttingActualMatrix.jsx",
+      "sha256": "0b5130838772968f5b98a0692ec09f1034b91fb62f9d80d16c30de639dfc669f"
+    },
+    {
+      "path": "client/src/pages/fabric/CuttingStockPage.jsx",
+      "sha256": "da8725a85bb7e662c352c5f4217112666995ca816ac7318a47ed2e5d5889e345"
+    },
+    {
+      "path": "client/src/pages/fabric/DepartmentPlanPrintPage.jsx",
+      "sha256": "f732b4732e033826e17bdd6d105f7df79dc378d225fb1c8b99ee1a50ec3a0b64"
+    },
+    {
+      "path": "client/src/pages/fabric/DepartmentRecordPage.jsx",
+      "sha256": "fe0d1a3af8b91be87e9359a2223e14605f92c3d5f10907b934fd5eff2b4c81b8"
+    },
+    {
+      "path": "client/src/pages/fabric/FabricCuttingPage.jsx",
+      "sha256": "948f3001ce5017429c2366b769d97b68ad0b3ee2760504fe228b240348081f35"
+    },
+    {
+      "path": "client/src/pages/fabric/FabricInwardPage.jsx",
+      "sha256": "80af5b1ccca26ed588253623c11bc84b87d9135b9d022b611ecb003b56f264d2"
+    },
+    {
+      "path": "client/src/pages/fabric/FabricMasterPage.jsx",
+      "sha256": "45aa8d26d0fa5f105aa22b278e3d95c06a96696b1819f7258ad34593733057d4"
+    },
+    {
+      "path": "client/src/pages/fabric/FabricQrPrintPage.jsx",
+      "sha256": "3b00ecd4c7c301f8dfc40a53b132e6b1f8dbd83e407e5e9b0c4284755f035fe3"
+    },
+    {
+      "path": "client/src/pages/fabric/FabricStockPage.jsx",
+      "sha256": "cb9b973d886e303debd2793f6d576528893053e2e9840cda73d1aa49d1109c3e"
+    },
+    {
+      "path": "client/src/pages/fabric/FoldingEntryPage.jsx",
+      "sha256": "bbd4fd667ec72883726e97a3c59da5bbb49ea992747a56c0d95a7908868b4822"
+    },
+    {
+      "path": "client/src/pages/fabric/ProductionPlanDocument.jsx",
+      "sha256": "4da17735ef526dd21d4cf77dfe13230242c8cb9bef86b4d7ff45461e52d3bcbf"
+    },
+    {
+      "path": "client/src/pages/fabric/ProductionPlanEntryPage.jsx",
+      "sha256": "4ccc4b714e89fafd9906b44b18470e5154b5f8cd93f3ca891c0d69774d5e979a"
+    },
+    {
+      "path": "client/src/pages/fabric/ProductionPlanHistoryPage.jsx",
+      "sha256": "46ef8b810260b2710071e8203bdd77cebf57d321c19bacfd6498c5151713b484"
+    },
+    {
+      "path": "client/src/pages/fabric/ProductionPlanPrintPage.jsx",
+      "sha256": "2b40d87ec293c9647569176b391fdc32b33a4e64cd9a6560ca0429f6a137144b"
+    },
+    {
+      "path": "client/src/pages/history/HistoryPage.jsx",
+      "sha256": "6c0cf89d72c18f25cd41b4326c18410907581cfe52d1ca37f2b9fe3f4cf5e5ad"
+    },
+    {
+      "path": "client/src/pages/inward/InwardDetailsPage.jsx",
+      "sha256": "c8bad290ad2baef421dc54271393d6ed76fdc0f56b2a3c5f86c62c2bb189164a"
+    },
+    {
+      "path": "client/src/pages/inward/InwardForm.jsx",
+      "sha256": "dcd7722355fc72a95084970f783102440c80162e820d1b3af0169027b782dfd2"
+    },
+    {
+      "path": "client/src/pages/inward/InwardPage.jsx",
+      "sha256": "036c1c407757a5f0e4ded52933170a6bcdafe5faa552ed4bfe88c6a2dd71f9e7"
+    },
+    {
+      "path": "client/src/pages/inward/QRLabelPage.jsx",
+      "sha256": "c999dba195d5f95ef9d998869af24af3825ce30db7ea901d653ba308e9697e05"
+    },
+    {
+      "path": "client/src/pages/legal/PrivacyPage.jsx",
+      "sha256": "43796df0419a4516817301bb2a1978fc544558764774dfdd42ea92af570f9d30"
+    },
+    {
+      "path": "client/src/pages/master/CategoryMasterPage.jsx",
+      "sha256": "40123f0f678dc5bfe48bb8755d2ab501d71034a2ee35281581c1e63cfb0123e9"
+    },
+    {
+      "path": "client/src/pages/master/GarmentItemMasterPage.jsx",
+      "sha256": "ffe4e7982eec85072fb3148d135e4f6ebef154cad77fefabf9c1020e1bb4830c"
+    },
+    {
+      "path": "client/src/pages/master/ItemForm.jsx",
+      "sha256": "82e138e76ad9351e2cafd42e58e952e51ec443eb4effb7ae3575c348c724914b"
+    },
+    {
+      "path": "client/src/pages/master/ItemMasterPage.jsx",
+      "sha256": "94896abd837ddd6a0544820eb25987d0315cd38c73268339462eda02cc860e43"
+    },
+    {
+      "path": "client/src/pages/master/ProductionMasterPage.jsx",
+      "sha256": "687780defbc8a98d166a27b619547410e40a4cd97c61bcd72a239b5ff54616aa"
+    },
+    {
+      "path": "client/src/pages/master/SectionMasterPage.jsx",
+      "sha256": "07842a8f56a4ca1fd6b81799e1b9c4712d82bad359eb277ef7690c6fd2bcaa45"
+    },
+    {
+      "path": "client/src/pages/master/SupplierMasterPage.jsx",
+      "sha256": "9f12bc58975570d3f0ba1b74f6bff107fe852a93806eebea46790fcc3d752e4b"
+    },
+    {
+      "path": "client/src/pages/outward/OutwardForm.jsx",
+      "sha256": "71e095d486f6134ac7735a6e2bad2d396b74177a0afba25d39c10bd76a0b06c7"
+    },
+    {
+      "path": "client/src/pages/outward/OutwardPage.jsx",
+      "sha256": "261d9b180c9d34d39a595723f170741ee1a2243635ac55d59880e32a4f925533"
+    },
+    {
+      "path": "client/src/pages/outward/PublicOutwardPage.jsx",
+      "sha256": "b7971a40457ef0d93a7de1b26f58792c191648842dfae4323332585d90a7adbf"
+    },
+    {
+      "path": "client/src/pages/outward/QRScanPage.jsx",
+      "sha256": "2a2551402068ff1a7d288ea2d1facb7f0c65528bdd415968f634b466da894a2f"
+    },
+    {
+      "path": "client/src/pages/print/PrintPage.jsx",
+      "sha256": "f3d775aaa5f6bd4047cf4bd859138998a6eb34eaf06740024be72b1cb324e699"
+    },
+    {
+      "path": "client/src/pages/production/CuttingDcPage.jsx",
+      "sha256": "2a22c1c6c0dae0c2862996c60230d9ba3b08f5fd27738859a0668a4ea7325d14"
+    },
+    {
+      "path": "client/src/pages/production/CuttingMachinePlanPage.jsx",
+      "sha256": "6abe46d85ad41c88596f1337c63d0e048fd661ddc8180bb96e7dbac596438b38"
+    },
+    {
+      "path": "client/src/pages/production/MachineStatusPage.jsx",
+      "sha256": "b3318b99fa7570f39358c6952a175321a5acb031d3c729839d519aee3af4a5ee"
+    },
+    {
+      "path": "client/src/pages/production/PendingPage.jsx",
+      "sha256": "04b00f59c449269a5c4f5a15f1f694a9a6866660a3b650eb5d1e4c4d3ec4bc98"
+    },
+    {
+      "path": "client/src/pages/production/ProductionControlPage.jsx",
+      "sha256": "2202d32098dd5d2657e6b262e5d2cc27b3a6c67a131755a79def846129bf5b61"
+    },
+    {
+      "path": "client/src/pages/production/ProductionDashboardPage.jsx",
+      "sha256": "b527a8d06a935c2ef9fd0fbab108abffb76ca5315ca48758f1348d6cb2b7cb06"
+    },
+    {
+      "path": "client/src/pages/production/ProductionPlanningPage.jsx",
+      "sha256": "9745f5de74f3c6390952bf50225e61c3c457043435a7bf5fa83f9e2d76da1522"
+    },
+    {
+      "path": "client/src/pages/production/ProductionSetupPage.jsx",
+      "sha256": "e89cc3842b7fabeb91f5c6a7a3cef7cd978b0ba34a8659cfcc927ab60e48445c"
+    },
+    {
+      "path": "client/src/pages/production/SewingDeliveryPage.jsx",
+      "sha256": "fcc455624bd7468e4641d2f39327319c5594001c7d9b34cb6029232e32e12ef7"
+    },
+    {
+      "path": "client/src/pages/production/WarehousePage.jsx",
+      "sha256": "30e1920d004567af54a250989ec7f70561fe72749ee5d554f043a7ad1008f042"
+    },
+    {
+      "path": "client/src/pages/purchase-order/POPendingPage.jsx",
+      "sha256": "8969b095cecfed929d28d9d53b46ad38fccd2573523ab986acdabe9f02526cba"
+    },
+    {
+      "path": "client/src/pages/purchase-order/PurchaseOrderForm.jsx",
+      "sha256": "02f815ba25da082fd06ac11909e820a28d7fef0799a444f23da3bcf58b3a4f5d"
+    },
+    {
+      "path": "client/src/pages/purchase-order/PurchaseOrderPage.jsx",
+      "sha256": "6ab2c5ce429a6191098e7e65c1383584c1f6fa6960b80b1e20d7a3bf9ff16695"
+    },
+    {
+      "path": "client/src/pages/reports/ReportsPage.jsx",
+      "sha256": "57c7cf3a55f07773f00fb115a76157c90f07b66e6d468ff739080312662d3874"
+    },
+    {
+      "path": "client/src/pages/saas/AuditBackupPage.jsx",
+      "sha256": "6156861bba573942e4a13f77070f689206b5e12301c85dc0d52959150c8526d0"
+    },
+    {
+      "path": "client/src/pages/saas/LeadCrmPage.jsx",
+      "sha256": "29e9f28e9ad6b5d379f5d5ff98c4f8e9f04b12682ad25b4b995eaad08c60948b"
+    },
+    {
+      "path": "client/src/pages/saas/OnboardingPage.jsx",
+      "sha256": "fa6e95fe701b1fea3e92231964b28d163a1aec4dea24c8d25c5558c2315e64e9"
+    },
+    {
+      "path": "client/src/pages/saas/OwnerPlansPage.jsx",
+      "sha256": "f9360f83ba083131ed0392919351b7154463c010c29a1b711fe3af534896a2b2"
+    },
+    {
+      "path": "client/src/pages/saas/OwnerSalesPage.jsx",
+      "sha256": "e67205d33fb901992027b2b226b6a1ea142bce1d4d623226ae1e07ab59079187"
+    },
+    {
+      "path": "client/src/pages/saas/ProfileSettingsPage.jsx",
+      "sha256": "45b0edba3e4dac9ac71da77d59f5f1929728401348c2f2f77d93312bea1d65dd"
+    },
+    {
+      "path": "client/src/pages/saas/PublicDemoPage.jsx",
+      "sha256": "df57576c23b343775825549aed15f602bd3058a4f67f6c54400f49adcc4f8064"
+    },
+    {
+      "path": "client/src/pages/saas/SaasControlPage.jsx",
+      "sha256": "f0d3f96acbba7e77d42712906d1c2a46150de7927fcd7d2b57cb630a29c9aca8"
+    },
+    {
+      "path": "client/src/pages/saas/SubscriptionCenterPage.jsx",
+      "sha256": "150635a97399e807d113917153e196b2849234544c6182d37390d99782397b2e"
+    },
+    {
+      "path": "client/src/pages/saas/SuperAdminDashboardPage.jsx",
+      "sha256": "a07b86285dd2fa2afab8dce21f62afd06905cb9e035310e9267fc856fcc92dad"
+    },
+    {
+      "path": "client/src/pages/saas/SupportAccessPage.jsx",
+      "sha256": "32579671b85f448670d31cb410fdee9523beea202ea7a27b67572b45e8b4e72e"
+    },
+    {
+      "path": "client/src/pages/stock/StockDetailsPage.jsx",
+      "sha256": "696055f7ef17c6ef70a6298d4aeb152c4317307a685f77eac6ccd071ede96331"
+    },
+    {
+      "path": "client/src/pages/stock/StockPage.jsx",
+      "sha256": "6b4b78058a9a19abae19a4213f328f18e8db2662f281426b088d4a2aff57349a"
+    },
+    {
+      "path": "client/src/rich-theme.css",
+      "sha256": "25cee2ddea2440c5c7fa667c31f0da46a475c14f1312e97fbdf83361c6717040"
+    },
+    {
+      "path": "client/src/routes/AppRoutes.jsx",
+      "sha256": "aeffe4d31bbeaa263f2c5f5e0ef243bc5c00c3c31c8860b94b0ead6f2ce02b50"
+    },
+    {
+      "path": "client/src/routes/ProtectedRoute.jsx",
+      "sha256": "a551b0823238ba8270c0b55fa023501dbdd2aeb2b9573a49781ebd38d5b12676"
+    },
+    {
+      "path": "client/src/services/csvService.js",
+      "sha256": "4cb956e8b7e30fae5b44aee5dad8a3a4aca8a03190d144a6dc490fd35687444d"
+    },
+    {
+      "path": "client/src/services/loadingService.js",
+      "sha256": "46b542ad3f3711c7846c5927f2ecda0ff068204a5da18360a7760ecf7128bcb4"
+    },
+    {
+      "path": "client/src/services/printService.js",
+      "sha256": "58c62d641a3033f52f61fb79b8781b5408fff513965638cd62e9c415c882673d"
+    },
+    {
+      "path": "client/src/services/qrService.js",
+      "sha256": "bdd32301fd5c0e65cb52528bbb041c04fe147e7e0752c3bba448e88b2d0c2540"
+    },
+    {
+      "path": "client/src/services/tokenService.js",
+      "sha256": "3c89921096f1e619bb3fa6df6204941f5c14fb537d8872b8e9bde6a6e21a599e"
+    },
+    {
+      "path": "client/src/styles/forms.css",
+      "sha256": "18b0bc02f2a8fc8bb58bac37bf9893f78d18481a528acf71a341c48ddd5fb7af"
+    },
+    {
+      "path": "client/src/styles/global.css",
+      "sha256": "079127df73d2c5aff626b3c448dced2b83095c10b634030f8b0e32305e530332"
+    },
+    {
+      "path": "client/src/styles/responsive.css",
+      "sha256": "17ba71eaec9736f088e8816d9fc45973b0222721ee67134f91fe47d5d802ef3e"
+    },
+    {
+      "path": "client/src/styles/tables.css",
+      "sha256": "a8c28472a5b50a19ec2a32efe9d9b025c36560f68d1745613c1029575f7c5fb7"
+    },
+    {
+      "path": "client/src/styles/variables.css",
+      "sha256": "2c35e098ae276581ab71e906d7ab89a9fe09067f9d3c31e3c0c968e0070ada5e"
+    },
+    {
+      "path": "client/src/styles.css",
+      "sha256": "92feacb34d74503a159b6c2eebece4a80414b6a229c38af952a92eb809d8d56d"
+    },
+    {
+      "path": "client/src/utils/constants.js",
+      "sha256": "375754bb64da9d1d9872aabcf7d4366f79be271d4218cc0686355a026fc524e2"
+    },
+    {
+      "path": "client/src/utils/dateFormatter.js",
+      "sha256": "0d599688c7a00827b21588ce5e933c10c39ed6a1a9f0ba12df21037efee2265e"
+    },
+    {
+      "path": "client/src/utils/formatters.js",
+      "sha256": "818ca87e59f84f7027a44695d7b427a1d3152814a261b317067fe7b40bb8c29d"
+    },
+    {
+      "path": "client/src/utils/numberFormatter.js",
+      "sha256": "68cc32dc1258b40539b1db2010edd9225c22f0a5a4e28c2d9954b0f89fa56f98"
+    },
+    {
+      "path": "client/src/utils/offlinePos.js",
+      "sha256": "b2d7c1fd068647e33d26ab1ce97e67edfbb6a08d69d6107a9c0a6b5881137140"
+    },
+    {
+      "path": "client/src/utils/offlineReceipt.js",
+      "sha256": "95b848151b19828fbc5b0445b07005afdba00417f701c4dd6a0a55969f7e1474"
+    },
+    {
+      "path": "client/src/utils/tenantClient.js",
+      "sha256": "fa79674ccd5f631989f169b8b118b31cf93b7b904713cd9203f1b09fc48d3e52"
+    },
+    {
+      "path": "client/src/utils/validators.js",
+      "sha256": "660c10e68d36ae38aa3f216aef4672cc3cb87625ae1cb81490c4f15ace7bcd8c"
+    },
+    {
+      "path": "client/vite.config.js",
+      "sha256": "9dbf15061659ad2fd50843117b4e0f984b0dca2b66fcff597267bb170b2c18e2"
+    },
+    {
+      "path": "netlify.toml",
+      "sha256": "67eead147f144569a06b269582a8092da872f44c1ea66a0fc25dad779a67e660"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "9b34c7169ccae1cf9a70378f813c59c9083b2523035561f9c49d3c7a9f1151a1"
+    },
+    {
+      "path": "package.json",
+      "sha256": "36d98fb94a01ae7c0322d327e1584dc940b03300576cbd6934ece27d54bffd98"
+    },
+    {
+      "path": "server/.env.example",
+      "sha256": "08239453df840596e655fe76901af3714d7322190c567d33c3a508922b603f0b"
+    },
+    {
+      "path": "server/.gitignore",
+      "sha256": "cf188000aaf42ee74be6e51766493445b3187d9ebae6b6e97efd30f24c883862"
+    },
+    {
+      "path": "server/package-lock.json",
+      "sha256": "82698effe4bf240622034ee75021057f9717a9c09d8b42c1a6c2bbb86a44c279"
+    },
+    {
+      "path": "server/package.json",
+      "sha256": "30f3e2507c2b514a0516b103535e1c9978488a2686f4b62983cbe3626e2412d9"
+    },
+    {
+      "path": "server/scripts/bootstrap-owner.js",
+      "sha256": "9d7d2fb3d1c9df9e156a44feba53bcf9337cb693db79e7200e1cce1e33c66ba4"
+    },
+    {
+      "path": "server/scripts/migrate-company-databases.js",
+      "sha256": "e07d9a1bef935f370549e4d71205fe5983c76898deb8cf74fa92ed93ad74a62e"
+    },
+    {
+      "path": "server/scripts/operations-probe.js",
+      "sha256": "eeaf3c78e4e5d8b32de0c998c084a42d6193bac9f7b78c2f46aa0552b581b483"
+    },
+    {
+      "path": "server/scripts/prepare-customer-database.js",
+      "sha256": "a276e6e790e29449849def85a7955807f869c9666f5d023d1c5782c3520edcf7"
+    },
+    {
+      "path": "server/scripts/recover-customer-database.js",
+      "sha256": "b947e001a8fed9637fcd5a62bd91d5bce20ca4d9f504195487a5b299ff468689"
+    },
+    {
+      "path": "server/scripts/restore-drill.js",
+      "sha256": "2835b946b2584e34bcd6d48ba819143ff145a21824f8cb573585694280f661ae"
+    },
+    {
+      "path": "server/scripts/run-jobs.js",
+      "sha256": "bc893ea54090e5f4dea8aa5dbaf0235465d2d84e4349fbc9f2de8714f45f744f"
+    },
+    {
+      "path": "server/scripts/tenant-backup.js",
+      "sha256": "05197178f96a01f383782ec50b7bef9d7cfead98d8297692ac284283aeaf3340"
+    },
+    {
+      "path": "server/src/app.js",
+      "sha256": "f4aa0ba5aad6bf61bd78aec3556fe5204406b309043dd4eb2d3496ec1d3c303c"
+    },
+    {
+      "path": "server/src/automation/models.js",
+      "sha256": "598140f4d21e2b99b50ed88a98da462d48cd1fe58463c9407785884cc7a7f2a4"
+    },
+    {
+      "path": "server/src/automation/queue.js",
+      "sha256": "635b34494246db94f34f2a474de1bcb3634a2d30e16507fadaa83159d46e1f3a"
+    },
+    {
+      "path": "server/src/automation/routes.js",
+      "sha256": "8c2670aad313da3402a9544815eb41349325acb0860fc3821da7c2b13b1107f3"
+    },
+    {
+      "path": "server/src/automation/worker.js",
+      "sha256": "0e0e0ba7fe05782e8e4d15247c40a0674ccbcbdec4c3b181a8bde66b82fb8dab"
+    },
+    {
+      "path": "server/src/config/cors.js",
+      "sha256": "94349bc5a8dc1d9dbb8ed1140c37ad3bd552f0f43b02d66a21afea5fc7fe7fe0"
+    },
+    {
+      "path": "server/src/config/database.js",
+      "sha256": "c69eb3d4aad8b828e463bcc1e7c3eba9587592666de71eb56b67668cc22ff87e"
+    },
+    {
+      "path": "server/src/config/environment.js",
+      "sha256": "16211b2de4954fa6aabde34d98f9f6b91091541e388b22b0bd33e89909d16cbc"
+    },
+    {
+      "path": "server/src/config/mongoosePlugins.js",
+      "sha256": "b47a1d8e8a9f0c8555eaded4cd757523e1ad19edeb732552326b115317794843"
+    },
+    {
+      "path": "server/src/config/tenantDatabase.js",
+      "sha256": "1a6d9b16b77fd197424eea20ddf42a62ef8ee2cd8cddd33c060cac8c16e49232"
+    },
+    {
+      "path": "server/src/constants/orderStatus.js",
+      "sha256": "2c682536d724068972010913d1c44e963ec5d03c7fb87d253cf9d9fec5646e9f"
+    },
+    {
+      "path": "server/src/constants/roles.js",
+      "sha256": "59a759fbbfee52532c616345c2a9b2941ecd0b99777c34da8495ae17d199ef08"
+    },
+    {
+      "path": "server/src/constants/transactionTypes.js",
+      "sha256": "cdc9cb769e569dca2eca39a0ea5cbbbc01a631cea3ff56143989d89b42f997c4"
+    },
+    {
+      "path": "server/src/controllers/authController.js",
+      "sha256": "3fd0ed4637d02381a5161b39fb90708f063acf54b0127a76ae57afb7b3684f08"
+    },
+    {
+      "path": "server/src/controllers/categoryController.js",
+      "sha256": "36d1a418891ddd96392fa8c9f98a47be7220bf96f5cc815ccab790cc09569bc6"
+    },
+    {
+      "path": "server/src/controllers/companyAdminController.js",
+      "sha256": "63251834716cd6aa61a0fba436867c5ba4847252b9139d621df3e87863f3ae7a"
+    },
+    {
+      "path": "server/src/controllers/companyController.js",
+      "sha256": "cf945ce41e8ddcee8ec3714a8cb13f32db2b6fe50b1f9a72c00aa8f8d52fcf56"
+    },
+    {
+      "path": "server/src/controllers/customerDatabaseController.js",
+      "sha256": "299df6015ed7a63c505ab49a0e53cc19d713554920ff11b369cd9d174528f351"
+    },
+    {
+      "path": "server/src/controllers/cuttingDcController.js",
+      "sha256": "042aa8f94028015157adead753caf066088fcce7323c5c99f6acdbfff1836c00"
+    },
+    {
+      "path": "server/src/controllers/cuttingMachinePlanController.js",
+      "sha256": "6b8e6ad1467f4934759dbf8ea7eae5e73476a18871e30b1221b03221260eccdc"
+    },
+    {
+      "path": "server/src/controllers/dashboardController.js",
+      "sha256": "4ee880d6c496f98fb8290c55d40f4d9409c1da5622584833a1f5e14e5d6141ac"
+    },
+    {
+      "path": "server/src/controllers/deliveryController.js",
+      "sha256": "a186dde5f814186acba97840250d9b2cd2f5087ed20a27001cd8eb934fac7be3"
+    },
+    {
+      "path": "server/src/controllers/fabricCuttingController.js",
+      "sha256": "e5f37b60629c52b1ef94f9eba60642176b929b14f4e69c344d363b0bb42b2eb0"
+    },
+    {
+      "path": "server/src/controllers/fabricMasterController.js",
+      "sha256": "9db5c6aa68d158b7125784d2e5aceb3c60542eba9ec0cc2af09c5a157f4b82c5"
+    },
+    {
+      "path": "server/src/controllers/garmentController.js",
+      "sha256": "67405871c6be106d9b13a7bd485743acbd16f2bf7803eb37c806e979ebc90e3a"
+    },
+    {
+      "path": "server/src/controllers/historyController.js",
+      "sha256": "fe58e1567be4e012ce72226a03c84407597d45fc6cd10a28e7cd90e15338bdee"
+    },
+    {
+      "path": "server/src/controllers/invoiceController.js",
+      "sha256": "7604dd265b6027e211a3c21470852b2fac52f73475b93f1471c60f21305ad4d0"
+    },
+    {
+      "path": "server/src/controllers/inwardController.js",
+      "sha256": "d5426b9c2ada2fe9afa2f94be29693bcda83a81e4c10ee2f9f76862039d8aa6a"
+    },
+    {
+      "path": "server/src/controllers/itemController.js",
+      "sha256": "d73e036793516e9228f50214c9fbc638f5d657e2301a9536ff65ec952666f5e7"
+    },
+    {
+      "path": "server/src/controllers/masterController.js",
+      "sha256": "c45fe4cdee0c4a4833103c7d03d93b8fd870e5cd76976b4b1ec39b6dc96e4e08"
+    },
+    {
+      "path": "server/src/controllers/operationsStatusController.js",
+      "sha256": "d1283639beb662bca62c56d49bb5a450e71e8de5afd3e185abe96e36f17bb20b"
+    },
+    {
+      "path": "server/src/controllers/outwardController.js",
+      "sha256": "8229e30e7a0e86dd9a7360132272221c639e97d4c84549b3997053dcb23c5a2f"
+    },
+    {
+      "path": "server/src/controllers/productionController.js",
+      "sha256": "ed293219d5c62ed0e9125c76a3dd9d596ae49a524cf5c08a3adecd332a7c4858"
+    },
+    {
+      "path": "server/src/controllers/publicOutwardController.js",
+      "sha256": "de11e1187a32785b09a493f4fcc49b1be8e0c8447dbe92b3c24b40f41e57a793"
+    },
+    {
+      "path": "server/src/controllers/purchaseOrderController.js",
+      "sha256": "5f34937f0ddfa287f026f3a077c5b2e791fef4a753879e6a9607e003a6757953"
+    },
+    {
+      "path": "server/src/controllers/reportController.js",
+      "sha256": "abf68572bd45da5d94a9f31c5506ab85af8f4b4cdfcf32a6e5ab4e8f72a81f32"
+    },
+    {
+      "path": "server/src/controllers/saasController.js",
+      "sha256": "dc6dc4dd3806a7a0daa2c81c6c56f3d6b7358b7a6c6647e9aeae4bfc08fefd87"
+    },
+    {
+      "path": "server/src/controllers/sectionController.js",
+      "sha256": "c6fa5a4e2717502fb651b6353944bc52b8b73dea64358cfcdecdc1802dcc45db"
+    },
+    {
+      "path": "server/src/controllers/supplierController.js",
+      "sha256": "76705b50bcaf52e1da56ab9c6208f1c2eb480f31023fae4d8668b86e393d9792"
+    },
+    {
+      "path": "server/src/controllers/supportAccessController.js",
+      "sha256": "a925d55c19ce569dd1f1c48b7393c70179f7c7b24c29fee604550bb2bbceb1e1"
+    },
+    {
+      "path": "server/src/controllers/transactionController.js",
+      "sha256": "154cfd54528c21cfd413af3f6cbb6c376cdd5e7276e47c596bb4cd58da577192"
+    },
+    {
+      "path": "server/src/controllers/warehouseController.js",
+      "sha256": "dd27fc3d18e99005ea2e0eeef781e5db3dd6fc0906611d77469d2efbe3342c47"
+    },
+    {
+      "path": "server/src/erp/approvalRoutes.js",
+      "sha256": "16817f5f206e8ac9d4411fb99aaae2dbbed80b00dbecb5987a7c31c677b2971a"
+    },
+    {
+      "path": "server/src/erp/bankPolicy.js",
+      "sha256": "25a15f1be773eec0cad42c4424529b39d654937d5151d09a7b90c277c5cf3bf7"
+    },
+    {
+      "path": "server/src/erp/bankRoutes.js",
+      "sha256": "4f3ed27f67832a2db3635bd55881a555e2208deb16bb4638f59941bdaa3fb1ea"
+    },
+    {
+      "path": "server/src/erp/commercialPolicy.js",
+      "sha256": "d3f94dc5bb4b7b50a12830c91818e626a8c236ab5cb48585d2a03ec6c9dce954"
+    },
+    {
+      "path": "server/src/erp/departmentModels.js",
+      "sha256": "6fcebaa1dd361ac2d859a8f424e49720fdfe9ee65594b535a72f957c53bc48d6"
+    },
+    {
+      "path": "server/src/erp/departmentPolicy.js",
+      "sha256": "084a41bdcff5abaaf6529c49fa300dcfaca66464e92b4a9f733f41ea1869853a"
+    },
+    {
+      "path": "server/src/erp/departmentReports.js",
+      "sha256": "bcc037ce4d11a32c2c520b3ea50dab4b91b363765ea9050ce56784af6df49282"
+    },
+    {
+      "path": "server/src/erp/departmentRoutes.js",
+      "sha256": "734278ba6418bbf734c6d75f3c416f4c95aa4a2c7ec6cf7a0d0898fd4647be29"
+    },
+    {
+      "path": "server/src/erp/engine.js",
+      "sha256": "c75d8a7748867d57b1d4364a6abfc470237cb79d72feccee04b41e7460f6ac15"
+    },
+    {
+      "path": "server/src/erp/featurePolicy.js",
+      "sha256": "6ecd7c7155113881e253d21601ac237ad24667900ff0290ea28837a137ab6fae"
+    },
+    {
+      "path": "server/src/erp/forecastPolicy.js",
+      "sha256": "72bf68989d9670d04d07b689a5a6e06ab8b3667c634d72e6a875b7906216225e"
+    },
+    {
+      "path": "server/src/erp/legacyGate.js",
+      "sha256": "453e1cd7f3773bd8b5362e7aafbc96aa369bc8aca5ead27a6b7c67a5507b4ad5"
+    },
+    {
+      "path": "server/src/erp/legacyHandoffPolicy.js",
+      "sha256": "4bfd46341e077536cefa9575dc666fffa5e049ac207cd17a033ebe42505c9189"
+    },
+    {
+      "path": "server/src/erp/lotCostPolicy.js",
+      "sha256": "6c252d17fc9d1acf8cf81253a98157d752b23977a9f61f41f979685064ff852e"
+    },
+    {
+      "path": "server/src/erp/managementReports.js",
+      "sha256": "654b9adf2d6751924e4661e7814620e59ce3ebae1470366a76da1723f6d21db8"
+    },
+    {
+      "path": "server/src/erp/models.js",
+      "sha256": "26870e99fac24ae529454e15c4b0db62bd6276c7e3014b38fb4fc8e9fb05a6af"
+    },
+    {
+      "path": "server/src/erp/operationsModels.js",
+      "sha256": "ed399b73713ecb3de5b109acd1ccf09e845f202f3dc6743c144dfcb3452cd57b"
+    },
+    {
+      "path": "server/src/erp/operationsPolicy.js",
+      "sha256": "72ee48d24a9e43759c64d18e3263f2725036706f511c140abfbd91a6ef9b0269"
+    },
+    {
+      "path": "server/src/erp/operationsRoutes.js",
+      "sha256": "cc6cb5398cd0422f1228c60ad1c5959ca9e6681c8a9eefee7e02bef67c24e613"
+    },
+    {
+      "path": "server/src/erp/payrollPolicy.js",
+      "sha256": "97188f99285a69e6fc2e50f3773148eee6e38d0b7216e9c17109a7bcf4d1a99a"
+    },
+    {
+      "path": "server/src/erp/policy.js",
+      "sha256": "13b5158270964317b6680609b61084c63c451d89a7f3b409622b4cce236bbeca"
+    },
+    {
+      "path": "server/src/erp/reports.js",
+      "sha256": "a2643e05822d855945c1ddee4bd553d68404eb886c59c85635b31adee03481b6"
+    },
+    {
+      "path": "server/src/erp/routes.js",
+      "sha256": "e3c76e89395cdd36031ef7184f68e6bcdeaa3a49317464fe070005e89a8108ed"
+    },
+    {
+      "path": "server/src/erp/service.js",
+      "sha256": "5f9d4aee178789acced31381ab97e6ef58661369d756b1453a40dacb7253cd8b"
+    },
+    {
+      "path": "server/src/erp/statutoryReport.js",
+      "sha256": "465d5206069ae3e3f8d1dc8ee9abf468c001500e22d92898e0762909a5abd8d4"
+    },
+    {
+      "path": "server/src/erp/statutoryRoutes.js",
+      "sha256": "071b2b5941db896854b63429e9d07e5dc3867659793b611333472a422dfda9a1"
+    },
+    {
+      "path": "server/src/erp/warehousePolicy.js",
+      "sha256": "5bbabec58219ce527597180df94d92c855bd67c0a63fcb945ff826b329fa0bb3"
+    },
+    {
+      "path": "server/src/erp/workforce.js",
+      "sha256": "fb1b86b5ee700eef3bb17142b4da6bbbb9dedacfdae0c5f68b993e9710e0be9e"
+    },
+    {
+      "path": "server/src/middleware/asyncHandler.js",
+      "sha256": "c3b7d9d3b5e5a037155fb4b4b718e6363dcb7e64af4489a67d241b376a7aee81"
+    },
+    {
+      "path": "server/src/middleware/auditMiddleware.js",
+      "sha256": "5c6134ef98f286c085e5049b804a359ddf259bc7969a8cb735bb860a9325d0f6"
+    },
+    {
+      "path": "server/src/middleware/authMiddleware.js",
+      "sha256": "d0eaa652cda3e1dfa42f00f2deaf9d4f0fd3b9bfac3a8ac35d4682b56f8d8982"
+    },
+    {
+      "path": "server/src/middleware/customerDatabaseMiddleware.js",
+      "sha256": "c6e0f59061ee03d6fda17cb310c9de45286045e197a5e262bf29981c2fea921f"
+    },
+    {
+      "path": "server/src/middleware/errorHandler.js",
+      "sha256": "99b30242c90f0aed0c64b0ad3ee32e4c4453299aaba1ec2437f116eac7270c89"
+    },
+    {
+      "path": "server/src/middleware/notFoundHandler.js",
+      "sha256": "296b2a4b43fda18b52355356d53e70295a94ddb496efd4533cde1e222f11eb81"
+    },
+    {
+      "path": "server/src/middleware/retentionMiddleware.js",
+      "sha256": "5fdfef6a351fd40e3c65300ecd83f2cb198f3abde65e76b6b362d2722a036f8a"
+    },
+    {
+      "path": "server/src/middleware/roleMiddleware.js",
+      "sha256": "ff29bdc6af484de8e7800173db753aee6bfd7a898054a9cebc6963a33e7023c6"
+    },
+    {
+      "path": "server/src/middleware/securityMiddleware.js",
+      "sha256": "1e239002f646e72344e7ce601b967719ee7ddcee42b391650d672662d5e2648b"
+    },
+    {
+      "path": "server/src/middleware/subscriptionMiddleware.js",
+      "sha256": "f4d63e7ea1ec2843b14c4c7dfc529c873b69a58fbeee375601893861f88d48ce"
+    },
+    {
+      "path": "server/src/middleware/tenantResolver.js",
+      "sha256": "02c067919904a884b9f2e8adef9fd7075a622d4a5ac56f85b4420735440358df"
+    },
+    {
+      "path": "server/src/middleware/validateRequest.js",
+      "sha256": "b052c5dcfc843bf13894cf610b13d53d0f220292dff30b804db74f80797dbfb7"
+    },
+    {
+      "path": "server/src/models/AuditLog.js",
+      "sha256": "a3da70e3c3cfd733257115e364e44a7cba6bd8a426d3acd5caeb59b913a48b13"
+    },
+    {
+      "path": "server/src/models/BillingRequest.js",
+      "sha256": "6d28eb11074f9993a9a1115bdac80967e573349cccd7699461c7f914aa0c28b9"
+    },
+    {
+      "path": "server/src/models/Category.js",
+      "sha256": "b829d27cbacb9284505dde5af9b96dada991c763a1fd36f0ed09065f86f0ff90"
+    },
+    {
+      "path": "server/src/models/Company.js",
+      "sha256": "178654ceceeb3153b84b963799d8d07fbc8a06cc733bcd8b410a13b977588ff4"
+    },
+    {
+      "path": "server/src/models/CustomerDatabaseCandidate.js",
+      "sha256": "00727059842aaa2f4cde8520f45ff4eb95d4c60112a3f111215ef7c812e94b25"
+    },
+    {
+      "path": "server/src/models/CuttingDc.js",
+      "sha256": "e7964adc794589dc844d5285e8b01318d06cf7c78043b6d3a104229bfd616a9c"
+    },
+    {
+      "path": "server/src/models/CuttingMachinePlan.js",
+      "sha256": "c4f2073298ce25334c979d122764f331759dab28dbd35755d799c34017b76e2e"
+    },
+    {
+      "path": "server/src/models/CuttingOrder.js",
+      "sha256": "1dee7264857a1d491fa98750dbd8c8d9946aeef05f75d3f53a5d87df78fd8a31"
+    },
+    {
+      "path": "server/src/models/DeliveryChallan.js",
+      "sha256": "17b8953276a9cc9ec079c36c718253764aa393503fc41310071aea1563de6a7a"
+    },
+    {
+      "path": "server/src/models/DeliveryVendor.js",
+      "sha256": "ce9b043442f5b717463a23d4eae4a8062849e4ea479f7e7d1c769d831e463b87"
+    },
+    {
+      "path": "server/src/models/Employee.js",
+      "sha256": "e0f453a15c721768ce058627e3e36c59a39c45d071dcdc23695f8e27e0734834"
+    },
+    {
+      "path": "server/src/models/FabricBundleStock.js",
+      "sha256": "049c3f763128f5ad02f0e41d60e957038a1e91f1559409141f36f32338b7b910"
+    },
+    {
+      "path": "server/src/models/FabricCutActual.js",
+      "sha256": "f64b80cb1698b7e503481ac9bb2a9a232a157fb2d9b76593283f0cfe431dd2e2"
+    },
+    {
+      "path": "server/src/models/FabricCutPlan.js",
+      "sha256": "071d980d9d78f2ca25fd3707a38e78195520a6b40a09b2b4c7dbcf268cd1f1f6"
+    },
+    {
+      "path": "server/src/models/FabricInwardLot.js",
+      "sha256": "5ca1e5303206e14afbfc7d57938ebdf990295ff08b58dcf6376bd1ef5685e30a"
+    },
+    {
+      "path": "server/src/models/FabricMaster.js",
+      "sha256": "6965035eb7a2c67ab132bb76028a1a73ba68fc794fd97a0fe456f4252355593e"
+    },
+    {
+      "path": "server/src/models/FabricRoll.js",
+      "sha256": "7c1b3f912fe1095b287c4660d4374137f920fcec59b00a5cdfb330b94f089bf5"
+    },
+    {
+      "path": "server/src/models/FabricWaste.js",
+      "sha256": "94ae6780b5ff66f5a78ac5a51d1a5b5e42a433ba873e32da9e30793ba1163ea2"
+    },
+    {
+      "path": "server/src/models/GarmentBom.js",
+      "sha256": "b195044bd5a60fb71f2e670ac161992300e3f479f05bb78bbed73796d6b90a65"
+    },
+    {
+      "path": "server/src/models/GarmentBundle.js",
+      "sha256": "75f81caad42695f18a6f8ddf148c3fd72dc5b0572d1362ac68134f3c4db70034"
+    },
+    {
+      "path": "server/src/models/GarmentItemMaster.js",
+      "sha256": "85ec468e0c2895e1c6e8f88cd624f9f653fbb0767ab6b86a4b00b3412e4ff5d5"
+    },
+    {
+      "path": "server/src/models/GarmentMaster.js",
+      "sha256": "fbbb955a43843bd62e9a89b276aaf9cb47c04cd9e53c1faf772ed7919282a468"
+    },
+    {
+      "path": "server/src/models/GarmentMovement.js",
+      "sha256": "8b8ed35d4fff5250006f9c94f2b96ef63c0d1ad62e09a72ed9ad7e12f52ccf17"
+    },
+    {
+      "path": "server/src/models/GarmentPo.js",
+      "sha256": "19307f98327c7473aecef81e07564924e10bb041e90d3f88591f6aef888c21c5"
+    },
+    {
+      "path": "server/src/models/InvoiceSequence.js",
+      "sha256": "a3cce1567ac3976730267c47f08e2e43c94440d8d468c1e6a67a1fec89cf7dbe"
+    },
+    {
+      "path": "server/src/models/Inward.js",
+      "sha256": "50ff3a79bff57512b286daa44defd6630b003b461ac7d1a6140777a4fe025c4e"
+    },
+    {
+      "path": "server/src/models/Item.js",
+      "sha256": "95c3042f6aa492b8632ea98d605fcddf0d2241427a685c600e688a0d9c911920"
+    },
+    {
+      "path": "server/src/models/Machine.js",
+      "sha256": "a6122b07c80d89ca936b982509841cae3d6e99a6a3fa9b2e8fc6acee0e225b70"
+    },
+    {
+      "path": "server/src/models/MasterRecord.js",
+      "sha256": "b6170fc582b128fffdc242960a88e593006ce7f931f874f77842baeb69788d66"
+    },
+    {
+      "path": "server/src/models/MeasurementMaster.js",
+      "sha256": "9aefe58bf6a2b754e234687d71ff4d54646a4ab3009ea6d62726b12a91bc5840"
+    },
+    {
+      "path": "server/src/models/Outward.js",
+      "sha256": "220b3bb57252cffa5f7363b1c325528393bd8a166dc63724d34315579a44c0c8"
+    },
+    {
+      "path": "server/src/models/PendingIssue.js",
+      "sha256": "79295cfd6fd3748de43c4af1a9ebcf43b0d52d945aed6730f40b56a6a829680e"
+    },
+    {
+      "path": "server/src/models/ProcessMaster.js",
+      "sha256": "ca3598f34c8e01a13564ce4dd67521c9094cdf9fffc8811cf443d58c5c62fa4e"
+    },
+    {
+      "path": "server/src/models/ProductionJob.js",
+      "sha256": "e2163c7950702ad2324bf218168cd51b3529778d7f8e01583575504dffad9abb"
+    },
+    {
+      "path": "server/src/models/ProductionPlan.js",
+      "sha256": "e6bc73d7b6a5bd73427d5a23be853f3922a1cade780c8fedab6bb4c538a94965"
+    },
+    {
+      "path": "server/src/models/PurchaseOrder.js",
+      "sha256": "1392dfd54017a69e8b051e6326e5fa31e0b1dd3e3505b600f9e2f57158f74abf"
+    },
+    {
+      "path": "server/src/models/SaasPlan.js",
+      "sha256": "bbb9c56fa4b8ba819dcd03a93c4c04e89685a5eda1e823b451884301f78f36df"
+    },
+    {
+      "path": "server/src/models/SalesLead.js",
+      "sha256": "b21dc12fc89359d308541d1c34f59f29b0afeffecb7794e0a1bf8c1e98fe34ec"
+    },
+    {
+      "path": "server/src/models/Section.js",
+      "sha256": "6f75eadfbde73977cd51de813315a127ce9a2aaf21f3ac3027963b87eb0c56b8"
+    },
+    {
+      "path": "server/src/models/Sequence.js",
+      "sha256": "0fe21f1adc3026facaff276090f00782a834c3663b3c4fb87eee427eff80af45"
+    },
+    {
+      "path": "server/src/models/SewingDelivery.js",
+      "sha256": "c47a5de5d53cb3fa5117b5912d32a48015476926ebb1366e3c800dd75c7d4adf"
+    },
+    {
+      "path": "server/src/models/SewingHold.js",
+      "sha256": "f5199c781e1a0764158198b587b7c57782771735b5fed52feabdc49d1edffeca"
+    },
+    {
+      "path": "server/src/models/StitchingDelivery.js",
+      "sha256": "dcda899769ed79f473aec1fef7ac41352268811d38a2b730eb4871d085cf3608"
+    },
+    {
+      "path": "server/src/models/StockLedger.js",
+      "sha256": "11a0967ed6d706ea7b6460d32ec3cce2bbe854dcdccfffb86ce5173458929c1c"
+    },
+    {
+      "path": "server/src/models/StockTransaction.js",
+      "sha256": "9632f3d63803966d2ae09691a11e3e5f2b6a1b1c6f77c61364d110bc5c92b22d"
+    },
+    {
+      "path": "server/src/models/SubscriptionInvoice.js",
+      "sha256": "36994806eb0b00ab769a02c2c4655c1fc4495d33025d9ee98266822a387f1472"
+    },
+    {
+      "path": "server/src/models/SubscriptionPayment.js",
+      "sha256": "bd5d297bf2c4604bbe033001a338c63791ff6ef246340d9f4502e32d982f0c74"
+    },
+    {
+      "path": "server/src/models/Supplier.js",
+      "sha256": "8faced1f33d67a4f51ba3a0085cb12135218e1a50cedb45f5181b479c3ada468"
+    },
+    {
+      "path": "server/src/models/SupportGrant.js",
+      "sha256": "56e18893489c78b63b98d474540e231fa983ec800a5c68bcb9777a1ee7b70031"
+    },
+    {
+      "path": "server/src/models/TenantRegistry.js",
+      "sha256": "3eb029d31e4efa42d03b8c5b0fdcb6a3f0c679092f30723396e0a8567f0604bd"
+    },
+    {
+      "path": "server/src/models/Transaction.js",
+      "sha256": "39b3b392221f38763e6c2b470e4877355cff64df6ca39c4b600399ee81ce81dd"
+    },
+    {
+      "path": "server/src/models/User.js",
+      "sha256": "9d46228dd684133296d56137cfb5a553c522d1f88b96d551442ef1769dede3cd"
+    },
+    {
+      "path": "server/src/models/WarehouseStock.js",
+      "sha256": "49b161ef245a791611a5d3420c20bf0bdb83a647f2c867dd6e08cd28c0790a4a"
+    },
+    {
+      "path": "server/src/repositories/inwardRepository.js",
+      "sha256": "9e163c7e3215fcbe32c13ec554ae34804b99f3ace84b590a647072717cba1b93"
+    },
+    {
+      "path": "server/src/repositories/itemRepository.js",
+      "sha256": "2684ccae9383fae41db4de0d8054dadae8e6a4fd86df46e83ca8d7b2627d8134"
+    },
+    {
+      "path": "server/src/repositories/outwardRepository.js",
+      "sha256": "24936ef3bf80445e396748c01bde16d75a174d5d725bed10118c5c90d69c882e"
+    },
+    {
+      "path": "server/src/repositories/purchaseOrderRepository.js",
+      "sha256": "b464cc547fd93a57b0794efab84c45c19cc93a11edf22d736dea455d05696e36"
+    },
+    {
+      "path": "server/src/repositories/transactionRepository.js",
+      "sha256": "e8e7b9fa76bd4bc412019f1bf46681e7523f09c8d83de116d4e3eaf72ab35028"
+    },
+    {
+      "path": "server/src/routes/auth.routes.js",
+      "sha256": "256098138bf6c634f3a905f0e467e1051f22a8576def34f4adb135182ed6ae2f"
+    },
+    {
+      "path": "server/src/routes/authRoutes.js",
+      "sha256": "91e472c121b8bc99f67c157fe25231df3213361240d1c1203df9f2f15af9fe8a"
+    },
+    {
+      "path": "server/src/routes/categoryRoutes.js",
+      "sha256": "427f271c459cfe96a27da976aa7213110f15c3fd7c987037ca100e08646d4a0b"
+    },
+    {
+      "path": "server/src/routes/company.routes.js",
+      "sha256": "5b09365b103f8e3ad4a7292a65a3e40b632fc19ba5435dfcf9ead0c8225368fa"
+    },
+    {
+      "path": "server/src/routes/dashboard.routes.js",
+      "sha256": "777a543483b2d530c64e244a2caa5183f1f5a9fb492fccbe35b324614c53a6be"
+    },
+    {
+      "path": "server/src/routes/dashboardRoutes.js",
+      "sha256": "42dcddc3a5310b3c8969269174f22b750c5f5c3dd054fce5b6adb637a09d1570"
+    },
+    {
+      "path": "server/src/routes/delivery.routes.js",
+      "sha256": "a05381f862051ab7034da926714a39a35669324cff1f843f1557700e48d3d5e2"
+    },
+    {
+      "path": "server/src/routes/fabricCutting.routes.js",
+      "sha256": "f4db50e3ab4bbcdf8bbf6727b53f6d1c568792eaad86a80c69a455ac3fe0c807"
+    },
+    {
+      "path": "server/src/routes/garment.routes.js",
+      "sha256": "7efa0cbeb8b4071db1d59c5b62d7f8a49914c38dac0b6a2616a1230a9c371004"
+    },
+    {
+      "path": "server/src/routes/historyRoutes.js",
+      "sha256": "2a5f3e178090021b04797e70af87790a3c6d9c820213bb2a94fcfc833343448c"
+    },
+    {
+      "path": "server/src/routes/index.js",
+      "sha256": "4df35641c33003ce1bc3ec22fdd12c331381ae3b4cfdf41217c538fa77ac9e1a"
+    },
+    {
+      "path": "server/src/routes/inwardRoutes.js",
+      "sha256": "c84b644f4db88e37b9328054420817f890a504e80e415e7751423f00c1700d94"
+    },
+    {
+      "path": "server/src/routes/itemRoutes.js",
+      "sha256": "ff21e530dc14ba9149dda2833724d1397943c8540d0a7b873bb9e1420fb44e60"
+    },
+    {
+      "path": "server/src/routes/items.routes.js",
+      "sha256": "b19ba35a350eca89ebcd3c941eb3bc5b1d80845985f34162c48f2b3b073fe39e"
+    },
+    {
+      "path": "server/src/routes/master.routes.js",
+      "sha256": "1de56af196efe34fa883f9369305a753b975a2a906ea3be583af0a5ac8300c5b"
+    },
+    {
+      "path": "server/src/routes/outwardRoutes.js",
+      "sha256": "30667331b3b6a2799b564955df7301c8b22d10c159c3b6e0ed0e3c4499f4557d"
+    },
+    {
+      "path": "server/src/routes/po.routes.js",
+      "sha256": "cc572580a0ed088f08a7c1dce1f148c4342018a6e7e2fdd5641461a8d1ed87c7"
+    },
+    {
+      "path": "server/src/routes/production.routes.js",
+      "sha256": "d412f554f47fe55bfaa8b0222588651d3b1469f8bc4bab92c06c072e9113ba48"
+    },
+    {
+      "path": "server/src/routes/publicOutwardRoutes.js",
+      "sha256": "4afff1c890734cd730dbe2d449fcbd7833734461efb3237d7f2fb1ee6aa4be5b"
+    },
+    {
+      "path": "server/src/routes/publicSaas.routes.js",
+      "sha256": "825c5889138c5691c28e1a81bf8397850d026bc30795799dea3cd1cfb4378a05"
+    },
+    {
+      "path": "server/src/routes/purchaseOrderRoutes.js",
+      "sha256": "2805c18ce8fb0153f630eac739ca67fbe5ac69a8823b0e0d8720d0f4106971f5"
+    },
+    {
+      "path": "server/src/routes/report.routes.js",
+      "sha256": "93c3622c36cd8d368e96bb60da679b310d13e618790c0f9b4ceb230c6c945758"
+    },
+    {
+      "path": "server/src/routes/saas.routes.js",
+      "sha256": "02c7831c1dd4bad7d2e05d822074a54545261cc414d133e86e9cca43e61ce5e7"
+    },
+    {
+      "path": "server/src/routes/sectionRoutes.js",
+      "sha256": "b2f8622f95db6e9a156dbadc6ff12055119902061cf5aad756e2c9882938224d"
+    },
+    {
+      "path": "server/src/routes/supplierRoutes.js",
+      "sha256": "82ccc99af6273f48ed93879c98cb9e2d737b1d23abe3c6e86863dd05d591ea53"
+    },
+    {
+      "path": "server/src/routes/transactions.routes.js",
+      "sha256": "4dd39016c2c833f0a4b9c9521c922149bbe24cf88f48688ae0bf70b83e63a8c6"
+    },
+    {
+      "path": "server/src/routes/warehouse.routes.js",
+      "sha256": "cf47e453ae782ea9b850bdc619c98e34e501a29b47077a6a8e8fac1b6a0916ce"
+    },
+    {
+      "path": "server/src/server.js",
+      "sha256": "3278ca22e20a591de832467525a0a3074db15972db4b015d48fa34fe70691cac"
+    },
+    {
+      "path": "server/src/services/accountEmailService.js",
+      "sha256": "f8e57e47b0d2de9cdcf6e6de0dc0878d4580ff861ba4965fab453a6b4f3b7796"
+    },
+    {
+      "path": "server/src/services/authService.js",
+      "sha256": "9d93a35e739faf3c6c9c34a07bdbc0f5b0c7e7a0c6b6e38cc7040a6a33bc3c7d"
+    },
+    {
+      "path": "server/src/services/customerDatabaseService.js",
+      "sha256": "aef3e95c5a404cad58e76798242be17e1ae777a55b47b203a53f832df2d90492"
+    },
+    {
+      "path": "server/src/services/dashboardService.js",
+      "sha256": "06fe610525c7c48737227a1eaee73a23bad215461b89739384586f596d2aeeb3"
+    },
+    {
+      "path": "server/src/services/fabricFlowCalculations.js",
+      "sha256": "97f380c21bd98dc552e5c0fd9b28c1356083070a1557d16e269caf48c19990c4"
+    },
+    {
+      "path": "server/src/services/invoiceService.js",
+      "sha256": "6fa9f54c00a003b0f596099ebe796d1b8c6d94be5335e5a94f7c735b1dbec541"
+    },
+    {
+      "path": "server/src/services/inwardService.js",
+      "sha256": "81b1a131fd853efb80e9bc512d8abb93f87ad7bd0d7dad28169be686a7ca8632"
+    },
+    {
+      "path": "server/src/services/itemService.js",
+      "sha256": "d9850c1b4b5b157b896da341e1ee6d12eb5320738380095dc07ab76e45d707c2"
+    },
+    {
+      "path": "server/src/services/outwardService.js",
+      "sha256": "5c3fc3548d7cf0dcf9bbd620fa53727f1e5fa11663eaf1112a89541d2350654c"
+    },
+    {
+      "path": "server/src/services/publicOutwardService.js",
+      "sha256": "e6bda28b26623a433b315ebf76f3d7b3558128b7bcf83824a9eb700445ca1030"
+    },
+    {
+      "path": "server/src/services/purchaseOrderService.js",
+      "sha256": "594f81a807b03c53ce8adc444756cbcd9622a60cd7d668fae62dbbcce5fda762"
+    },
+    {
+      "path": "server/src/services/qrService.js",
+      "sha256": "01c871ae71ea48f1f21c9b8a2e30f9c4c1787c98bde644f1265384caf92753b5"
+    },
+    {
+      "path": "server/src/services/stockService.js",
+      "sha256": "a888edff22855cd693b34dfa3c4fdd5b19605a83caa48e7215a6ff572742c4b2"
+    },
+    {
+      "path": "server/src/services/subscriptionSettlementService.js",
+      "sha256": "363b04e1a988c027a8fd49eaee2f19495307141ec09ba4805fe7fa717d4bc4f8"
+    },
+    {
+      "path": "server/src/services/tenantProvisioningService.js",
+      "sha256": "84c457bd474aa981b6cbf33179d4afb37af20176b9541a35bb8a626efd587cda"
+    },
+    {
+      "path": "server/src/utils/ApiError.js",
+      "sha256": "17843204ebabbc9a420eaa95183e1302138e27ad1ea46dceecdddf42ed73dc6b"
+    },
+    {
+      "path": "server/src/utils/ApiResponse.js",
+      "sha256": "258582a22ffaf7a3154d85a9be23db95cef7ebec8383c57649cff8243a094175"
+    },
+    {
+      "path": "server/src/utils/asyncHandler.js",
+      "sha256": "371186938654d4a1fb4c01352ddfdd26711425d75009a421b1f72d1dcc876ccc"
+    },
+    {
+      "path": "server/src/utils/backupCrypto.js",
+      "sha256": "7237881560b9e0c0d2bbfeb647d977b8b6c8448e7a1a219407633a6364d6e341"
+    },
+    {
+      "path": "server/src/utils/companyKey.js",
+      "sha256": "781a81a0853591e6680bf25967cf68fb01b933b381947356efc10494cf65e168"
+    },
+    {
+      "path": "server/src/utils/customerDatabasePolicy.js",
+      "sha256": "8a5bdee9b253f656c202dea9472939c7a505676b993bc76e6a6d776324786cc8"
+    },
+    {
+      "path": "server/src/utils/customerDatabaseSecret.js",
+      "sha256": "f8cdac46d80d640925f0ebd4c2145a1bd516a5f37f113c03a64370e350885bf1"
+    },
+    {
+      "path": "server/src/utils/dateHelper.js",
+      "sha256": "dc05964446435c889909f98acb3e277221b8d03c2dd0b9631b422c6dc0e885e0"
+    },
+    {
+      "path": "server/src/utils/entitlementPolicy.js",
+      "sha256": "90c490cdacc7d98cc4486ef4485cab3b255133342aee976fc32cde8f3c6a5676"
+    },
+    {
+      "path": "server/src/utils/generateReferenceNo.js",
+      "sha256": "3c346fca4d6d82eb71d3206e4c4addbddee122e280455f0ea6a28322468db769"
+    },
+    {
+      "path": "server/src/utils/generateToken.js",
+      "sha256": "f469db721dc5bb29b701516066e455a269b0e58854a28d7d0f69d84b4e9fb814"
+    },
+    {
+      "path": "server/src/utils/generateUserId.js",
+      "sha256": "e18481d62b81f528fc988e8b8504df3d4b633b2cac01f23299dd250b681ebc40"
+    },
+    {
+      "path": "server/src/utils/passwordPolicy.js",
+      "sha256": "f1850f13cdb68e30ae0c1f087a86702c573fe724c3d2856d206a1b01eeb6da0d"
+    },
+    {
+      "path": "server/src/utils/paymentPolicy.js",
+      "sha256": "073894d1287517e9fc97f974998f68a095dad163c555cd39ffc7bfc67f24bd86"
+    },
+    {
+      "path": "server/src/utils/stockQuantity.js",
+      "sha256": "7b3096089aca65ea3f26ce72d1230784d01457e8bf264ecaed6cc6a401ee713e"
+    },
+    {
+      "path": "server/src/utils/subscriptionAccess.js",
+      "sha256": "e6de0480f815f8ef0866b52133fe6be5fed25258a5f97296798f5727bad1dd66"
+    },
+    {
+      "path": "server/src/utils/subscriptionPeriod.js",
+      "sha256": "a1488659fd0dcc25065be7b397ccd92dfafd03c193eb14848036efe63877d900"
+    },
+    {
+      "path": "server/src/utils/supportPolicy.js",
+      "sha256": "ce34c3eeaeec0ddfefaa49dc5597ebbf3311691200d36d9ca14bce7211125eb6"
+    },
+    {
+      "path": "server/src/utils/tenantContext.js",
+      "sha256": "ae4383bfadca33ca083dbca66a5d80507ee2e39530bd3932676313c6829ce3f8"
+    },
+    {
+      "path": "server/src/validators/authValidator.js",
+      "sha256": "4a4868bdc55f919f470d4f69c8d226ead9f046857a4dcedeffdb3f6aa4afd9a5"
+    },
+    {
+      "path": "server/src/validators/inwardValidator.js",
+      "sha256": "154bd027b94aba3f475f8d6c5aa8d488a3c199a32fcbb83558d991ea9328e0a9"
+    },
+    {
+      "path": "server/src/validators/itemValidator.js",
+      "sha256": "9ec5b9e4babb087fa83397986328d233d39d664810c23806b12812034a25e204"
+    },
+    {
+      "path": "server/src/validators/outwardValidator.js",
+      "sha256": "165b54e4de0a011be530ae0d7d36c94316a13e4cc9f60206f7881ea041c07599"
+    },
+    {
+      "path": "server/src/validators/purchaseOrderValidator.js",
+      "sha256": "0b323aa7fb3f4e3b87c83c954250e8240e2c8ac29845c9bfd35a40f5e07bf7e9"
+    },
+    {
+      "path": "server/tests/accountActivation.test.js",
+      "sha256": "62031e9dcfbeec7913bb95e18b223f30e5d1f43d7aada935144e623f44989042"
+    },
+    {
+      "path": "server/tests/advancedPlanning.test.js",
+      "sha256": "eacc8b0e0bd4ab3923114819d9936679a6b86bb4a07e2f6e5504cbf1d1980f14"
+    },
+    {
+      "path": "server/tests/auth.test.js",
+      "sha256": "1ce6cf850ff235f9c062678819b6cbe3baff0f4b2fb14144602c6ab6b68310b5"
+    },
+    {
+      "path": "server/tests/automation.test.js",
+      "sha256": "d6ba8c4c62c31a8635a9b10da54e16d7b3ca47ba6857d5ad6243d50516d3c887"
+    },
+    {
+      "path": "server/tests/backupStock.test.js",
+      "sha256": "cd555d3933fe1c28cdac15dd341096667f4c5980548ec1b71f222e40d317a3c1"
+    },
+    {
+      "path": "server/tests/companyKey.test.js",
+      "sha256": "a59fce678853f49eaf8f4dc130020947385c47a6545653e1250af3bd763e2275"
+    },
+    {
+      "path": "server/tests/companyList.test.js",
+      "sha256": "e359c0e1c773c9eb0f5988abf4c6efe654bcdc98052bd5a4fef38119fcab4964"
+    },
+    {
+      "path": "server/tests/customerDatabaseAtlas.test.js",
+      "sha256": "2161ba20de47054a7fe704425b22172b5da7f658a6c8bbb301d6f4698a9e708b"
+    },
+    {
+      "path": "server/tests/customerDatabaseSecret.test.js",
+      "sha256": "dd61ef8ce47d68a3a0d47f7d6b00699abb968aeeaef6460085d8806524847b4b"
+    },
+    {
+      "path": "server/tests/customerDatabaseWorkflow.test.js",
+      "sha256": "0ab76cf9b400fa0417a399955d362322afc2654e9cfac99a1cd1e422c30cde06"
+    },
+    {
+      "path": "server/tests/departmentDatabase.test.js",
+      "sha256": "61eb81e11dd5dc2e07a8dfc2ebc7e22e0d85fdbfc66a6f2a5b3f86e9a4a3d958"
+    },
+    {
+      "path": "server/tests/departmentPolicy.test.js",
+      "sha256": "1fe405c0bceb200c82f105688bec2882e5135f4ac03459394035f363b5773007"
+    },
+    {
+      "path": "server/tests/erpDatabase.test.js",
+      "sha256": "e6702b373ab5ebbbf6f1d3cbc0dc0a64789f57623b3cca7866abdb01fbeaf20e"
+    },
+    {
+      "path": "server/tests/erpOperations.test.js",
+      "sha256": "b454fa41704023cd1128ecf12f36c4c179453fb75fefe74ebb1d2321302771fb"
+    },
+    {
+      "path": "server/tests/erpOperationsDatabase.test.js",
+      "sha256": "43b4a44d7fb4b7ea26dcc4c3b62d64555226d93f04acf77e0d324a0f8fa6f628"
+    },
+    {
+      "path": "server/tests/erpReleasePolicies.test.js",
+      "sha256": "3788edc39dd9c40fe507977709e5650b60617d19a77bd3ff75e3efe950aac6b1"
+    },
+    {
+      "path": "server/tests/erpWorkflow.test.js",
+      "sha256": "bd1ce6f7dc780fcef619bb3ba1ec80e5fe57715e4ae39a8ae4d8d5417bdcd4fc"
+    },
+    {
+      "path": "server/tests/fabricFlow.test.js",
+      "sha256": "c60004c73af01dc5d6b2918cad731dea7fd70ec7b3a58edb63ecdaf2bdbc590e"
+    },
+    {
+      "path": "server/tests/httpSmoke.test.js",
+      "sha256": "7595ad2b96dabf4a75d076caf00b6768d3e9ad5909e20067308b33077e98cbe7"
+    },
+    {
+      "path": "server/tests/inward.test.js",
+      "sha256": "b7385fb086697f652c5042cffdfd740a079c974e36ccb0e6fd3eb83a015ce0a1"
+    },
+    {
+      "path": "server/tests/item.test.js",
+      "sha256": "bfa234062b4743f8119fbea0f6113360c94b8258a83b56154171a1ee82a45252"
+    },
+    {
+      "path": "server/tests/outward.test.js",
+      "sha256": "72081a782009e5c7d4cb0c01c386943215c4fe3749491d5dd4bdc0ca57dab3f3"
+    },
+    {
+      "path": "server/tests/plan1.test.js",
+      "sha256": "fd26437d5a91e802b5b0d6bddce5da6862f917ea061074682ce3366c30491874"
+    },
+    {
+      "path": "server/tests/plan2.test.js",
+      "sha256": "a73fe160f746cdfb774f645382c872333bcd67c3acbab469b0ed9452b0a8fcf2"
+    },
+    {
+      "path": "server/tests/plan3.test.js",
+      "sha256": "908b66241d3a25acdff3692eaa6d58fec3e9c6c139dab4084a4da6ff3ce1e442"
+    },
+    {
+      "path": "server/tests/production.test.js",
+      "sha256": "2043096c73554fda203b036141916cd8984413ca0dae9370c05aab22c2188302"
+    },
+    {
+      "path": "server/tests/purchaseOrder.test.js",
+      "sha256": "2a2d911798e574fa20c4be6a75cfb8d790957d20bda3859f9d65ccedb598e42e"
+    },
+    {
+      "path": "server/tests/saas.test.js",
+      "sha256": "5f081155b6825acdcb2ab0ab4872f51545b16df249edf3734718eadc3b2ba25e"
+    },
+    {
+      "path": "server/tests/securityLock.test.js",
+      "sha256": "263a9c6ba492b3a69809e83e94b6bae3497661af600947822aa44b849a750ced"
+    },
+    {
+      "path": "server/tests/subscriptionPeriod.test.js",
+      "sha256": "f4e540f406ae781221b434632dd19e72b2781873fc8b6165d29897c9dbbb684c"
+    },
+    {
+      "path": "server/tests/supportPaymentPolicy.test.js",
+      "sha256": "278a55923dd2cf0f2f1952504404fb7f978068e2cd6c38913a220107e42b2a36"
+    },
+    {
+      "path": "server/tests/tenantSecurity.test.js",
+      "sha256": "02a229f5b4f1fe5d183a0a30f5863e03f352c8002c559de1e883bfbd25eb7f18"
+    },
+    {
+      "path": "server/tests/workspaceContext.test.js",
+      "sha256": "a63e48797cfd36671eb30dcfeaaa049e434d7eb85aa725c550ce74622a009f19"
+    }
+  ]
 }

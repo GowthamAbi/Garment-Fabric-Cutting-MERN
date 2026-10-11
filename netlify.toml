@@ -40,6 +40,25 @@
   status = 200
 
 [[redirects]]
+  from = "/offline-pos"
+  to = "/offline-pos/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/offline-pos/"
+  to = "/offline-pos/index.html"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[headers]]
+  for = "/offline-pos/*"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self'; worker-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "no-referrer"

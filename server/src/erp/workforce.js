@@ -8,6 +8,7 @@ import { authorizeErp, money, safeInteger, fail } from "./policy.js";
 import Company from "../models/Company.js";
 import { payrollRule, calculateRulePay, payrollAccrual } from "./payrollPolicy.js";
 import { featureAllowed } from "./featurePolicy.js";
+import { statutoryRoutes } from './statutoryRoutes.js';
 import { currentDatabase } from "../config/tenantDatabase.js";
 import { ErpSettings, ErpDocument, ErpEntry, ErpSequence } from "./models.js";
 const {Schema}=mongoose;
@@ -40,6 +41,8 @@ router.get("/",asyncHandler(async(req,res)=>{
   res.json({employees,attendance,payslips,rules,period});
 }));
 const write=(req,_res,next)=>authorizeErp(req.user,"post","WORK_COST")?next():next(new ApiError(403,"Accounts posting permission required"));
+router.use('/statutory',write);
+router.use(statutoryRoutes(ErpPayslip));
 router.post("/payroll-rules",write,asyncHandler(async(req,res)=>{
  if(!["company_admin","admin"].includes(req.user.role))throw new ApiError(403,"Company administrator must approve payroll rules");
  const rule=payrollRule(req.body);await ErpPayrollRule.init();

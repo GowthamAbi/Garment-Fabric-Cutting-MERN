@@ -1,3 +1,5 @@
+> Current increment: see [ADVANCED-ERP-RELEASE.md](ADVANCED-ERP-RELEASE.md) for forecasting, offline device POS, payroll review and remaining live acceptance. Earlier sections below describe previous increments.
+
 > Current release: read [PLANS-5-10-RELEASE.md](PLANS-5-10-RELEASE.md) for 11 October updates and current validation/limits. The content below describes an earlier release.
 
 > Current department extension: read DEPARTMENT-RELEASE-START-HERE.md after these base setup steps. Current test status is in RELEASE-VALIDATION.md.
