@@ -6,3 +6,5 @@ export function subscriptionPeriod(currentEnd, validityDays, now = Date.now()) {
   const periodStart = new Date(Math.max(now, previous));
   return { periodStart, periodEnd: new Date(periodStart.getTime() + days * 86400000) };
 }
+
+export function purchasedSubscriptionPeriod(company,validityDays,now=Date.now()){return subscriptionPeriod(company.subscriptionPlan==='Trial'?null:company.subscriptionEndsAt,validityDays,now);}

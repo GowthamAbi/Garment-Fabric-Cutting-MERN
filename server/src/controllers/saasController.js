@@ -1,6 +1,6 @@
 import { settleSubscription } from "../services/subscriptionSettlementService.js";
 import { PaymentInbox } from "../automation/models.js";
-import { capturedPaymentMatches } from "../utils/paymentPolicy.js";
+import { capturedPaymentMatches,providerOrderMatches,validBillingSnapshot } from "../utils/paymentPolicy.js";
 import InvoiceSequence from "../models/InvoiceSequence.js";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
@@ -98,7 +98,16 @@ export async function createSubscription(request, response) {
     ).toFixed(2),
   );
   const total = Number((planRecord.price + planRecord.setupFee + taxAmount).toFixed(2));
-  const payment = await SubscriptionPayment.create({
+  if(planRecord.code==='TRIAL')throw new ApiError(400,'Trial requires owner approval, not purchase');
+  if(!Number.isFinite(total)||total<=0)throw new ApiError(409,'Configure a positive package price before selling subscriptions');
+  const snapshot={validityDays:planRecord.validityDays,entitlements:{maxUsers:planRecord.maxUsers,maxDepartments:planRecord.maxDepartments,modules:planRecord.modules}};
+  if(!validBillingSnapshot(snapshot))throw new ApiError(409,'Package duration or feature limits are invalid');
+  if(!planRecord.modules.includes('ERP_CORE'))throw new ApiError(409,'Configure explicit ERP_CORE and purchased feature modules before selling this package');
+  await Promise.all([SubscriptionPayment.init(),BillingRequest.init()]);
+  let payment,billingRequest;
+  const creationSession=await mongoose.startSession();
+  try {await creationSession.withTransaction(async()=>{
+  [payment] = await SubscriptionPayment.create([{
     companyId: request.user.companyId,
     referenceNo: generateReferenceNo("SUB"),
     plan: planRecord.name,
@@ -109,9 +118,9 @@ export async function createSubscription(request, response) {
     paymentMethod: method,
     status: method === "MANUAL" ? "PENDING_APPROVAL" : "CREATED",
     notes: request.body.notes || "",
-  });
+  }],{session:creationSession});
   const tenant = getTenant();
-  const billingRequest = await BillingRequest.create({
+  [billingRequest] = await BillingRequest.create([{
     companyKey: tenant.companyKey,
     databaseName: tenant.databaseName,
     tenantPaymentId: payment._id,
@@ -123,7 +132,8 @@ export async function createSubscription(request, response) {
     paymentMethod: method,
     status: payment.status,
     notes: payment.notes,
-  });
+  }],{session:creationSession});
+  });}finally{await creationSession.endSession();}
   if (method === "RAZORPAY") {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET)
       throw new ApiError(
@@ -133,7 +143,9 @@ export async function createSubscription(request, response) {
     const auth = Buffer.from(
       `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`,
     ).toString("base64");
+    try {
     const providerResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      signal:AbortSignal.timeout(15000),
       method: "POST",
       headers: {
         Authorization: `Basic ${auth}`,
@@ -151,10 +163,16 @@ export async function createSubscription(request, response) {
         502,
         order.error?.description || "Payment order creation failed",
       );
+    if(!providerOrderMatches(order,total))throw new ApiError(502,"Payment provider order does not match the requested amount/currency");
     payment.providerOrderId = order.id;
     await payment.save();
     billingRequest.providerOrderId = order.id;
     await billingRequest.save();
+    } catch(error) {
+      payment.status='FAILED';billingRequest.status='FAILED';
+      await payment.save();await billingRequest.save();
+      throw new ApiError(502,'Payment order could not be created or recorded. No subscription access was activated. Retry or contact support.');
+    }
   }
   response.status(201).json({
     ...payment.toObject(),
@@ -175,7 +193,8 @@ export async function approveSubscription(request, response) {
 export async function verifyRazorpayPayment(request, response) {
   const secret = process.env.RAZORPAY_KEY_SECRET;
   if (!secret) throw new ApiError(503, "Payment verification is not configured");
-  const payment = await SubscriptionPayment.findOne({ providerOrderId: request.body.razorpay_order_id });
+  if(!/^order_[A-Za-z0-9]+$/.test(request.body.razorpay_order_id||"")||!/^pay_[A-Za-z0-9]+$/.test(request.body.razorpay_payment_id||""))throw new ApiError(400,"Valid Razorpay order/payment identifiers required");
+  const payment = await SubscriptionPayment.findOne({ providerOrderId: request.body.razorpay_order_id,companyId:request.user.companyId });
   if (!payment) throw new ApiError(404, "Payment order not found");
   const expected = crypto.createHmac("sha256", secret)
     .update(`${request.body.razorpay_order_id}|${request.body.razorpay_payment_id}`).digest("hex");
@@ -591,6 +610,7 @@ export async function razorpayWebhook(request, response) {
   const billing = await BillingRequest.findOne({ providerOrderId: entity.order_id }).lean();
   if (!billing) throw new ApiError(404, "Payment order is not recognized");
   if (!capturedPaymentMatches(entity, billing)) throw new ApiError(409, "Payment does not match the order");
+  await PaymentInbox.init();
   await PaymentInbox.findOneAndUpdate({ key: `capture-${entity.id}` }, { $setOnInsert: {
     key: `capture-${entity.id}`, billingId: String(billing._id),
     entity: { id: entity.id, order_id: entity.order_id, amount: entity.amount, currency: entity.currency, status: entity.status },
@@ -639,4 +659,11 @@ export async function getAccessStatus(request,response){
  const company=await Company.findById(request.user.companyId).lean();
  if(!company)throw new ApiError(404,'Company not found');
  response.json(subscriptionAccess(company));
+}
+
+export async function getPaymentStatus(request,response){
+ if(!mongoose.isValidObjectId(request.params.id))throw new ApiError(400,'Invalid payment identifier');
+ const payment=await SubscriptionPayment.findOne({_id:request.params.id,companyId:request.user.companyId}).lean();
+ if(!payment)throw new ApiError(404,'Payment not found');
+ response.json({status:payment.status,pending:['CREATED','PENDING_APPROVAL'].includes(payment.status),activated:payment.status==='PAID',periodStart:payment.periodStart,periodEnd:payment.periodEnd});
 }

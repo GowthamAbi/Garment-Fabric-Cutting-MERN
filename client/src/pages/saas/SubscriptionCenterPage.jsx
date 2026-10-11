@@ -38,6 +38,7 @@ export default function SubscriptionCenterPage({ mode }) {
   const [data, setData] = useState(null),
     [paymentNotice, setPaymentNotice] = useState(""),
     [error, setError] = useState(""),
+    [purchasing,setPurchasing] = useState(false),
     [form, setForm] = useState({
       plan: "Professional",
       paymentMethod: "MANUAL",
@@ -64,6 +65,7 @@ export default function SubscriptionCenterPage({ mode }) {
   }
   async function purchase(e) {
     e.preventDefault();
+    if(purchasing)return;setPurchasing(true);setError("");
     try {
       const result = await api("/saas/subscription", {
         method: "POST",
@@ -77,12 +79,22 @@ export default function SubscriptionCenterPage({ mode }) {
           });
           setPaymentNotice(verification.pending ? verification.message : "Payment confirmed. Subscription activated.");
           await load();
+          if(verification.pending){
+            let settled=false;
+            for(let attempt=0;attempt<24;attempt++){
+              await new Promise(resolve=>setTimeout(resolve,2500));
+              const status=await api(`/saas/subscription/payments/${result._id}/status`);
+              if(status.activated){settled=true;setPaymentNotice("Payment captured. Package features activated.");await load();break;}
+              if(!status.pending){setPaymentNotice("Payment was not settled. No new paid access activated.");break;}
+            }
+            if(!settled)setPaymentNotice("Activation is not confirmed yet. Refresh payment history before paying again.");
+          }
         });
       } else await load();
       setForm({ ...form, notes: "" });
     } catch (x) {
       setError(x.message);
-    }
+    } finally {setPurchasing(false);}
   }
   async function sendInvoice(invoice) {
     try {
@@ -221,7 +233,7 @@ export default function SubscriptionCenterPage({ mode }) {
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
             </label>
-            <button className="primary">
+            <button className="primary" disabled={purchasing}>
               {form.paymentMethod === "RAZORPAY"
                 ? "Pay with Razorpay"
                 : "Create Manual Request"}
@@ -350,6 +362,7 @@ async function openRazorpay(order, key, verified) {
       },
       modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
     });
+    checkout.on("payment.failed",()=>reject(new Error("Payment failed. No new subscription access was activated.")));
     checkout.open();
   });
 }
