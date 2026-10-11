@@ -6,11 +6,12 @@ export function notFoundHandler(request, _response, next) {
 
 export function errorHandler(error, request, response, _next) {
   const statusCode =
-    error.statusCode || (error.name === "ValidationError" ? 400 : 500);
+    error.statusCode || (error.code === 11000 ? 409 : ["ValidationError", "CastError"].includes(error.name) ? 400 : 500);
   if (statusCode >= 500) {
     console.error("API request failed", error.stack);
   }
-  const message =
+  const message = error.code===11000 ? "An account or record with these details already exists" :
+    error.name==="CastError" ? "Invalid record identifier or value" :
     statusCode >= 500 && process.env.NODE_ENV === "production" &&
       !(error.exposeToOwner === true && request.user?.role === "saas_super_admin")
       ? "Unexpected server error"

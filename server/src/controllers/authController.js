@@ -8,7 +8,7 @@ import { clearLoginAttempts } from "../middleware/securityMiddleware.js";
 import { getTenant } from "../utils/tenantContext.js";
 import { assertStrongPassword } from "../utils/passwordPolicy.js";
 import { generateUserId } from "../utils/generateUserId.js";
-import { issueEmailVerification } from "../services/accountEmailService.js";
+import { issueEmailVerification, issuePasswordReset, activationEmailConfiguration } from "../services/accountEmailService.js";
 import mongoose from "mongoose";
 import SaasPlan from "../models/SaasPlan.js";
 import { checkUserQuota } from "../utils/entitlementPolicy.js";
@@ -142,8 +142,13 @@ export async function createUser(request, response) {
       "Name, email, password and a valid role are required",
     );
   }
-  assertStrongPassword(password, { name, email });
-  if (await User.exists({ email: email.toLowerCase() }))
+  const normalizedEmail=String(email).trim().toLowerCase();
+  if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(normalizedEmail))throw new ApiError(400,"Valid email is required");
+  const department=String(request.body.department||"").trim().toUpperCase();
+  const allowedDepartments=User.schema.path("department").enumValues;
+  if(!allowedDepartments.includes(department))throw new ApiError(400,"Unsupported department");
+  assertStrongPassword(password, { name, email:normalizedEmail });
+  if (await User.exists({ email: normalizedEmail }))
     throw new ApiError(409, "Email already registered");
   const targetCompanyId =
     request.user.role === "saas_super_admin"
@@ -153,17 +158,17 @@ export async function createUser(request, response) {
     request.user.role === "saas_super_admin"
       ? request.body.factoryId || request.user.factoryId
       : request.user.factoryId;
-  const userId = await generateUserId({ name, department: request.body.department, role });
+  const userId = await generateUserId({ name, department, role });
   const userData = {
     userId,
     name,
-    email,
+    email: normalizedEmail,
     password: await bcrypt.hash(password, 12),
     role,
     emailVerified: false,
     accountStatus: "INVITED",
     permissions: request.body.permissions || [],
-    department: request.body.department || "",
+    department,
     companyId: targetCompanyId,
     factoryId: targetFactoryId,
   };
@@ -181,14 +186,16 @@ export async function createUser(request, response) {
       [user]=await User.create([userData],{session});
     }); } finally {await session.endSession();}
   }
-  const activationUrl = await issueEmailVerification(user, getTenant().companyKey);
+  let activationUrl, activationEmailStatus="ACCEPTED";
+  try { activationUrl=await issueEmailVerification(user,getTenant().companyKey); } catch(error) { activationEmailStatus="FAILED"; console.error("User activation email failed", {code:error.statusCode||500}); }
   response.status(201).json({
     _id: user._id,
     userId: user.userId,
     name: user.name,
     email: user.email,
     role: user.role,
-    message: "User created. Activation link sent to the registered email.",
+    activationEmailStatus,
+    message: activationEmailStatus==="ACCEPTED"?"User created. Activation email accepted by provider.":"User created; activation email failed. Use Resend activation.",
     ...(process.env.NODE_ENV !== "production" && { activationUrl }),
   });
 }
@@ -213,6 +220,7 @@ export async function verifyEmail(request, response) {
 export async function forgotPassword(request, response) {
   const identifier = String(request.body.userId || request.body.email || "").trim();
   if (!identifier) throw new ApiError(400, "User ID is required");
+  activationEmailConfiguration();
   const user = await User.findOne(
     identifier.includes("@")
       ? { email: identifier.toLowerCase() }
@@ -220,44 +228,12 @@ export async function forgotPassword(request, response) {
   );
   if (!user) {
     return response.json({
-      message: "If the email exists, a reset link has been created",
+      message: "If the account exists, a password reset email has been requested.",
     });
   }
 
-  const rawToken = crypto.randomBytes(32).toString("hex");
-  user.resetPasswordToken = crypto
-    .createHash("sha256")
-    .update(rawToken)
-    .digest("hex");
-  user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
-  await user.save();
-
-  const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173")
-    .split(",")[0]
-    .replace(/\/$/, "");
-  const companyKey = getTenant().companyKey || "platform";
-  const resetUrl = `${clientUrl}/c/${companyKey}/login?resetToken=${rawToken}`;
-
-  if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM,
-        to: [user.email],
-        subject: "UG SaaS password reset",
-        html: `<p>Use this one-time link within 15 minutes:</p><p><a href="${resetUrl}">Reset password</a></p><p>If you did not request this, contact your administrator.</p>`,
-      }),
-    });
-  }
-
-  response.json({
-    message: "Password reset link created. Check your email.",
-    ...(process.env.NODE_ENV !== "production" && { resetUrl }),
-  });
+  await issuePasswordReset(user,getTenant().companyKey || "platform");
+  response.json({message:"If the account exists, a password reset email has been requested."});
 }
 
 export async function resetPassword(request, response) {
@@ -387,4 +363,13 @@ export async function updateProfile(request, response) {
   );
   if (!user) throw new ApiError(404, "Profile not found");
   response.json(user);
+}
+
+export async function resendUserActivation(request,response){
+ if(!mongoose.isValidObjectId(request.params.id))throw new ApiError(400,'Invalid user');
+ const user=await User.findOne({_id:request.params.id,companyId:request.user.companyId,factoryId:request.user.factoryId});
+ if(!user||user.role==='saas_super_admin')throw new ApiError(404,'Company user not found');
+ if(user.emailVerified)throw new ApiError(409,'Email already verified');
+ await issueEmailVerification(user,getTenant().companyKey);
+ response.json({message:'Activation email accepted by provider',activationEmailStatus:'ACCEPTED'});
 }

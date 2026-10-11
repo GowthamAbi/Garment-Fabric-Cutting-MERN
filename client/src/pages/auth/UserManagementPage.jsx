@@ -50,10 +50,10 @@ export default function UserManagementPage({ notify }) {
   }, []);
   async function submit(event) {
     event.preventDefault();
-    await api("/auth/users", { method: "POST", body: JSON.stringify(form) });
+    const result=await api("/auth/users", { method: "POST", body: JSON.stringify(form) });
     setForm(blank);
     await load();
-    notify("User account created");
+    notify(result.message);
   }
   return (
     <>
@@ -153,6 +153,7 @@ export default function UserManagementPage({ notify }) {
             { key: "email", label: "Email" },
             { key: "role", label: "Role" },
             { key: "department", label: "Department" },
+            { key: "activation", label: "Activation", render: row => !row.emailVerified && row.role!=="saas_super_admin" ? <button type="button" onClick={async()=>{try{const result=await api(`/auth/users/${row._id}/resend-activation`,{method:"POST",body:"{}"});notify(result.message);}catch(error){notify(error.message);}}}>Resend activation</button> : "Verified" },
             { key: "emailVerified", label: "Email Verified", render: (row) => row.emailVerified ? "Yes" : "Pending" },
             {
               key: "createdAt",

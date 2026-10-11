@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   forgotPassword,
+  resendUserActivation,
   createUser,
   getUsers,
   login,
@@ -25,8 +26,8 @@ const router = Router();
 router.get("/setup-status", resolvePublicTenant, asyncHandler(getSetupStatus));
 router.post("/register", resolvePublicTenant, asyncHandler(register));
 router.post("/login", resolvePublicTenant, loginRateLimit, asyncHandler(login));
-router.post("/forgot-password", resolvePublicTenant, asyncHandler(forgotPassword));
-router.post("/reset-password", resolvePublicTenant, asyncHandler(resetPassword));
+router.post("/forgot-password", resolvePublicTenant, loginRateLimit, asyncHandler(forgotPassword));
+router.post("/reset-password", resolvePublicTenant, loginRateLimit, asyncHandler(resetPassword));
 router.post("/verify-email", resolvePublicTenant, asyncHandler(verifyEmail));
 router.get("/session", requireAuth, asyncHandler(getSession));
 router.post("/logout", requireAuth, asyncHandler(logout));
@@ -47,3 +48,5 @@ router.post("/users/:id/permissions", requireAuth, allowRoles("company_admin", "
 router.patch("/profile", requireAuth, asyncHandler(updateProfile));
 
 export default router;
+
+router.post("/users/:id/resend-activation",requireAuth,allowRoles("company_admin","admin"),loginRateLimit,asyncHandler(resendUserActivation));

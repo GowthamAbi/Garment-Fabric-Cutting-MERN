@@ -17,25 +17,30 @@ export async function issueEmailVerification(user, companyKey) {
   user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.save();
   const activationUrl = `${clientUrl}/c/${companyKey}/login?verifyToken=${rawToken}`;
-  if (process.env.RESEND_API_KEY && process.env.EMAIL_FROM) {
-    let result;
-    try { result = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      signal: AbortSignal.timeout(15000),
-      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM,
-        to: [user.email],
-        subject: "Activate your UG SaaS account",
-        html: `<h2>UG SaaS account activation</h2><p>Your User ID is <b>${user.userId}</b>.</p><p><a href="${activationUrl}">Verify email and activate account</a></p><p>This link expires in 24 hours. UG SaaS will never email your password.</p>`,
-      }),
-    });
-    } catch { throw mailError(502,"Cannot reach Resend email service or request timed out. Retry and check Render connectivity."); }
-    if (!result.ok) {
-      const reason=result.status===401?'Invalid Resend API key':result.status===403?'Resend sender/domain is not verified or API key lacks sending permission':result.status===429?'Resend sending limit reached': 'Check Resend email logs and sender configuration';
-      throw mailError(502,`Activation email rejected by provider (status ${result.status}): ${reason}`);
-    }
-  }
+  await sendAccountEmail({to:user.email,subject:"Activate your UG SaaS account",html:`<h2>UG SaaS account activation</h2><p>Your User ID is <b>${user.userId}</b>.</p><p><a href="${activationUrl}">Verify email and activate account</a></p><p>This link expires in 24 hours. UG SaaS will never email your password.</p>`});
   return activationUrl;
 }
 
+
+export async function sendAccountEmail({to,subject,html}) {
+  activationEmailConfiguration();
+  let result;
+  try {
+    result=await fetch("https://api.resend.com/emails",{method:"POST",signal:AbortSignal.timeout(15000),headers:{Authorization:`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},body:JSON.stringify({from:process.env.EMAIL_FROM,to:[to],subject,html})});
+  } catch {throw mailError(502,"Cannot reach Resend email service or request timed out. Retry and check Render connectivity.");}
+  if(!result.ok){
+    const reason=result.status===401?'Invalid Resend API key':result.status===403?'Resend sender/domain is not verified or API key lacks sending permission':result.status===429?'Resend sending limit reached':'Check Resend email logs and sender configuration';
+    throw mailError(502,`Account email rejected by provider (status ${result.status}): ${reason}`);
+  }
+}
+
+export async function issuePasswordReset(user,companyKey){
+ const clientUrl=activationEmailConfiguration();
+ const rawToken=crypto.randomBytes(32).toString('hex');
+ user.resetPasswordToken=crypto.createHash('sha256').update(rawToken).digest('hex');
+ user.resetPasswordExpires=new Date(Date.now()+15*60*1000);
+ await user.save();
+ const resetUrl=`${clientUrl}/c/${companyKey}/login?resetToken=${rawToken}`;
+ await sendAccountEmail({to:user.email,subject:'UG SaaS password reset',html:`<p>Use this one-time link within 15 minutes:</p><p><a href="${resetUrl}">Reset password</a></p><p>If you did not request this, contact your administrator.</p>`});
+ return resetUrl;
+}
