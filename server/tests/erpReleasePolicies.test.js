@@ -1,3 +1,7 @@
+import { legacyHandoff } from '../src/erp/legacyHandoffPolicy.js';
+import { managementReport } from '../src/erp/managementReports.js';
+import { countDifference, approveException } from '../src/erp/warehousePolicy.js';
+import { allocateLotCost } from '../src/erp/lotCostPolicy.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { departmentSummary } from '../src/erp/departmentReports.js';
@@ -61,4 +65,35 @@ test('payroll accrual balances gross and employer costs against net pay and cont
  const journals=payrollAccrual(pay);assert.equal(journals.reduce((n,j)=>n+j.debit-j.credit,0),0);
  assert.equal(journals[1].credit,pay.net);assert.equal(journals[0].debit,pay.gross+pay.calculation.employerPf+pay.calculation.employerEsi);
  assert.throws(()=>payrollAccrual({...pay,net:pay.net+1}));
+});
+
+test('legacy challan partial handoff rejects remapping and over-linking without creating stock',()=>{
+ const challan={_id:'CH',status:'ISSUED',planNo:'P1',challanNo:'DC1',vendorCode:'V1',lines:[{_id:'LINE',pcs:10,colour:'BLUE',size:'M'}]};
+ const sku={code:'TEE-BLUE-M',kind:'FINISHED',unit:'PCS',colour:'BLUE',size:'M'};
+ const linked=[{sourceChallanId:'CH',sourceChallanLineId:'LINE',sku:sku.code,sent:6,status:'ACTIVE'}];
+ assert.equal(legacyHandoff(challan,'LINE',sku,linked,3).pending,1);
+ assert.throws(()=>legacyHandoff(challan,'LINE',sku,linked,5));assert.throws(()=>legacyHandoff(challan,'LINE',{...sku,size:'L'},linked,1));
+ assert.throws(()=>legacyHandoff(challan,'LINE',{...sku,code:'OTHER'},linked,1));
+ assert.equal(legacyHandoff(challan,'LINE',sku,[{...linked[0],status:'CANCELLED'}],10).pending,0);
+});
+
+test('management report groups variants, completed operations and targets, and counts repeated inspections explicitly',()=>{
+ const lots=[{_id:'L',sku:'TEE-M',section:'V1',operations:['Join','Hem']}];
+ const bundles=[{_id:'OLD',code:'B0',lotId:'L',stage:'OP:0',qty:0,createdAt:'2026-10-01'},{_id:'NEW',code:'B1',lotId:'L',stage:'OP:1',qty:10,createdAt:'2026-10-01'}];
+ const events=[{kind:'ADVANCE',bundleId:'OLD',lotId:'L',quantity:10,createdAt:'2026-10-11',details:{operator:'Worker',shift:'DAY'}},{kind:'CHECK',details:{split:{good:8,rework:2,oil:0,reject:0}}},{kind:'CHECK',details:{split:{good:1,oil:1,rework:0,reject:0}}}];
+ const targets=[{date:'2026-10-11',sku:'TEE-M',operation:'Join',operator:'Worker',shift:'DAY',quantity:12}];
+ const report=managementReport(lots,bundles,events,[{code:'TEE-M',name:'Tee',colour:'BLUE',size:'M'}],targets,new Date('2026-10-11'),7);
+ assert.equal(report.wip[0].operation,'Hem');assert.equal(report.wip[0].pieces,10);assert.equal(report.output[0].variance,-2);assert.equal(report.output[0].actual,10);assert.equal(report.aging[0].stageAgeDays,10);assert.equal(report.checking.total,12);assert.equal(report.checking.percentages.good,75);
+});
+
+test('stock counts require independent approval, exact snapshot and reviewed source for excess stock',()=>{
+ assert.equal(countDifference(10,7),3);assert.throws(()=>countDifference(10,11));assert.throws(()=>countDifference(10,10));
+ const request={status:'PENDING',requestedBy:'COUNT1',expectedQty:10,countedQty:7,stage:'WAREHOUSE:W1',destination:'W1'};
+ const bundle={qty:10,stage:request.stage,destination:'W1'};
+ assert.equal(approveException(request,bundle,'ADMIN2'),3);assert.throws(()=>approveException(request,bundle,'COUNT1'));assert.throws(()=>approveException(request,{...bundle,qty:9},'ADMIN2'));
+});
+
+test('lot cost allocation preserves every paise and refuses sold/lost quantity',()=>{
+ const allocation=allocateLotCost(101,[3,3,4],10);assert.deepEqual(allocation,[30,30,41]);assert.equal(allocation.reduce((n,v)=>n+v,0),101);
+ assert.deepEqual(allocateLotCost(1,[1,1,1],3),[0,0,1]);assert.throws(()=>allocateLotCost(100,[3,3],10));assert.throws(()=>allocateLotCost(0,[10],10));
 });

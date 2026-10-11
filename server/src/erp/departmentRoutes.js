@@ -5,12 +5,19 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import Company from '../models/Company.js';
 import {workspaceFilter,requestHash} from './service.js';
-import {ErpSettings,ErpSku,ErpBalance,ErpDocument,ErpEntry,ErpSequence} from './models.js';
-import {DepartmentMaster as Master,DepartmentLot as Lot,DepartmentBundle as Bundle,DepartmentEvent as Event,RetailSale as Sale,DepartmentDemand as Demand,DEPARTMENT_MODELS} from './departmentModels.js';
+import {ErpSettings,ErpParty,ErpSku,ErpBalance,ErpDocument,ErpEntry,ErpSequence} from './models.js';
+import {DepartmentMaster as Master,DepartmentLot as Lot,DepartmentBundle as Bundle,DepartmentEvent as Event,RetailSale as Sale,DepartmentDemand as Demand,DepartmentTarget as Target,DepartmentException as Exception,DepartmentCost as Cost,DEPARTMENT_MODELS} from './departmentModels.js';
 import {DEPARTMENTS,allowedShop,allowedDepartment,enabledDepartment,pieces,names,checkSplit,stageAfter,packingRequirements,saleTotals,demandSuggestion} from './departmentPolicy.js';
-import {fail,ratio,safeInteger} from './policy.js';
+import {fail,money,ratio,safeInteger} from './policy.js';
 import { forecastDemand, dailyNetSales } from './forecastPolicy.js';
 import { departmentSummary } from './departmentReports.js';
+import DeliveryChallan from '../models/DeliveryChallan.js';
+import FabricCutPlan from '../models/FabricCutPlan.js';
+import FabricCutActual from '../models/FabricCutActual.js';
+import { legacyHandoff } from './legacyHandoffPolicy.js';
+import { managementReport } from './managementReports.js';
+import { countDifference, approveException } from './warehousePolicy.js';
+import { allocateLotCost } from './lotCostPolicy.js';
 const router=Router();
 const clean=v=>String(v||'').trim().slice(0,120);
 const deptFor=stage=>stage.startsWith('OP:')||['STITCHING_READY','STITCHED','REWORK','REWORK_DONE'].includes(stage)?'STITCHING':['OIL','OIL_DONE','CHECKING','GOOD','WASTE'].includes(stage)?'CHECKING':['IRONING','IRONED'].includes(stage)?'IRONING':stage==='PACKED'?'DISPATCH':stage==='TRANSIT_WAREHOUSE'?'DISPATCH':stage.startsWith('WAREHOUSE:')||stage.startsWith('TRANSIT_SHOP:')?'WAREHOUSE':'SHOP';
@@ -45,9 +52,78 @@ async function take(scope,session,sku,from,count){const qty=count*1000,b=await E
 async function moveBundle(req,scope,session,b,count,next,destination=''){
  if(count>b.qty)fail('Quantity exceeds bundle');const lot=await Lot.findOne({...scope,_id:b.lotId}).session(session);if(!lot)fail('Lot not found');
  const out=await take(scope,session,lot.sku,location(b),count),child=await newBundle(scope,session,lot,count,next,String(b._id),destination,b.cycle+(next==='CHECKING'?1:0));
+ if(next===b.stage&&destination===b.destination){child.bin=b.bin;await child.save({session});}
  b.qty-=count;await b.save({session});const documentId=await journalMove(scope,session,req,[out,{sku:lot.sku,location:location(child),delta:count*1000,value:-out.value}]);return {child,documentId,lot};
 }
 router.get('/catalog',asyncHandler(async(req,res)=>res.json({departments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,false)&&enabledDepartment(req.departmentCompany,d)),writeDepartments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,true)&&enabledDepartment(req.departmentCompany,d))})));
+router.post('/labour-cost',asyncHandler(async(req,res)=>{
+ requireAccess(req,'STITCHING');if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator cost approval required');
+ res.json(await transaction(req,'LABOUR_COST',async(scope,session)=>{
+ if(!mongoose.isValidObjectId(req.body.lotId))fail('Valid lot ID required');const lot=await Lot.findOne({...scope,_id:req.body.lotId,status:'ACTIVE'}).session(session);if(!lot)fail('Active lot required');
+ const bundles=await Bundle.find({...scope,lotId:String(lot._id),qty:{$gt:0}}).sort({_id:1}).limit(2001).session(session);if(bundles.length>2000)fail('Lot exceeds allocation capacity');
+ const amount=money(req.body.amount),costReference=clean(req.body.costReference).toUpperCase(),paymentAccount=clean(req.body.paymentAccount),supplierCode=clean(req.body.supplierCode).toUpperCase();
+ if(!costReference||!['AP','CASH','BANK'].includes(paymentAccount)||!clean(req.body.notes))fail('Unique bill/line reference, payment account and review notes required');
+ if(paymentAccount==='AP'&&!await ErpParty.exists({...scope,code:supplierCode,kind:{$in:['SUPPLIER','BOTH']},active:{$ne:false}}).session(session))fail('Supplier ledger code required for jobwork payable');
+ const allocations=allocateLotCost(amount,bundles.map(b=>b.qty),lot.sent),moves=[];
+ for(let i=0;i<bundles.length;i++){const b=bundles[i],balance=await ErpBalance.findOne({...scope,key:`${lot.sku}@${location(b)}`}).session(session);if(!balance||balance.qty!==b.qty*1000)fail('Reconcile bundle stock before allocating costs');moves.push({sku:lot.sku,location:location(b),delta:0,value:allocations[i]});}
+ const documentId=await journalMove(scope,session,req,moves,[{account:'INVENTORY',debit:amount,credit:0},{account:paymentAccount,debit:0,credit:amount,party:paymentAccount==='AP'?supplierCode:''}]);
+ const [cost]=await Cost.create([{...scope,costReference,lotId:String(lot._id),amount,paymentAccount,supplierCode,documentId,createdBy:req.user.userId}],{session});return {lotId:String(lot._id),documentId,details:{cost,allocations}};
+ }));
+}));
+router.get('/warehouse-bins',asyncHandler(async(req,res)=>{requireAccess(req,'WAREHOUSE',false);res.json(await Master.find({...workspaceFilter(),kind:'BIN'}).limit(2000).lean());}));
+router.post('/warehouse-bins',asyncHandler(async(req,res)=>{
+ requireAccess(req,'WAREHOUSE');res.json(await transaction(req,'BIN_MASTER',async(scope,session)=>{
+ const key=clean(req.body.binKey),warehouse=clean(req.body.warehouse);if(!/^[A-Za-z0-9_-]{2,60}$/.test(key)||!clean(req.body.rack)||!clean(req.body.bin))fail('Bin key, rack and bin labels required');
+ if(!await Master.exists({...scope,kind:'WAREHOUSE',key:warehouse}).session(session))fail('Warehouse master required');
+ const [master]=await Master.create([{...scope,key,kind:'BIN',warehouse,rack:clean(req.body.rack),bin:clean(req.body.bin),name:clean(req.body.name)||key}],{session});return {details:{master}};
+ }));
+}));
+router.post('/relocate',asyncHandler(async(req,res)=>{
+ requireAccess(req,'WAREHOUSE');res.json(await transaction(req,'RELOCATE',async(scope,session)=>{
+ const b=await getBundle(req.body.bundleId,scope,session);if(!b.stage.startsWith('WAREHOUSE:'))fail('Received warehouse stock required');
+ const target=await Master.findOne({...scope,kind:'BIN',key:clean(req.body.binKey),warehouse:b.destination,active:{$ne:false}}).session(session);if(!target)fail('Active bin in the same warehouse required');
+ const moved=await moveBundle(req,scope,session,b,pieces(req.body.quantity),b.stage,b.destination);moved.child.bin=target.key;await moved.child.save({session});return {bundleId:String(b._id),quantity:pieces(req.body.quantity),documentId:moved.documentId,details:{bundle:moved.child}};
+ }));
+}));
+function exceptionAccess(req,b){const d=b.stage==='TRANSIT_WAREHOUSE'?'WAREHOUSE':b.stage.startsWith('TRANSIT_SHOP:')?'SHOP':deptFor(b.stage);if(!['WAREHOUSE','SHOP'].includes(d))fail('Count/transit exception requires warehouse or shop stock');requireAccess(req,d);if(d==='SHOP')shopAccess(req,b.destination);}
+router.get('/stock-exceptions',asyncHandler(async(req,res)=>{if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator required');res.json(await Exception.find(workspaceFilter()).sort({_id:-1}).limit(2000).lean());}));
+router.post('/stock-exceptions',asyncHandler(async(req,res)=>{
+ res.json(await transaction(req,'STOCK_EXCEPTION',async(scope,session)=>{
+ const b=await getBundle(req.body.bundleId,scope,session);exceptionAccess(req,b);if(req.body.countedQty==null||req.body.countedQty===''||typeof req.body.countedQty==='boolean')fail('Physical count required');const countedQty=Number(req.body.countedQty);countDifference(b.qty,countedQty);
+ if(!['MISSING','DAMAGED'].includes(req.body.kind)||!clean(req.body.reason))fail('Exception kind and count reason required');
+ const [request]=await Exception.create([{...scope,key:req.body.key,bundleId:String(b._id),kind:req.body.kind,expectedQty:b.qty,countedQty,stage:b.stage,destination:b.destination,reason:clean(req.body.reason),requestedBy:req.user.userId}],{session});return {bundleId:String(b._id),details:{request}};
+ }));
+}));
+router.post('/stock-exceptions/:id/decision',asyncHandler(async(req,res)=>{
+ if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator required');
+ res.json(await transaction(req,'STOCK_EXCEPTION_DECISION',async(scope,session)=>{
+ if(!mongoose.isValidObjectId(req.params.id)||!['APPROVED','REJECTED'].includes(req.body.status)||!clean(req.body.reason))fail('Decision and review reason required');
+ const request=await Exception.findOne({...scope,_id:req.params.id,status:'PENDING'}).session(session);if(!request)fail('Pending exception required');
+ const b=await Bundle.findOne({...scope,_id:request.bundleId}).session(session);if(!b)fail('Original bundle not found');exceptionAccess(req,{stage:request.stage,destination:request.destination});if(request.requestedBy===req.user.userId)fail('Independent administrator review required');let documentId;
+ if(req.body.status==='APPROVED'){
+ const count=approveException(request,b,req.user.userId);
+ if(request.kind==='DAMAGED'){const moved=await moveBundle(req,scope,session,b,count,'WASTE');documentId=moved.documentId;}
+ else{const lot=await Lot.findOne({...scope,_id:b.lotId}).session(session),out=await take(scope,session,lot.sku,location(b),count);b.qty-=count;await b.save({session});documentId=await journalMove(scope,session,req,[out],[{account:'WASTE_EXPENSE',debit:-out.value,credit:0},{account:'INVENTORY',debit:0,credit:-out.value}]);}
+ }
+ request.status=req.body.status;request.decidedBy=req.user.userId;request.decisionReason=clean(req.body.reason);request.documentId=documentId;await request.save({session});return {bundleId:String(b._id),documentId,details:{request}};
+ }));
+}));
+router.get('/management',asyncHandler(async(req,res)=>{
+ if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Management permission required');
+ const scope=workspaceFilter(),days=Number(req.query.days||7);if(!Number.isInteger(days)||days<1||days>90)fail('Management window must be 1–90 days');
+ const start=new Date(Date.now()-days*86400000),[lots,bundles,events,skus,targets]=await Promise.all([Lot.find(scope).limit(20001).lean(),Bundle.find(scope).limit(20001).lean(),Event.find({...scope,createdAt:{$gte:start},reversedBy:{$exists:false}}).limit(20001).lean(),ErpSku.find(scope).limit(20001).lean(),Target.find({...scope,date:{$gte:start.toISOString().slice(0,10),$lte:new Date().toISOString().slice(0,10)}}).limit(20001).lean()]);
+ if([lots,bundles,events,skus,targets].some(rows=>rows.length>20000))fail('Management report exceeds capacity; reduce the window/export historical data');
+ res.json(managementReport(lots,bundles,events,skus,targets,new Date(),Number(req.query.overdueDays||7)));
+}));
+router.post('/targets',asyncHandler(async(req,res)=>{
+ if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator approval required');requireAccess(req,'STITCHING');
+ res.json(await transaction(req,'TARGET',async(scope,session)=>{
+  const date=clean(req.body.date);if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(new Date(date).getTime())||new Date(date).toISOString().slice(0,10)!==date)fail('Valid target date required');
+  const sku=clean(req.body.sku).toUpperCase(),operation=clean(req.body.operation),operator=clean(req.body.operator)||'Unassigned',shift=clean(req.body.shift)||'Unassigned';
+  if(!await Master.exists({...scope,kind:'STITCHING',sku,operations:operation,active:{$ne:false}}).session(session))fail('Select a saved stitching operation for this SKU');
+  const [target]=await Target.create([{...scope,key:req.body.key,date,sku,operation,operator,shift,quantity:pieces(req.body.quantity),createdBy:req.user.userId}],{session});return {details:{target}};
+ }));
+}));
 router.get('/reconciliation',asyncHandler(async(req,res)=>{
  if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator required');
  const scope=workspaceFilter();const [lots,bundles,balances]=await Promise.all([Lot.find(scope).limit(20001).lean(),Bundle.find(scope).limit(20001).lean(),ErpBalance.find({...scope,location:{$regex:'^DPT:'}}).limit(20001).lean()]);
@@ -68,14 +144,29 @@ router.post('/masters',asyncHandler(async(req,res)=>{
  if(!['STITCHING','PACKING','WAREHOUSE','SHOP'].includes(kind))fail('Unsupported master');
  res.json(await transaction(req,'MASTER',async(s,session)=>{if(await Master.exists({...s,key}).session(session))fail('Use a new master version/key');const [m]=await Master.create([{...s,key,kind,sku,name:clean(req.body.name)||key,operations,materials}],{session});return {details:{master:m}};}));
 }));
+router.get('/legacy-challans',asyncHandler(async(req,res)=>{
+ requireAccess(req,'STITCHING',false);const scope=workspaceFilter();
+ const rows=await DeliveryChallan.find({...scope,status:'ISSUED',...(req.query.planNo?{planNo:clean(req.query.planNo).toUpperCase()}:{})}).sort({_id:-1}).limit(501).lean();if(rows.length>500)fail('Filter/archive legacy challans before linking');
+ const lots=await Lot.find({...scope,sourceChallanId:{$in:rows.map(c=>String(c._id))},status:{$ne:'CANCELLED'}}).lean();
+ res.json(rows.map(c=>({...c,lines:c.lines.map(l=>({...l,linked:lots.filter(x=>x.sourceChallanId===String(c._id)&&x.sourceChallanLineId===String(l._id)).reduce((n,x)=>n+x.sent,0)}))})));
+}));
 router.post('/delivery',asyncHandler(async(req,res)=>{
  requireAccess(req,'STITCHING');res.json(await transaction(req,'DELIVERY',async(scope,session)=>{
   const sku=clean(req.body.sku).toUpperCase(),qty=pieces(req.body.quantity),sourceLocation=req.body.sourceLocation;
   if(!['CUTTING','FINISHED'].includes(sourceLocation))fail('Use reviewed CUTTING or FINISHED core stock');
   const master=await Master.findOne({...scope,key:req.body.operationMaster,kind:'STITCHING',sku,active:{$ne:false}}).session(session);if(!master)fail('Stitching master required');
   const packing=await Master.findOne({...scope,key:req.body.packingMaster,kind:'PACKING',sku,active:{$ne:false}}).session(session);if(!packing)fail('Packing master required');
-  if(!clean(req.body.dcNo)||!clean(req.body.orderNo)||!clean(req.body.section))fail('Order, DC and section required');
-  const [lot]=await Lot.create([{...scope,code:await sequence(scope,session,'LOT'),sku,sent:qty,dcNo:clean(req.body.dcNo),orderNo:clean(req.body.orderNo),section:clean(req.body.section),sourceLocation,operations:master.operations,packing:packing.materials,createdBy:req.user.userId}],{session});
+  let legacy={};
+  if(req.body.sourceChallanId){
+   if(sourceLocation!=='CUTTING'||!mongoose.isValidObjectId(req.body.sourceChallanId)||!mongoose.isValidObjectId(req.body.sourceChallanLineId))fail('Legacy handoff requires CUTTING stock and valid challan/line IDs');
+   const challan=await DeliveryChallan.findOne({...scope,_id:req.body.sourceChallanId,status:'ISSUED'}).session(session).lean();
+   const variant=await ErpSku.findOne({...scope,code:sku}).session(session).lean();
+   const linked=await Lot.find({...scope,sourceChallanId:req.body.sourceChallanId}).session(session).lean();
+   legacy=legacyHandoff(challan,req.body.sourceChallanLineId,variant,linked,qty);
+   const plan=await FabricCutPlan.findOne({...scope,planNo:challan.planNo}).session(session).lean(),actual=await FabricCutActual.findOne({...scope,planNo:challan.planNo}).session(session).lean();
+   if(!plan?.foldingSavedAt||!plan.foldingLines?.length||actual?.status!=='COMPLETED')fail('Legacy Cutting and Folding completion must be retained before linking');
+  }else if(!clean(req.body.dcNo)||!clean(req.body.orderNo)||!clean(req.body.section))fail('Order, DC and section required');
+  const [lot]=await Lot.create([{...scope,code:await sequence(scope,session,'LOT'),sku,sent:qty,dcNo:clean(req.body.dcNo),orderNo:clean(req.body.orderNo),section:clean(req.body.section),sourceLocation,...legacy,operations:master.operations,packing:packing.materials,createdBy:req.user.userId}],{session});
   const b=await newBundle(scope,session,lot,qty,'STITCHING_READY'),out=await take(scope,session,sku,sourceLocation,qty);
   const documentId=await journalMove(scope,session,req,[out,{sku,location:location(b),delta:qty*1000,value:-out.value}]);return {lotId:String(lot._id),bundleId:String(b._id),quantity:qty,documentId,details:{bundle:b}};
  }));

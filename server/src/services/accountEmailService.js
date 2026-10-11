@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import ApiError from '../utils/ApiError.js';
 function mailError(status, message){ const error=new ApiError(status,message); error.exposeToOwner=true; return error; }
 export function activationEmailConfiguration(){
- if(!process.env.RESEND_API_KEY||!process.env.EMAIL_FROM)throw mailError(503,'Configure RESEND_API_KEY and EMAIL_FROM before creating a company');
+ if(!process.env.RESEND_API_KEY||!process.env.EMAIL_FROM)throw mailError(503,'Configure RESEND_API_KEY and EMAIL_FROM before sending account emails');
  const candidates=(process.env.CLIENT_URL||'').split(',').map(v=>v.trim()).filter(Boolean);
  const value=process.env.NODE_ENV==='production'?candidates.find(v=>{try{const u=new URL(v);return u.protocol==='https:'&&!['localhost','127.0.0.1'].includes(u.hostname);}catch{return false;}}):candidates[0];
  let url;try{url=new URL(value);}catch{throw mailError(503,'Configure a valid public HTTPS CLIENT_URL for activation links');}

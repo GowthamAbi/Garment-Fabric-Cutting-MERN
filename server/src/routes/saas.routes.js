@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getOperationsStatus } from '../controllers/operationsStatusController.js';
 import {
   addLeadActivity,
   getAccessStatus,
@@ -25,6 +26,7 @@ import { getCustomerDatabaseStatus, saveCustomerDatabaseConnection, startCustome
 import { enterOperationalDatabase } from "../middleware/customerDatabaseMiddleware.js";
 
 const router = Router();
+router.get('/operations-status', allowRoles('saas_super_admin'), asyncHandler(getOperationsStatus));
 // These controllers enforce exact company_admin identity and workspace. The
 // legacy operational-entry role guard must not block account configuration.
 router.get("/customer-database", asyncHandler(getCustomerDatabaseStatus));
