@@ -1,3 +1,4 @@
+import DisplayTools from '../common/DisplayTools.jsx';
 import { useState } from "react";
 import {
   BarChart3,
@@ -103,6 +104,7 @@ export default function SuperAdminLayout({ page, onPageChange, children }) {
       {menuOpen && <div className="shade" onClick={() => setMenuOpen(false)} />}
       <main>
         <header className="owner-topbar">
+          <DisplayTools page={page}/>
           <button className="menu" onClick={() => setMenuOpen(true)}>
             <Menu />
           </button>

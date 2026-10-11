@@ -8,6 +8,7 @@ import SupportGrant from "../models/SupportGrant.js";
 import { supportRequestAllowed } from "../utils/supportPolicy.js";
 import AuditLog from "../models/AuditLog.js";
 import TenantRegistry from "../models/TenantRegistry.js";
+import {sessionIsIdle} from '../utils/sessionIdlePolicy.js';
 
 const SESSION_COOKIE_NAMES = ["__Host-ug_session", "ug_session"];
 
@@ -79,13 +80,17 @@ export async function requireAuth(request, _response, next) {
           return tenantContext.run({ ...request.tenant, ...request.user }, next);
         }
         const activeUser = await User.findById(payload.id)
-          .select("+sessionVersion active role companyId factoryId permissions department")
+          .select("+sessionVersion +lastSessionActivityAt active role companyId factoryId permissions department")
           .lean();
 
         if (!activeUser?.active) throw new Error("Inactive session");
+        if(sessionIsIdle(activeUser.lastSessionActivityAt,payload.iat))throw new Error('Inactive session expired');
 
         if (Number(activeUser.sessionVersion || 0) !== Number(payload.sessionVersion || 0))
           throw new Error("Revoked session");
+        const version=Number(activeUser.sessionVersion||0);
+        const touched=await User.updateOne({_id:activeUser._id,active:true,...(version===0?{$or:[{sessionVersion:0},{sessionVersion:{$exists:false}}]}:{sessionVersion:version})},{$set:{lastSessionActivityAt:new Date()}});
+        if(!touched.matchedCount)throw new Error('Session revoked during request');
 
         request.user = {
           ...payload,

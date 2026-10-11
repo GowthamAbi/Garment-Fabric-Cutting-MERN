@@ -98,6 +98,7 @@ const userSchema = new mongoose.Schema(
     lockedUntil: { type: Date, select: false },
     lastLoginAt: Date,
     sessionVersion: { type: Number, default: 0, select: false },
+    lastSessionActivityAt: {type:Date,select:false},
     passwordChangedAt: Date,
     passwordHistory: [{ hash: String, changedAt: Date }],
     resetPasswordToken: { type: String, default: "" },

@@ -1,10 +1,10 @@
 {
-  "release": "Advanced ERP release candidate",
+  "release": "Device/security ERP release candidate",
   "validation": {
-    "serverPassed": 117,
+    "serverPassed": 118,
     "serverFailed": 0,
     "serverSkipped": 4,
-    "browserLiveAcceptance": "NOT_RUN"
+    "browserAcceptance": "EXISTING_LIVE_UNAUTHENTICATED_GUARD_ONLY"
   },
   "files": [
     {
@@ -22,6 +22,10 @@
     {
       "path": "DEPARTMENT-RELEASE-START-HERE.md",
       "sha256": "e05969071e49558136f68d49e6ccb3fcebd075f5731a704381f6d746f73ee1a9"
+    },
+    {
+      "path": "DEVICE-SECURITY-RELEASE.md",
+      "sha256": "d832f094b30cdfad617eb41ac16bc199b582e18909e937bcbf7fa21c3bb738c0"
     },
     {
       "path": "ERP-REMAINING-WORK-RELEASE.md",
@@ -89,7 +93,7 @@
     },
     {
       "path": "RELEASE-VALIDATION.md",
-      "sha256": "aaba107cf72a87ace059da445df192274ae4e1850a89cd151551d2c047cae545"
+      "sha256": "0f0a01004eb402b234e1b5a360602a9b94f5a0fa57b108507799fe4256acc20c"
     },
     {
       "path": "SECURITY-ARCHITECTURE.md",
@@ -101,7 +105,11 @@
     },
     {
       "path": "START-HERE.md",
-      "sha256": "fcde23d10c8b58a004bb406d0c23c6d2b6657208865f169c6315377287ee32f1"
+      "sha256": "4ad621e502992aa45cb0be963cef323b96149663a25043f24488ab6984af59c1"
+    },
+    {
+      "path": "USER-OPTION-GUIDE.md",
+      "sha256": "062f6abd7a3f91c993404b533848e3ba4b51c068408d74cdd81cf385a16f1707"
     },
     {
       "path": "client/.env.example",
@@ -182,6 +190,10 @@
     {
       "path": "client/src/App.jsx",
       "sha256": "a7804b6c97d1efc5cce77fcd289af62d694656f0b851b81210f4a0a0cd27d7cb"
+    },
+    {
+      "path": "client/src/accessibility-theme.css",
+      "sha256": "c2dcbc70f11bab07661060b292a0373f2b4d33687d5e8c1bb33fe5aa7cc6fa23"
     },
     {
       "path": "client/src/api/authApi.js",
@@ -268,6 +280,10 @@
       "sha256": "507fdbd19cb37f24fa03b32e741de0a5488175ecf233453d079d60e8a163fe31"
     },
     {
+      "path": "client/src/components/common/DisplayTools.jsx",
+      "sha256": "9367b6f4c7e6af5bb07af66bbc3a6cddcf59c112b781cfdd33f4c6da38f5775d"
+    },
+    {
       "path": "client/src/components/common/EmptyState.jsx",
       "sha256": "c6c448bfe78b350ecfb69ee731e4758c41b10d48fb711125b2821db7d969a19f"
     },
@@ -296,6 +312,10 @@
       "sha256": "5f3d75cf2510ffc21fd24453979febed07d03b0b1894c7bfb9e9494033793dc6"
     },
     {
+      "path": "client/src/components/common/OptionGuide.jsx",
+      "sha256": "9bea9530689a83f66af474c3bb901ad416dba4d42e2f4adae13bb8687800cacb"
+    },
+    {
       "path": "client/src/components/common/PageTitle.jsx",
       "sha256": "6adca463fa038735a892ca9687982d55639ad6ed0737d56c58bbdc5893f82c85"
     },
@@ -321,7 +341,7 @@
     },
     {
       "path": "client/src/components/layout/MainLayout.jsx",
-      "sha256": "46123808e51b84d4d545ccc1d152bd70c7a2ffdbb8596beed780cc1fb79e89b4"
+      "sha256": "2625647b8b350f0d8eadfbd4dd4e2b9a5bb3fadc46137c7163d243bd73d3aec1"
     },
     {
       "path": "client/src/components/layout/MobileMenu.jsx",
@@ -337,7 +357,7 @@
     },
     {
       "path": "client/src/components/layout/SuperAdminLayout.jsx",
-      "sha256": "4ac36bc4c5e5f3bb1dffe058d245f2c659ef8accf2809e8d44ad78a0c191389f"
+      "sha256": "1cb03e54e598c07986000e1da5041adfb0319dd0730e9028e990695694bbebf0"
     },
     {
       "path": "client/src/components/qr/QRGenerator.jsx",
@@ -357,7 +377,7 @@
     },
     {
       "path": "client/src/context/AuthContext.jsx",
-      "sha256": "e830c85230de5f1927b35d277be1a08e0512f0de1b212eb07c6d2def37a8ed9f"
+      "sha256": "d96e1875e7a92824a7db0936387c1454d52636dd20ab0796a95f692d736ae1ea"
     },
     {
       "path": "client/src/context/LanguageContext.jsx",
@@ -381,7 +401,7 @@
     },
     {
       "path": "client/src/main.jsx",
-      "sha256": "35e9c2b9253c081e1f5dd6d57c93df54ee00a1e3ec91fe948cfa63c51c8d5767"
+      "sha256": "2a966fd30c70623528a2ca6ccd1ab9c8cb0ed6bec24a3c84a10283e757bd0440"
     },
     {
       "path": "client/src/pages/auth/CompanyManagementPage.jsx",
@@ -816,6 +836,10 @@
       "sha256": "95b848151b19828fbc5b0445b07005afdba00417f701c4dd6a0a55969f7e1474"
     },
     {
+      "path": "client/src/utils/sessionPolicy.js",
+      "sha256": "f98937f8f52d20a006c2b3a7b4be687c6091bc98ae3262bbb5eb6719161b3e10"
+    },
+    {
       "path": "client/src/utils/tenantClient.js",
       "sha256": "fa79674ccd5f631989f169b8b118b31cf93b7b904713cd9203f1b09fc48d3e52"
     },
@@ -941,7 +965,7 @@
     },
     {
       "path": "server/src/controllers/authController.js",
-      "sha256": "3fd0ed4637d02381a5161b39fb90708f063acf54b0127a76ae57afb7b3684f08"
+      "sha256": "1e898e173ab4e5f681cd6ca2d5ca6ae229201c9097af0b926c74fc02674abda1"
     },
     {
       "path": "server/src/controllers/categoryController.js",
@@ -1177,7 +1201,7 @@
     },
     {
       "path": "server/src/middleware/authMiddleware.js",
-      "sha256": "d0eaa652cda3e1dfa42f00f2deaf9d4f0fd3b9bfac3a8ac35d4682b56f8d8982"
+      "sha256": "64da78e548564f4a40f5d53fce00ee2866cf420129f7cfc305b5aa5be7555dc8"
     },
     {
       "path": "server/src/middleware/customerDatabaseMiddleware.js",
@@ -1421,7 +1445,7 @@
     },
     {
       "path": "server/src/models/User.js",
-      "sha256": "9d46228dd684133296d56137cfb5a553c522d1f88b96d551442ef1769dede3cd"
+      "sha256": "32557ba79db2a8cc7dd5a6c889a02621837f6710596b91056de82b2c0680ff52"
     },
     {
       "path": "server/src/models/WarehouseStock.js",
@@ -1676,6 +1700,10 @@
       "sha256": "073894d1287517e9fc97f974998f68a095dad163c555cd39ffc7bfc67f24bd86"
     },
     {
+      "path": "server/src/utils/sessionIdlePolicy.js",
+      "sha256": "92e7591527452227e3fe9d8bc0b93907b83bb6b3836f61671937c42639bf0ab2"
+    },
+    {
       "path": "server/src/utils/stockQuantity.js",
       "sha256": "7b3096089aca65ea3f26ce72d1230784d01457e8bf264ecaed6cc6a401ee713e"
     },
@@ -1830,6 +1858,10 @@
     {
       "path": "server/tests/securityLock.test.js",
       "sha256": "263a9c6ba492b3a69809e83e94b6bae3497661af600947822aa44b849a750ced"
+    },
+    {
+      "path": "server/tests/sessionIdle.test.js",
+      "sha256": "f648511677b4708e6425d64bbffb7e916840303658ba38da73e0a396680a9fa5"
     },
     {
       "path": "server/tests/subscriptionPeriod.test.js",

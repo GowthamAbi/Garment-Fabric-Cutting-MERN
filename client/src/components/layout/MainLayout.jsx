@@ -1,3 +1,4 @@
+import DisplayTools from '../common/DisplayTools.jsx';
 import SubscriptionNotice from './SubscriptionNotice';
 import {
   AlertTriangle,
@@ -968,6 +969,7 @@ export default function MainLayout({ page, onPageChange, children }) {
 
       <main>
         <header className="topbar">
+          <DisplayTools page={page}/>
           <button className="menu" onClick={() => setMenuOpen(true)}>
             <Menu />
           </button>

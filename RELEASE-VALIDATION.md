@@ -1,3 +1,5 @@
+> Latest device/security increment: see [DEVICE-SECURITY-RELEASE.md](DEVICE-SECURITY-RELEASE.md) and [USER-OPTION-GUIDE.md](USER-OPTION-GUIDE.md).
+
 > Current increment: see [ADVANCED-ERP-RELEASE.md](ADVANCED-ERP-RELEASE.md) for forecasting, offline device POS, payroll review and remaining live acceptance. Earlier sections below describe previous increments.
 
 > Current release: read [PLANS-5-10-RELEASE.md](PLANS-5-10-RELEASE.md) for 11 October updates and current validation/limits. The content below describes an earlier release.

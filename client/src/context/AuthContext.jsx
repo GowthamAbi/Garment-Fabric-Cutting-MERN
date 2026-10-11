@@ -2,12 +2,15 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { request } from "../api/axiosInstance.js";
 import { tokenService } from "../services/tokenService.js";
 import { companyKeyFromLocation, tenantLoginPath } from "../utils/tenantClient.js";
+import { idleExpired } from '../utils/sessionPolicy.js';
+import {posScope,removeOfflineCatalog} from '../utils/offlinePos.js';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const lockKey='ug-session-lock:'+companyKeyFromLocation(),activityKey='ug-session-activity:'+companyKeyFromLocation();
 
   function clearSensitiveBrowserState() {
     tokenService.clearLegacyLogin();
@@ -17,16 +20,18 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     clearSensitiveBrowserState();
+    if(localStorage.getItem(lockKey)|| (localStorage.getItem(activityKey)&&idleExpired(Number(localStorage.getItem(activityKey))))){localStorage.setItem(lockKey,'1');setCheckingSession(false);return;}
 
     request("/auth/session", {
       suppressGlobalError: true,
       suppressSessionExpired: true,
     })
-      .then((session) => setUser(session.user))
+      .then((session) => {if(!localStorage.getItem(lockKey))setUser(session.user);})
       .catch(() => setUser(null))
       .finally(() => setCheckingSession(false));
 
     const expireSession = () => {
+      localStorage.setItem(lockKey,'1');
       clearSensitiveBrowserState();
       setUser(null);
       window.history.replaceState({}, "", tenantLoginPath(companyKeyFromLocation()));
@@ -40,22 +45,30 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!user) return undefined;
 
-    let inactivityTimer;
-    const lockAfterInactivity = () => {
-      window.clearTimeout(inactivityTimer);
-      inactivityTimer = window.setTimeout(() => logout(), 30 * 60 * 1000);
+    let lastWrite=0;
+    const readLast=()=>Number(localStorage.getItem(activityKey)||0);
+    const check=()=>{if(localStorage.getItem(lockKey)||idleExpired(readLast()))logout();};
+    const lockAfterInactivity = event => {
+      if(event&&!event.isTrusted)return;
+      if(idleExpired(readLast())){logout();return;}
+      if(Date.now()-lastWrite>1000){lastWrite=Date.now();localStorage.setItem(activityKey,String(lastWrite));}
     };
-    const activityEvents = ["pointerdown", "keydown", "touchstart", "scroll"];
+    const activityEvents = ["pointermove", "pointerdown", "keydown", "touchstart", "scroll"];
 
     activityEvents.forEach((eventName) =>
       window.addEventListener(eventName, lockAfterInactivity, {
         passive: true,
       }),
     );
-    lockAfterInactivity();
+    if(!localStorage.getItem(activityKey))localStorage.setItem(activityKey,String(Date.now()));
+    const inactivityTimer=window.setInterval(check,1000);
+    window.addEventListener('focus',check);document.addEventListener('visibilitychange',check);
+    const storage=e=>{if(e.key===lockKey&&e.newValue){clearSensitiveBrowserState();setUser(null);}};
+    window.addEventListener('storage',storage);
 
     return () => {
-      window.clearTimeout(inactivityTimer);
+      window.clearInterval(inactivityTimer);
+      window.removeEventListener('focus',check);document.removeEventListener('visibilitychange',check);window.removeEventListener('storage',storage);
       activityEvents.forEach((eventName) =>
         window.removeEventListener(eventName, lockAfterInactivity),
       );
@@ -64,10 +77,16 @@ export function AuthProvider({ children }) {
 
   function login(loginData) {
     clearSensitiveBrowserState();
+    localStorage.removeItem(lockKey);localStorage.setItem(activityKey,String(Date.now()));
     setUser(loginData.user);
   }
 
   async function logout() {
+    setCheckingSession(true);
+    localStorage.setItem(lockKey,'1');localStorage.removeItem(activityKey);
+    if(user?.companyId&&user?.factoryId)try{removeOfflineCatalog(posScope(user,companyKeyFromLocation())).catch(()=>{});}catch{}
+    clearSensitiveBrowserState();setUser(null);
+    window.history.replaceState({}, "", tenantLoginPath(companyKeyFromLocation()));
     try {
       await request("/auth/logout", {
         method: "POST",
@@ -77,9 +96,7 @@ export function AuthProvider({ children }) {
     } catch {
       // Local lock still happens if the network is unavailable.
     }
-    clearSensitiveBrowserState();
-    setUser(null);
-    window.history.replaceState({}, "", tenantLoginPath(companyKeyFromLocation()));
+    setCheckingSession(false);
   }
 
   return (

@@ -298,6 +298,7 @@ export async function login(request, response) {
   user.lockedUntil = undefined;
   user.accountStatus = "ACTIVE";
   user.lastLoginAt = new Date();
+  user.lastSessionActivityAt = new Date();
   await user.save();
   response.json(startSession(response, user, company?.companyName));
 }
