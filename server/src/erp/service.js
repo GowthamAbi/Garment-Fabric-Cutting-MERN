@@ -86,6 +86,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
         }
       }
       if (reverseId && !original) fail("Original document not found");
+      if(original?.metadata?.payrollManaged) fail("Use the workforce payroll correction flow");
       if(original?.metadata?.departmentManaged) fail("Use department return/correction flow; generic reversal would desynchronise bundles");
       if (original?.clearedAt) fail("Unmatch the bank statement with a reviewed reason before reversing this document");
       if (reverseId && original.type === "OPENING" && settings.enabled) fail("Opening balance is locked after activation");

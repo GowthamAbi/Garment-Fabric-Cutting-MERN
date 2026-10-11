@@ -1,3 +1,5 @@
+> Current release: read [PLANS-5-10-RELEASE.md](PLANS-5-10-RELEASE.md) for 11 October updates and current validation/limits. The content below describes an earlier release.
+
 # UG SaaS — Department and retail extension, 9 October 2026
 
 This source release extends the previous consolidated ERP. It is a staging candidate, not a certification that the live system is production ready. No GitHub push or deployment was made.

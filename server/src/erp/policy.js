@@ -6,6 +6,7 @@ export const ACCOUNTS = {
   AR: { name: "Accounts receivable", group: "ASSET" }, INPUT_TAX: { name: "Input tax", group: "ASSET" },
   AP: { name: "Accounts payable", group: "LIABILITY" }, GRNI: { name: "Goods received not invoiced", group: "LIABILITY" },
   OUTPUT_TAX: { name: "Output tax", group: "LIABILITY" }, OPENING_EQUITY: { name: "Opening equity", group: "EQUITY" },
+  SALARY_EXPENSE: { name: "Salary expense", group: "EXPENSE" }, PAYROLL_PAYABLE: { name: "Net salary payable", group: "LIABILITY" }, PAYROLL_CONTRIBUTIONS_PAYABLE: { name: "Payroll deductions and contributions payable", group: "LIABILITY" },
   SALES: { name: "Sales", group: "REVENUE" }, COGS: { name: "Cost of goods sold", group: "EXPENSE" },
   WASTE_EXPENSE: { name: "Waste expense", group: "EXPENSE" }, OPERATING_EXPENSE: { name: "Operating expense", group: "EXPENSE" },
 };

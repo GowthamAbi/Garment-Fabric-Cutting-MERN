@@ -1,3 +1,5 @@
+> Current release: read [PLANS-5-10-RELEASE.md](PLANS-5-10-RELEASE.md) for 11 October updates and current validation/limits. The content below describes an earlier release.
+
 # Release validation — 9 October 2026
 
 This extension supersedes the older consolidated source ZIP. Read DEPARTMENT-RELEASE-START-HERE.md first. It is not deployed and has not been certified as production ready.

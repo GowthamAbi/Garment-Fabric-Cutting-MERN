@@ -29,7 +29,7 @@ export async function request(path, options = {}) {
     if (response.status === 401 && !suppressSessionExpired) {
       window.dispatchEvent(new Event("ug-session-expired"));
     }
-    if (!response.ok) throw new Error(data.message || "Request failed");
+    if (!response.ok) { const error = new Error(data.message || "Request failed"); error.status = response.status; throw error; }
     return data;
   } catch (error) {
     if (!suppressGlobalError) {
