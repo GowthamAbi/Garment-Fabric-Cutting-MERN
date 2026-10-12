@@ -26,7 +26,7 @@ scopedUnique(bom, "code"); export const ErpBom = createTenantModel("ErpBom", bom
 const settings = new Schema({ key: { type: String, default: "ERP" }, enabled: { type: Boolean, default: false },
   revision: { type: Number, default: 0 },
   legacyWritesLocked: { type: Boolean, default: false }, activationAt: Date, activatedBy: String,
-  migrationNotes: String, approvalThreshold: { type: Number, default: null }, approvalTypes: [String] }, { timestamps: true });
+  migrationNotes: String, approvalThreshold: { type: Number, default: null }, approvalTypes: [String],approvalPolicyVersion:Number,policyRevision:{type:Number,default:0},reviewerLimits:[{_id:false,userId:String,limitPaise:Number}],escalationHours:Number,pendingApprovalPolicy:Schema.Types.Mixed }, { timestamps: true });
 scopedUnique(settings, "key"); export const ErpSettings = createTenantModel("ErpSettings", settings);
 const document = new Schema({ number: { type: String, required: true }, type: { type: String, required: true },
   date: { type: Date, required: true }, partyCode: String, sourceId: String, bomCode: String, notes: String,
@@ -55,7 +55,9 @@ const sequence = new Schema({ key: { type: String, required: true }, value: { ty
 scopedUnique(sequence, "key"); export const ErpSequence = createTenantModel("ErpSequence", sequence);
 export const ERP_MODELS = [ErpParty, ErpSku, ErpBom, ErpSettings, ErpDocument, ErpBalance, ErpEntry, ErpSequence];
 const approval = new Schema({ key: { type: String, required: true }, requestHash: String, input: Schema.Types.Mixed,
-  requestedBy: String, decidedBy: String, reason: String, documentId: String,
+  dueAt:Date,policyRevision:Number,requestedBy: String, decidedBy: String, reason: String, documentId: String,
   status: { type: String, enum: ["PENDING","APPROVED","REJECTED","POSTED"], default: "PENDING" } }, { timestamps: true });
 scopedUnique(approval,"key");
 export const ErpApproval = createTenantModel("ErpApproval",approval);
+
+const approvalAudit=new Schema({sequence:Number,previousHash:String,hash:String,data:Schema.Types.Mixed},{timestamps:true});approvalAudit.index({companyId:1,factoryId:1,sequence:1},{unique:true});immutable(approvalAudit);export const ErpApprovalAudit=createTenantModel("ErpApprovalAudit",approvalAudit);

@@ -1,4 +1,8 @@
 import {DepartmentDemand} from "./departmentModels.js";
+import {appendApprovalAudit} from "./approvalAudit.js";
+import {assertApprovalLimit} from "./approvalPolicy.js";
+import {exposure} from "./commercialPolicy.js";
+import {ErpApprovalAudit} from "./models.js";
 import {bomUsable} from "./routingPolicy.js";
 import mongoose from "mongoose";
 import crypto from "node:crypto";
@@ -53,7 +57,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
   const input = reverseId ? { reverseId, notes: String(body.notes || "") } : documentInput(body);
   if (reverseId && !input.notes.trim()) fail("Reversal reason is required");
   const hash = requestHash(input);
-  await Promise.all([...ERP_MODELS, ErpApproval, ...OPERATION_MODELS].map(model => model.init()));
+  await Promise.all([...ERP_MODELS, ErpApprovalAudit, ErpApproval, ...OPERATION_MODELS].map(model => model.init()));
   // Create configuration before the transaction; unique index protects races.
   try { await ErpSettings.updateOne({ ...scope, key: "ERP" }, { $setOnInsert: { ...scope, key: "ERP", revision: 0 } }, { upsert: true }); }
   catch (e) { if (e.code !== 11000) throw e; }
@@ -100,6 +104,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
         approval = await ErpApproval.findOne({ ...scope,_id: approvalId,status: "APPROVED" }).session(session);
         if (!approval || approval.requestHash!==hash || approval.decidedBy!==actor || approval.requestedBy===actor) fail("Independent approved request does not match this posting");
       }
+      if(approval)assertApprovalLimit(settings,actor,exposure(plan));
       if (!reverseId && needsApproval(settings,plan) && !approval) fail("This document needs independent approval; submit it through the approval queue");
       if(input.demandId){
         if(input.type!=="WORK_ORDER"||!mongoose.isValidObjectId(input.demandId))fail("Demand references belong to work orders");
@@ -139,7 +144,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
       ];
       if (entries.length) await ErpEntry.create(entries, { session });
       if (original) { original.reversedBy = String(document._id); await original.save({ session }); }
-      if (approval) { approval.status="POSTED"; approval.documentId=String(document._id); await approval.save({ session }); }
+      if (approval) { await appendApprovalAudit(scope,session,{action:"POSTED",actor,reference:String(approval._id),documentId:String(document._id),amountPaise:exposure(plan),policyRevision:settings.policyRevision||0});approval.status="POSTED"; approval.documentId=String(document._id); await approval.save({ session }); }
       result = document.toObject();
     });
     return result;

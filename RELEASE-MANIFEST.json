@@ -1,11 +1,12 @@
 {
-  "release": "Owner Part 5 approved routing and BOM versions",
+  "release": "Owner Part 6 document approvals and audit",
   "validation": {
-    "serverPassed": 139,
+    "serverPassed": 144,
     "serverFailed": 0,
-    "serverSkipped": 5,
+    "serverSkipped": 6,
     "frontendBuild": "PASSED",
     "realDatabaseAcceptance": "NOT_RUN",
+    "liveEscalationEmail": "NOT_RUN",
     "loggedInDeviceAcceptance": "NOT_RUN"
   },
   "files": [
@@ -80,6 +81,10 @@
     {
       "path": "OWNER-PART-5-RELEASE.md",
       "sha256": "fc7903d4396b0d23bc86b300eee7f9be323a333e31662d9344e44835821beb3c"
+    },
+    {
+      "path": "OWNER-PART-6-RELEASE.md",
+      "sha256": "0a00b0806d46f0a769b3332db239aa23b3e2bfaaf7960412686d437e365dd7bd"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -487,7 +492,7 @@
     },
     {
       "path": "client/src/pages/erp/Approvals.jsx",
-      "sha256": "018d7467098cf08f3fea39b0500016b18e8b5e5922d15beb84893aa238564af1"
+      "sha256": "563a266958297f0e4593753d23b9ff23dbc138767c0176a404bdea21afc35cf2"
     },
     {
       "path": "client/src/pages/erp/AutomationPage.jsx",
@@ -1126,8 +1131,16 @@
       "sha256": "dd27fc3d18e99005ea2e0eeef781e5db3dd6fc0906611d77469d2efbe3342c47"
     },
     {
+      "path": "server/src/erp/approvalAudit.js",
+      "sha256": "2fdedb300ed0cea955f3ef729ee5d725433ddabfc0c477e5b889d2711279bc45"
+    },
+    {
+      "path": "server/src/erp/approvalPolicy.js",
+      "sha256": "06f471f94f168aed9381cf45c75b6c5ac66fe5be71ba1f203e38253970be315a"
+    },
+    {
       "path": "server/src/erp/approvalRoutes.js",
-      "sha256": "9d37cd6ce8a5356d1f0b77351c77d8f98097c8ed436c950bb6b98718518dbb7f"
+      "sha256": "47ed9dc79b1aeaa914ff1a263799d80d44f480b6527d97dea384e8d2bf52288a"
     },
     {
       "path": "server/src/erp/bankPolicy.js",
@@ -1191,7 +1204,7 @@
     },
     {
       "path": "server/src/erp/models.js",
-      "sha256": "a876c7c544d72dccd6d2a2ab0e2d194c7e6c5a72962db72868fb453433a9d04e"
+      "sha256": "06a4ca28cd2f79b2b4219270c583ac595b18ec254b2579e38438cfec23629f7a"
     },
     {
       "path": "server/src/erp/operationsModels.js",
@@ -1227,7 +1240,7 @@
     },
     {
       "path": "server/src/erp/service.js",
-      "sha256": "306111dbdbfc91d13bbfa7a589ef1e6040e5eb14a34e5c51d9088ef84e4dc13c"
+      "sha256": "cf9f31e5fc8a2258e25117ff42c6dcb4b0adef9260ae93d84000f1eeeda31ce3"
     },
     {
       "path": "server/src/erp/statutoryReport.js",
@@ -1830,6 +1843,14 @@
       "sha256": "eacc8b0e0bd4ab3923114819d9936679a6b86bb4a07e2f6e5504cbf1d1980f14"
     },
     {
+      "path": "server/tests/approvalDatabase.test.js",
+      "sha256": "2cc5a0cc931f22b55d4bd5e801919d5bbbf22713b7222cf2992936031cd4ff43"
+    },
+    {
+      "path": "server/tests/approvalPolicy.test.js",
+      "sha256": "f35cfde14f1eb2777ad068a8e828e7d02319ace6b7061e9fd94a3ddc3c8787c1"
+    },
+    {
       "path": "server/tests/auth.test.js",
       "sha256": "1ce6cf850ff235f9c062678819b6cbe3baff0f4b2fb14144602c6ab6b68310b5"
     },
@@ -1907,7 +1928,7 @@
     },
     {
       "path": "server/tests/httpSmoke.test.js",
-      "sha256": "c8f8529298bde39fd661bd90ed7ea35d8413e479b3ced64f20c55a6e018cb8ce"
+      "sha256": "2ba54cdb3153e71bda474ceeffc7c819ddf6b4d78b3cb6bb09c2379f1f50163a"
     },
     {
       "path": "server/tests/inward.test.js",
