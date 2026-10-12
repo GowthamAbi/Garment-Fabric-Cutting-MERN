@@ -1,10 +1,10 @@
 {
-  "release": "Device/security ERP release candidate",
+  "release": "Owner Part 1 department catalogue",
   "validation": {
-    "serverPassed": 118,
+    "serverPassed": 122,
     "serverFailed": 0,
     "serverSkipped": 4,
-    "browserAcceptance": "EXISTING_LIVE_UNAUTHENTICATED_GUARD_ONLY"
+    "liveMigration": "NOT_RUN"
   },
   "files": [
     {
@@ -58,6 +58,10 @@
     {
       "path": "MILESTONE-4.md",
       "sha256": "a8b17438ae206e1a1bb09cc7b65b0a10581f4e5ec734db57b27ea7574a2157f9"
+    },
+    {
+      "path": "OWNER-PART-1-RELEASE.md",
+      "sha256": "5f01887428790d4296b27f8ef9f42418aac53770dd3c0de657dd38adec940322"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -405,7 +409,7 @@
     },
     {
       "path": "client/src/pages/auth/CompanyManagementPage.jsx",
-      "sha256": "4d576a03f113da00ba0d4e0362afd43264dc47d32cf2bf616278a8d65ab70e46"
+      "sha256": "5cc3b1b64c5f735ae066d6b021c723e2317c7556494329aff25686cea06c5396"
     },
     {
       "path": "client/src/pages/auth/ForgotPasswordPage.jsx",
@@ -421,7 +425,7 @@
     },
     {
       "path": "client/src/pages/auth/UserManagementPage.jsx",
-      "sha256": "27837fef780e4ba433a7924b9e4ccafa9fa37b1653eb11dbbeff5a1f4b24e49d"
+      "sha256": "0fec9518c9173c3bab2e4fc5892a626b696d5fdc03768f12132d4fd913140016"
     },
     {
       "path": "client/src/pages/auth/company-management.css",
@@ -717,7 +721,7 @@
     },
     {
       "path": "client/src/pages/saas/OwnerPlansPage.jsx",
-      "sha256": "f9360f83ba083131ed0392919351b7154463c010c29a1b711fe3af534896a2b2"
+      "sha256": "bbfb3f6fd01e12af791565b5196f0f57250551e865897f9bd9c66a7b9de6f502"
     },
     {
       "path": "client/src/pages/saas/OwnerSalesPage.jsx",
@@ -904,6 +908,10 @@
       "sha256": "2835b946b2584e34bcd6d48ba819143ff145a21824f8cb573585694280f661ae"
     },
     {
+      "path": "server/scripts/review-department-catalogue.js",
+      "sha256": "001188e46a43d57cbe1a5ceff55e74e876327a56289f42a320f1709170d2418f"
+    },
+    {
       "path": "server/scripts/run-jobs.js",
       "sha256": "bc893ea54090e5f4dea8aa5dbaf0235465d2d84e4349fbc9f2de8714f45f744f"
     },
@@ -965,7 +973,7 @@
     },
     {
       "path": "server/src/controllers/authController.js",
-      "sha256": "1e898e173ab4e5f681cd6ca2d5ca6ae229201c9097af0b926c74fc02674abda1"
+      "sha256": "1b1891884548646b9a0ac34bb5de046baa5c72d1793f1c6b1b26079b986b67a1"
     },
     {
       "path": "server/src/controllers/categoryController.js",
@@ -977,7 +985,7 @@
     },
     {
       "path": "server/src/controllers/companyController.js",
-      "sha256": "cf945ce41e8ddcee8ec3714a8cb13f32db2b6fe50b1f9a72c00aa8f8d52fcf56"
+      "sha256": "01363bf920df33df9d022df194a421f746b9a3e32d1be4a2f6373c9bcfda0c88"
     },
     {
       "path": "server/src/controllers/customerDatabaseController.js",
@@ -1057,7 +1065,7 @@
     },
     {
       "path": "server/src/controllers/saasController.js",
-      "sha256": "dc6dc4dd3806a7a0daa2c81c6c56f3d6b7358b7a6c6647e9aeae4bfc08fefd87"
+      "sha256": "c9c2757dfd0edbcda01602598ca70ec5884e013ed40fac685a7c2f71b6a832cd"
     },
     {
       "path": "server/src/controllers/sectionController.js",
@@ -1101,7 +1109,7 @@
     },
     {
       "path": "server/src/erp/departmentPolicy.js",
-      "sha256": "084a41bdcff5abaaf6529c49fa300dcfaca66464e92b4a9f733f41ea1869853a"
+      "sha256": "661612392ebe273681b4cef8b06de383026332362822cf68a454531317eff83b"
     },
     {
       "path": "server/src/erp/departmentReports.js",
@@ -1109,7 +1117,7 @@
     },
     {
       "path": "server/src/erp/departmentRoutes.js",
-      "sha256": "734278ba6418bbf734c6d75f3c416f4c95aa4a2c7ec6cf7a0d0898fd4647be29"
+      "sha256": "749de2862b48bd1ff2cd5356b6e79aa7bd7011725e8a17600c78ff0373d023ea"
     },
     {
       "path": "server/src/erp/engine.js",
@@ -1253,7 +1261,7 @@
     },
     {
       "path": "server/src/models/Company.js",
-      "sha256": "178654ceceeb3153b84b963799d8d07fbc8a06cc733bcd8b410a13b977588ff4"
+      "sha256": "e148a27c1c798847a0ac7fd3f1b52907e14439d48a6b3675f10fb3a42deb5df0"
     },
     {
       "path": "server/src/models/CustomerDatabaseCandidate.js",
@@ -1437,7 +1445,7 @@
     },
     {
       "path": "server/src/models/TenantRegistry.js",
-      "sha256": "3eb029d31e4efa42d03b8c5b0fdcb6a3f0c679092f30723396e0a8567f0604bd"
+      "sha256": "2f83b88a98cc9f169fe0626e05fd864a9a4201b641fffcb57ba929d41c6a93a8"
     },
     {
       "path": "server/src/models/Transaction.js",
@@ -1445,7 +1453,7 @@
     },
     {
       "path": "server/src/models/User.js",
-      "sha256": "32557ba79db2a8cc7dd5a6c889a02621837f6710596b91056de82b2c0680ff52"
+      "sha256": "8e7f9c2f963f2ebc41e2036d409a47ab97e919b2bb48d27b894e85b7da6be575"
     },
     {
       "path": "server/src/models/WarehouseStock.js",
@@ -1641,7 +1649,7 @@
     },
     {
       "path": "server/src/services/tenantProvisioningService.js",
-      "sha256": "84c457bd474aa981b6cbf33179d4afb37af20176b9541a35bb8a626efd587cda"
+      "sha256": "dc054c4632454e29f19b3527c42fc5d7814ff03c1474c20bc5f87c15f0374445"
     },
     {
       "path": "server/src/utils/ApiError.js",
@@ -1677,7 +1685,7 @@
     },
     {
       "path": "server/src/utils/entitlementPolicy.js",
-      "sha256": "90c490cdacc7d98cc4486ef4485cab3b255133342aee976fc32cde8f3c6a5676"
+      "sha256": "9b68cf53e1ef84bdc2066e876b84c773bdcd6fa3f0e9119e410c57862fb2bfdc"
     },
     {
       "path": "server/src/utils/generateReferenceNo.js",
@@ -1784,6 +1792,10 @@
       "sha256": "0ab76cf9b400fa0417a399955d362322afc2654e9cfac99a1cd1e422c30cde06"
     },
     {
+      "path": "server/tests/departmentCatalogue.test.js",
+      "sha256": "a8bb60ad4557288464dab310925c8c8fdb804d15dc77978cf5c9aaa6689ae60f"
+    },
+    {
       "path": "server/tests/departmentDatabase.test.js",
       "sha256": "61eb81e11dd5dc2e07a8dfc2ebc7e22e0d85fdbfc66a6f2a5b3f86e9a4a3d958"
     },
@@ -1878,6 +1890,14 @@
     {
       "path": "server/tests/workspaceContext.test.js",
       "sha256": "a63e48797cfd36671eb30dcfeaaa049e434d7eb85aa725c550ce74622a009f19"
+    },
+    {
+      "path": "shared/departmentCatalogue.js",
+      "sha256": "3965a5c7c3dc013a2a9e3424d18784bbbe9e2046151659e6143a206149c29b5b"
+    },
+    {
+      "path": "shared/package.json",
+      "sha256": "1239d4d885dcad42201a27ed9324f8f0f760b78700d8db9ced39a511cffe7eae"
     }
   ]
 }

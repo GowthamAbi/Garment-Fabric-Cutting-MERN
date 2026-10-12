@@ -1,3 +1,4 @@
+import {DEPARTMENTS,DEPARTMENT_CATALOGUE,ERP_MODULES,departmentCode} from '../../../../shared/departmentCatalogue.js';
 import { useEffect, useState } from "react";
 import { Check, Plus, Save } from "lucide-react";
 import { api } from "../../api.js";
@@ -14,7 +15,7 @@ const blank = {
   validityDays: 30,
   maxUsers: 5,
   maxDepartments: 3,
-  modules: ["Fabric", "Cutting"],
+  modules: ["FABRIC", "CUTTING"],
   active: true,
   featured: false,
   sortOrder: 10,
@@ -48,14 +49,14 @@ export default function OwnerPlansPage({ notify }) {
   }
   function edit(p) {
     setEditing(p._id);
-    setForm({ ...p, modules: p.modules || [] });
+    setForm({ ...p, modules: (p.modules || []).map(departmentCode) });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   return (
     <section className="classic-page">
       <PageTitle
         title="Plans & Pricing"
-        subtitle="Set price, validity, user limits and modules. GST 0 creates a no-tax plan. Full downstream workflow needs maxDepartments 9."
+        subtitle="Set price, validity, user limits and modules. GST 0 creates a no-tax plan. All departments use the shared 14-department catalogue."
       />
       <form className="classic-card saas-plan-form" onSubmit={save}>
         <div className="table-toolbar">
@@ -107,21 +108,7 @@ export default function OwnerPlansPage({ notify }) {
               onChange={(e) => field("description", e.target.value)}
             />
           </label>
-          <label className="wide">
-            <span>Modules (comma separated)</span>
-            <input
-              value={(form.modules || []).join(", ")}
-              onChange={(e) =>
-                field(
-                  "modules",
-                  e.target.value
-                    .split(",")
-                    .map((x) => x.trim())
-                    .filter(Boolean),
-                )
-              }
-            />
-          </label>
+          <fieldset className="wide"><legend>Licensed departments and ERP features</legend>{[...DEPARTMENT_CATALOGUE,...ERP_MODULES.map(code=>({code,label:code}))].map(({code,label})=><label className="check" key={code}><input type="checkbox" checked={(form.modules||[]).includes(code)} onChange={e=>field('modules',e.target.checked?[...form.modules,code]:form.modules.filter(m=>m!==code))}/>{label}</label>)}</fieldset>
           <label className="check">
             <input
               type="checkbox"

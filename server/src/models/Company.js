@@ -32,6 +32,7 @@ const companySchema = new mongoose.Schema(
     subscriptionStartsAt: Date,
     subscriptionEndsAt: Date,
     enabledDepartments: [String],
+    departmentCatalogueVersion: Number,
     entitlements: { maxUsers:Number,maxDepartments:Number,modules:[String] },
     userProvisionRevision: { type:Number,default:0 },
     preferredLanguage: { type: String, enum: ["en", "ta"], default: "en" },

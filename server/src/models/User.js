@@ -1,3 +1,4 @@
+import {DEPARTMENTS} from '../../../shared/departmentCatalogue.js';
 import mongoose from "mongoose";
 import { createTenantModel } from "../config/tenantDatabase.js";
 
@@ -66,24 +67,7 @@ const userSchema = new mongoose.Schema(
     permissions: [{ type: String }],
     department: {
       type: String,
-      enum: [
-        "",
-        "FABRIC",
-        "CUTTING",
-        "ACCESSORIES",
-        "ELASTIC",
-        "STITCHING",
-        "INWARD",
-        "CHECKING",
-        "IRONING",
-        "WAREHOUSE",
-        "SHOP",
-        "MARKETING",
-        "FINISHING",
-        "PACKING",
-        "DISPATCH",
-        "DELIVERY",
-      ],
+      enum: ["",...DEPARTMENTS,"FINISHING"],
       default: "",
       uppercase: true,
       trim: true,

@@ -1,3 +1,4 @@
+import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import {trialExpiry} from "../utils/subscriptionAccess.js";
 import {DEPARTMENTS} from "../erp/departmentPolicy.js";
 import Company from "../models/Company.js";
@@ -16,7 +17,7 @@ import {checkUserQuota} from "../utils/entitlementPolicy.js";
 export async function getCompanies(request, response) {
   if (request.user.role === "saas_super_admin") {
     const tenants = await TenantRegistry.find()
-      .select("companyKey companyName databaseName adminUserId adminName adminEmail activationEmailStatus activationEmailAt enabledDepartments loginPath status subscriptionPlan subscriptionEndsAt dataOwner ownerDataAccess retentionLock createdAt")
+      .select("companyKey companyName databaseName adminUserId adminName adminEmail activationEmailStatus activationEmailAt enabledDepartments departmentCatalogueVersion loginPath status subscriptionPlan subscriptionEndsAt dataOwner ownerDataAccess retentionLock createdAt")
       .sort({ companyName: 1 })
       .lean();
 
@@ -180,7 +181,7 @@ export async function updateCompanyUser(request, response) {
     if(nextActive){
       const plan=company.entitlements?.maxUsers?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
       const users=await User.collection.find({companyId:company._id,_id:{$ne:user._id},active:{$ne:false}},{session,projection:{department:1}}).limit(10001).toArray();
-      checkUserQuota(plan,users,nextDepartment);
+      checkUserQuota(plan,users,nextDepartment,company);
     }
     if(request.body.permissions&&(!Array.isArray(request.body.permissions)||request.body.permissions.some(p=>typeof p!=="string")))throw new ApiError(400,"Invalid permissions");
     if(request.body.role)user.role=request.body.role;user.active=nextActive;user.department=nextDepartment;
@@ -215,13 +216,13 @@ export async function createCompany(request, response) {
   assertStrongPassword(adminPassword, { name: adminName, email: adminEmail });
   const validityDays=Number(request.body.validityDays||14);
   if(!Number.isInteger(validityDays)||validityDays<1||validityDays>366)throw new ApiError(400,"Validity must be 1–366 days");
-  const selected=request.body.enabledDepartments||DEPARTMENTS;
+  let selected;try{selected=departmentSelection(request.body.enabledDepartments);}catch(e){throw new ApiError(400,e.message);}
   if(!Array.isArray(selected)||!selected.length||selected.some(d=>!DEPARTMENTS.includes(d))||new Set(selected).size!==selected.length)throw new ApiError(400,"Select unique supported departments");
   const selectedPlan=await SaasPlan.findOne({name:subscriptionPlan||"Trial",active:true}).lean();
   if(!selectedPlan)throw new ApiError(400,"Create/select an active subscription plan first");
   if(selected.length>selectedPlan.maxDepartments)throw new ApiError(400,"Selected departments exceed subscription limit");
-  const licensed=selectedPlan.modules.filter(d=>DEPARTMENTS.includes(d));
-  if(licensed.length&&selected.some(d=>!licensed.includes(d)))throw new ApiError(400,"Department is not included in this plan");
+  const licensed=licensedDepartments(selectedPlan.modules);
+  if(!licensed.length||selected.some(d=>!licensed.includes(d)))throw new ApiError(400,"Department is not included in this plan");
   const expiresAt = selectedPlan.code==="TRIAL" ? trialExpiry() : new Date(Date.now() + validityDays * 86400000);
   const provisioned = await provisionTenant({
     companyName, adminName, adminEmail, password: adminPassword,
@@ -253,17 +254,21 @@ export async function resendCompanyActivation(request,response){
  }catch(error){if(error.statusCode!==409&&error.statusCode!==404){registry.activationEmailStatus='FAILED';await registry.save();}throw error;}
 }
 export async function configureCompanyDepartments(request,response){
- const selected=request.body.enabledDepartments;
- if(!Array.isArray(selected)||!selected.length||selected.some(d=>!DEPARTMENTS.includes(d))||new Set(selected).size!==selected.length)throw new ApiError(400,'Select unique supported departments');
- const registry=await TenantRegistry.findById(request.params.id);if(!registry)throw new ApiError(404,'Workspace not found');
- await runWithTenant({companyKey:registry.companyKey,databaseName:registry.databaseName},async()=>{
-  const company=await Company.findOne();if(!company)throw new ApiError(404,'Company configuration missing');
-  const plan=company.entitlements?.maxDepartments?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).lean();
-  if(!plan||selected.length>plan.maxDepartments)throw new ApiError(409,'Department selection exceeds plan limits');
-  const licensed=(plan.modules||[]).filter(d=>DEPARTMENTS.includes(d));if(licensed.length&&selected.some(d=>!licensed.includes(d)))throw new ApiError(409,'Department not licensed');
-  company.enabledDepartments=selected;await company.save();
- });registry.enabledDepartments=selected;await registry.save();response.json({enabledDepartments:selected});
+ let selected;try{selected=departmentSelection(request.body.enabledDepartments);}catch(e){throw new ApiError(400,e.message);}
+ const session=await mongoose.startSession();
+ try{await session.withTransaction(async()=>{
+  const registry=await TenantRegistry.findById(request.params.id).session(session);if(!registry)throw new ApiError(404,'Workspace not found');
+  await runWithTenant({companyKey:registry.companyKey,databaseName:registry.databaseName},async()=>{
+   const company=await Company.findOne().session(session);if(!company)throw new ApiError(404,'Company configuration missing');
+   const plan=company.entitlements?.maxDepartments?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
+   if(!plan||selected.length>plan.maxDepartments)throw new ApiError(409,'Department selection exceeds plan limits');
+   const licensed=licensedDepartments(plan.modules);if(!licensed.length||selected.some(d=>!licensed.includes(d)))throw new ApiError(409,'Department not licensed');
+   company.enabledDepartments=selected;company.departmentCatalogueVersion=1;await company.save({session});
+  });
+  registry.enabledDepartments=selected;registry.departmentCatalogueVersion=1;await registry.save({session});
+ });response.json({enabledDepartments:selected});}finally{await session.endSession();}
 }
+
 export async function updateCompany(request, response) {
   if (request.user.role === "saas_super_admin")
     throw new ApiError(403, "Customer profile changes require the company administrator");

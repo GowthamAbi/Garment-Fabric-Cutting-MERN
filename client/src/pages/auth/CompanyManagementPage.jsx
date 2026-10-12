@@ -1,3 +1,4 @@
+import {DEPARTMENTS,DEPARTMENT_CATALOGUE,ERP_MODULES,departmentCode} from '../../../../shared/departmentCatalogue.js';
 import { useEffect, useState } from "react";
 import "./company-management.css";
 import { api } from "../../api.js";
@@ -6,7 +7,7 @@ import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-const departmentChoices=["STITCHING","INWARD","CHECKING","IRONING","PACKING","DISPATCH","WAREHOUSE","SHOP","MARKETING"];
+const departmentChoices=DEPARTMENTS;
 const blank = {
   companyName: "",
   factoryName: "",
@@ -22,6 +23,8 @@ export default function CompanyManagementPage({ notify }) {
   const [form, setForm] = useState({...blank,enabledDepartments:[]});
   const [rows, setRows] = useState([]);
   const [plans,setPlans]=useState([]);
+  const chosenPlan=plans.find(p=>p.name===form.subscriptionPlan);
+  const planDepartments=(chosenPlan?.modules||[]).map(departmentCode).filter(d=>DEPARTMENTS.includes(d));
   const [created, setCreated] = useState(null);
   const [selected,setSelected]=useState(null);
   async function load() {
@@ -48,7 +51,7 @@ export default function CompanyManagementPage({ notify }) {
     }
   }
   async function resend(row){try{const result=await api(`/companies/${row._id}/resend-activation`,{method:"POST",body:"{}"});notify?.(result.message);await load();}catch(e){notify?.(e.message);}}
-  async function configure(row){const value=window.prompt("Enabled departments, comma-separated: STITCHING,INWARD,CHECKING,IRONING,PACKING,DISPATCH,WAREHOUSE,SHOP,MARKETING",(row.enabledDepartments||[]).join(","));if(value===null)return;try{await api(`/companies/${row._id}/departments`,{method:"PATCH",body:JSON.stringify({enabledDepartments:value.split(",").map(x=>x.trim().toUpperCase()).filter(Boolean)})});await load();notify?.("Departments updated; existing data retained");}catch(e){notify?.(e.message);}}
+  async function configure(row){const value=window.prompt("Enabled departments, comma-separated: "+DEPARTMENTS.join(","),(row.enabledDepartments||[]).join(","));if(value===null)return;try{await api(`/companies/${row._id}/departments`,{method:"PATCH",body:JSON.stringify({enabledDepartments:value.split(",").map(x=>x.trim().toUpperCase()).filter(Boolean)})});await load();notify?.("Departments updated; existing data retained");}catch(e){notify?.(e.message);}}
   async function control(row, action) {
     const label =
       action === "ARCHIVE"
@@ -125,7 +128,7 @@ export default function CompanyManagementPage({ notify }) {
                     <select
                       required
                       value={form[key]}
-                      onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                      onChange={(e) => setForm({ ...form, [key]: e.target.value,enabledDepartments:[] })}
                     >
                       {plans.filter((plan) => plan.active).map((plan) => (
                         <option key={plan.name} value={plan.name}>{plan.name}</option>
@@ -149,13 +152,14 @@ export default function CompanyManagementPage({ notify }) {
 
             <fieldset className="company-departments-fieldset">
               <legend>Enabled departments</legend>
-              <p className="company-field-hint">Choose the departments this workspace can access. Selection must fit the chosen plan.</p>
+              <p className="company-field-hint">Choose the departments this workspace can access. Unlicensed choices and additions beyond the selected plan limit are disabled.</p>
               <div className="company-department-options">
                 {departmentChoices.map((department) => (
                   <label className={`company-department-option ${form.enabledDepartments.includes(department) ? "is-selected" : ""}`} key={department}>
                     <input
                       type="checkbox"
                       checked={form.enabledDepartments.includes(department)}
+                      disabled={Boolean(chosenPlan&&(!planDepartments.includes(department)||(!form.enabledDepartments.includes(department)&&form.enabledDepartments.length>=chosenPlan.maxDepartments)))}
                       onChange={(e) => setForm({
                         ...form,
                         enabledDepartments: e.target.checked

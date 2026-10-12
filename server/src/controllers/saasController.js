@@ -1,3 +1,4 @@
+import {DEPARTMENTS,planModules,departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import { settleSubscription } from "../services/subscriptionSettlementService.js";
 import { PaymentInbox } from "../automation/models.js";
 import { capturedPaymentMatches,providerOrderMatches,validBillingSnapshot } from "../utils/paymentPolicy.js";
@@ -39,10 +40,10 @@ const defaultPlans = [
     price,
     validityDays,
     maxUsers,
-    maxDepartments,
+    maxDepartments:Math.min(14,maxDepartments),
     sortOrder,
     description: `${name} garment production package`,
-    modules: ["Fabric", "Cutting", "Elastic", "Accessories", "Delivery"],
+    modules: [...DEPARTMENTS],
   }),
 );
 
@@ -252,6 +253,8 @@ export async function savePlan(request, response) {
   }))(request.body);
   if(!Number.isFinite(Number(payload.taxPercent))||Number(payload.taxPercent)<0||Number(payload.taxPercent)>28)throw new ApiError(400,"Tax rate must be 0–28; 0 means no GST charged");
   if(!Array.isArray(payload.modules)||payload.modules.some(x=>typeof x!=="string"||x.length>60))throw new ApiError(400,"Module list required");
+  try{payload.modules=planModules(payload.modules);}catch(e){throw new ApiError(400,e.message);}
+  if(!Number.isInteger(Number(payload.maxDepartments))||Number(payload.maxDepartments)<1||Number(payload.maxDepartments)>14)throw new ApiError(400,'Department limit must be 1–14');
   const plan = request.params.id
     ? await SaasPlan.findByIdAndUpdate(request.params.id, payload, {
         new: true,
@@ -539,6 +542,7 @@ export async function decideLeadRequest(request, response) {
   const trial = await SaasPlan.findOne({ code: "TRIAL", active: true }).lean();
   if(!trial)throw new ApiError(409,"Enable a Trial plan before approving trial requests");
   const expiry = trialExpiry();
+  let trialDepartments;try{trialDepartments=departmentSelection(request.body.enabledDepartments||licensedDepartments(trial.modules).slice(0,trial.maxDepartments));}catch(e){throw new ApiError(400,e.message);}
   const provisioned = await provisionTenant({
     companyName: lead.companyName,
     adminName: lead.contactName,
@@ -546,6 +550,7 @@ export async function decideLeadRequest(request, response) {
     passwordHash: lead.pendingPasswordHash,
     city: lead.city || "",
     plan: "Trial",
+    enabledDepartments: trialDepartments,
     entitlements:{maxUsers:trial.maxUsers,maxDepartments:trial.maxDepartments,modules:trial.modules},
     expiresAt: expiry,
     createdBy: request.user.userId || request.user.name,

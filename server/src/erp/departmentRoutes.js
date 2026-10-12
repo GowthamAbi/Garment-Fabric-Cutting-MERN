@@ -7,7 +7,7 @@ import Company from '../models/Company.js';
 import {workspaceFilter,requestHash} from './service.js';
 import {ErpSettings,ErpParty,ErpSku,ErpBalance,ErpDocument,ErpEntry,ErpSequence} from './models.js';
 import {DepartmentMaster as Master,DepartmentLot as Lot,DepartmentBundle as Bundle,DepartmentEvent as Event,RetailSale as Sale,DepartmentDemand as Demand,DepartmentTarget as Target,DepartmentException as Exception,DepartmentCost as Cost,DEPARTMENT_MODELS} from './departmentModels.js';
-import {DEPARTMENTS,allowedShop,allowedDepartment,enabledDepartment,pieces,names,checkSplit,stageAfter,packingRequirements,saleTotals,demandSuggestion} from './departmentPolicy.js';
+import {DEPARTMENTS,WORKFLOW_DEPARTMENTS,allowedShop,allowedDepartment,enabledDepartment,pieces,names,checkSplit,stageAfter,packingRequirements,saleTotals,demandSuggestion} from './departmentPolicy.js';
 import {fail,money,ratio,safeInteger} from './policy.js';
 import { forecastDemand, dailyNetSales, scenarioForecast } from './forecastPolicy.js';
 import { departmentSummary } from './departmentReports.js';
@@ -23,7 +23,7 @@ const clean=v=>String(v||'').trim().slice(0,120);
 const deptFor=stage=>stage.startsWith('OP:')||['STITCHING_READY','STITCHED','REWORK','REWORK_DONE'].includes(stage)?'STITCHING':['OIL','OIL_DONE','CHECKING','GOOD','WASTE'].includes(stage)?'CHECKING':['IRONING','IRONED'].includes(stage)?'IRONING':stage==='PACKED'?'DISPATCH':stage==='TRANSIT_WAREHOUSE'?'DISPATCH':stage.startsWith('WAREHOUSE:')||stage.startsWith('TRANSIT_SHOP:')?'WAREHOUSE':'SHOP';
 function location(b){return `DPT:${b.stage}:${b.code}`;}
 function shopAccess(req,code){if(!allowedShop(req.user,code))throw new ApiError(403,'Assigned shop permission required');}
-function requireAccess(req,department,write=true){if(!DEPARTMENTS.includes(department)||!allowedDepartment(req.user,department,write)||!enabledDepartment(req.departmentCompany,department))throw new ApiError(403,`${department} department permission/subscription required`);if(write)req.departmentWrite=department;}
+function requireAccess(req,department,write=true){if(!WORKFLOW_DEPARTMENTS.includes(department)||!allowedDepartment(req.user,department,write)||!enabledDepartment(req.departmentCompany,department))throw new ApiError(403,`${department} department permission/subscription required`);if(write)req.departmentWrite=department;}
 router.use(asyncHandler(async(req,_res,next)=>{req.departmentCompany=await Company.findById(workspaceFilter().companyId).lean();if(!req.departmentCompany)fail('Company not found');next();}));
 async function transaction(req,kind,fn){
  const scope=workspaceFilter(),key=clean(req.body.key);if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))fail('A 16–100 character idempotency key is required');
@@ -55,7 +55,7 @@ async function moveBundle(req,scope,session,b,count,next,destination=''){
  if(next===b.stage&&destination===b.destination){child.bin=b.bin;await child.save({session});}
  b.qty-=count;await b.save({session});const documentId=await journalMove(scope,session,req,[out,{sku:lot.sku,location:location(child),delta:count*1000,value:-out.value}]);return {child,documentId,lot};
 }
-router.get('/catalog',asyncHandler(async(req,res)=>res.json({departments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,false)&&enabledDepartment(req.departmentCompany,d)),writeDepartments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,true)&&enabledDepartment(req.departmentCompany,d))})));
+router.get('/catalog',asyncHandler(async(req,res)=>res.json({departments:WORKFLOW_DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,false)&&enabledDepartment(req.departmentCompany,d)),writeDepartments:WORKFLOW_DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,true)&&enabledDepartment(req.departmentCompany,d))})));
 router.post('/labour-cost',asyncHandler(async(req,res)=>{
  requireAccess(req,'STITCHING');if(!['admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator cost approval required');
  res.json(await transaction(req,'LABOUR_COST',async(scope,session)=>{

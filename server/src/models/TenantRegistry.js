@@ -4,6 +4,7 @@ import { controlDatabase } from "../config/tenantDatabase.js";
 const tenantRegistrySchema = new mongoose.Schema({
   companyKey: { type: String, required: true, unique: true, lowercase: true, trim: true },
   enabledDepartments: [String],
+    departmentCatalogueVersion: Number,
   adminUserId: String,
   adminName: String,
   adminEmail: {type:String,lowercase:true,trim:true},

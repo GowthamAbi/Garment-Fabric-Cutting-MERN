@@ -1,3 +1,4 @@
+import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import bcrypt from "bcryptjs";
 import TenantRegistry from "../models/TenantRegistry.js";
 import Company from "../models/Company.js";
@@ -25,6 +26,8 @@ export async function provisionTenant({
   // Email configuration must not block tenant creation. The verification-email
   // attempt below is intentionally isolated so a missing/invalid Resend setup
   // marks activationEmailStatus as FAILED while still provisioning the company.
+  try{enabledDepartments=departmentSelection(enabledDepartments);}catch(error){throw new ApiError(400,error.message);}
+  if(!entitlements||enabledDepartments.length>entitlements.maxDepartments||enabledDepartments.some(d=>!licensedDepartments(entitlements.modules).includes(d)))throw new ApiError(400,'Department selection must fit the licensed plan');
   adminEmail=String(adminEmail||'').trim().toLowerCase();
   if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(adminEmail))throw new ApiError(400,'Valid administrator email required');
   await TenantRegistry.init();
@@ -36,7 +39,7 @@ export async function provisionTenant({
   const companyKey = await availableCompanyKey(companyName);
   const databaseName = tenantDatabaseName(companyKey);
   const registry = await TenantRegistry.create({
-    companyKey, companyName, databaseName,enabledDepartments,adminEmail,adminName,
+    companyKey, companyName, databaseName,enabledDepartments,departmentCatalogueVersion:1,adminEmail,adminName,
     loginPath: `/c/${companyKey}/login`,
     status: "PROVISIONING", subscriptionPlan: plan,
     subscriptionEndsAt: expiresAt, trialEndsAt: new Date(Date.now() + 7 * 86400000), createdBy,
@@ -47,7 +50,7 @@ export async function provisionTenant({
       { companyKey, databaseName, tenantRegistryId: registry._id },
       async () => {
         const company = await Company.create({
-          companyName, address: city, subscriptionPlan: plan,enabledDepartments,entitlements,
+          companyName, address: city, subscriptionPlan: plan,enabledDepartments,departmentCatalogueVersion:1,entitlements,
           subscriptionStatus: "Active", subscriptionStartsAt: new Date(),
           subscriptionEndsAt: expiresAt,
           factories: [{ name: factoryName||`${companyName} Main`, code: factoryCode||"MAIN", address: city }],

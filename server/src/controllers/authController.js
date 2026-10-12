@@ -1,3 +1,4 @@
+import {DEPARTMENT_PERMISSIONS,departmentCode} from '../../../shared/departmentCatalogue.js';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
@@ -144,7 +145,7 @@ export async function createUser(request, response) {
   }
   const normalizedEmail=String(email).trim().toLowerCase();
   if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(normalizedEmail))throw new ApiError(400,"Valid email is required");
-  const department=String(request.body.department||"").trim().toUpperCase();
+  const department=departmentCode(request.body.department);
   const allowedDepartments=User.schema.path("department").enumValues;
   if(!allowedDepartments.includes(department))throw new ApiError(400,"Unsupported department");
   assertStrongPassword(password, { name, email:normalizedEmail });
@@ -182,7 +183,7 @@ export async function createUser(request, response) {
       if(!company) throw new ApiError(409,"Company is unavailable");
       const plan=company.entitlements?.maxUsers?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
       const users=await User.collection.find({companyId:new mongoose.Types.ObjectId(targetCompanyId),active:{$ne:false}},{session,projection:{department:1}}).limit(10001).toArray();
-      checkUserQuota(plan,users,userData.department);
+      checkUserQuota(plan,users,userData.department,company);
       [user]=await User.create([userData],{session});
     }); } finally {await session.endSession();}
   }
@@ -334,7 +335,7 @@ export async function getProfile(request, response) {
   response.json(user);
 }
 export async function updateUserPermissions(request, response) {
-  const allowed = ["department.stitching.read","department.stitching.write","department.inward.read","department.inward.write","department.checking.read","department.checking.write","department.ironing.read","department.ironing.write","department.packing.read","department.packing.write","department.dispatch.read","department.dispatch.write","department.warehouse.read","department.warehouse.write","department.shop.read","department.shop.write","department.marketing.read","department.marketing.write", "erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
+  const allowed = [...DEPARTMENT_PERMISSIONS, "erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
   const permissions = request.body.permissions;
   if (!Array.isArray(permissions) || permissions.some(p => !allowed.includes(p)&&!(typeof p==="string"&&/^shop\.[A-Za-z0-9_-]{2,60}$/.test(p)))) throw new ApiError(400, "Invalid ERP permissions");
   const user = await User.findOne({ _id: request.params.id, companyId: request.user.companyId, factoryId: request.user.factoryId }).select("+sessionVersion");
