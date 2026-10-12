@@ -1,3 +1,4 @@
+import AccessAdministration from '../../components/AccessAdministration.jsx';
 import {DEPARTMENT_PERMISSIONS} from '../../../../shared/departmentCatalogue.js';
 import {DEPARTMENTS,DEPARTMENT_CATALOGUE,ERP_MODULES,departmentCode} from '../../../../shared/departmentCatalogue.js';
 import { useEffect, useState } from "react";
@@ -63,7 +64,7 @@ export default function UserManagementPage({ notify }) {
         title="User Management"
         subtitle="Company roles and action-level access accounts"
       />
-      <Card title="Create User">
+      <AccessAdministration/><Card title="Create User">
         <form className="production-start-grid" onSubmit={submit}>
           <label>
             <span>Name</span>

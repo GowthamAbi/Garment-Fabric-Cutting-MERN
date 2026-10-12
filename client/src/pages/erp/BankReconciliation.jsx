@@ -2,7 +2,7 @@ import {useEffect,useState} from "react";
 import {api} from "../../api.js";
 import {useAuth} from "../../context/AuthContext.jsx";
 export default function BankReconciliation({notify}){
- const {user}=useAuth(),write=["company_admin","admin"].includes(user?.role)||(user?.permissions||[]).includes("erp.reconcile");
+ const {user}=useAuth(),write=["company_owner", "company_admin","admin"].includes(user?.role)||(user?.permissions||[]).includes("erp.reconcile");
  const [rows,setRows]=useState([]),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const load=async()=>setRows(await api("/erp/bank"));useEffect(()=>{load().catch(e=>setError(e.message));},[]);
  async function run(fn){setBusy(true);setError("");try{await fn();await load();notify("Bank reconciliation updated");}catch(e){setError(e.message);}finally{setBusy(false);}}

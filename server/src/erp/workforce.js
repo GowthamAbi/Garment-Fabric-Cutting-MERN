@@ -8,6 +8,7 @@ import { authorizeErp, money, safeInteger, fail } from "./policy.js";
 import Company from "../models/Company.js";
 import { payrollRule, calculateRulePay, payrollAccrual } from "./payrollPolicy.js";
 import { featureAllowed } from "./featurePolicy.js";
+import {strictAccess,hasPermission} from '../utils/accessPolicy.js';
 import { statutoryRoutes } from './statutoryRoutes.js';
 import { currentDatabase } from "../config/tenantDatabase.js";
 import { ErpSettings, ErpDocument, ErpEntry, ErpSequence } from "./models.js";
@@ -34,17 +35,17 @@ export function calculatePay(body){
 }
 const router=Router();
 const actor=req=>req.user.userId||String(req.user._id);
-router.use((req,_res,next)=>authorizeErp(req.user,"finance")?next():next(new ApiError(403,"Company finance permission required for workforce records")));
+router.use((req,_res,next)=>(strictAccess(req.user)?hasPermission(req.user,'hr.payroll.read'):authorizeErp(req.user,"finance"))?next():next(new ApiError(403,"Payroll read permission required")));
 router.get("/",asyncHandler(async(req,res)=>{
   const scope=workspaceFilter(),period=String(req.query.period||new Date().toISOString().slice(0,7));if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period))fail("Invalid payroll month");
   const [employees,attendance,payslips,rules]=await Promise.all([ErpEmployee.find(scope).limit(2000).lean(),ErpAttendance.find({...scope,date:{$gte:period+"-01",$lte:period+"-31"}}).limit(10000).lean(),ErpPayslip.find({...scope,period}).limit(2000).lean(),ErpPayrollRule.find(scope).sort({createdAt:-1}).limit(200).lean()]);
   res.json({employees,attendance,payslips,rules,period});
 }));
-const write=(req,_res,next)=>authorizeErp(req.user,"post","WORK_COST")?next():next(new ApiError(403,"Accounts posting permission required"));
+const write=(req,_res,next)=>(strictAccess(req.user)?hasPermission(req.user,req.method==='GET'?'hr.payroll.read':['accrual','reverse-accrual','void','decision'].some(p=>req.originalUrl.split('?')[0].endsWith('/'+p))?'hr.payroll.approve':'hr.payroll.write'):authorizeErp(req.user,"post","WORK_COST"))?next():next(new ApiError(403,"Payroll preparation/approval permission required"));
 router.use('/statutory',write);
 router.use(statutoryRoutes(ErpPayslip));
 router.post("/payroll-rules",write,asyncHandler(async(req,res)=>{
- if(!["company_admin","admin"].includes(req.user.role))throw new ApiError(403,"Company administrator must approve payroll rules");
+ if(!["company_owner","company_admin","admin"].includes(req.user.role))throw new ApiError(403,"Company administrator must approve payroll rules");
  const rule=payrollRule(req.body);await ErpPayrollRule.init();
  if(await ErpPayrollRule.exists({...workspaceFilter(),key:rule.key}))fail("Use a new immutable payroll rule version");
  res.status(201).json(await ErpPayrollRule.create({...workspaceFilter(),...rule,createdBy:actor(req)}));
@@ -80,14 +81,15 @@ router.post("/payslips",write,asyncHandler(async(req,res)=>{
   try{res.json(await ErpPayslip.create({...scope,employeeCode,period,key,requestHash:hash,company:companySnapshot,employee:{name:employee.name,department:employee.department,designation:employee.designation},...pay,notes,attendance,createdBy:actor(req)}));}
   catch(e){if(e.code!==11000)throw e;const duplicate=await ErpPayslip.findOne({...scope,key}).lean();if(duplicate?.requestHash===hash)return res.json(duplicate);fail("A posted payslip already exists for this employee/month; review or void before correction");}
 }));
-const payrollFinance=asyncHandler(async(req,_res,next)=>{const company=await Company.findById(workspaceFilter().companyId).lean();if(!company||!featureAllowed(company.entitlements?.modules,"ERP_FINANCE"))throw new ApiError(403,"ERP Finance subscription required for payroll accounting");next();});
+const payrollFinance=asyncHandler(async(req,_res,next)=>{if(strictAccess(req.user)&&!hasPermission(req.user,"erp.accounts"))throw new ApiError(403,"Accounts posting permission required");const company=await Company.findById(workspaceFilter().companyId).lean();if(!company||!featureAllowed(company.entitlements?.modules,"ERP_FINANCE"))throw new ApiError(403,"ERP Finance subscription required for payroll accounting");next();});
 router.post("/payslips/:id/accrual",write,payrollFinance,asyncHandler(async(req,res)=>{
- if(!["company_admin","admin"].includes(req.user.role)||req.body.confirm!=="POST PAYROLL"||!mongoose.isValidObjectId(req.params.id))fail("Administrator confirmation POST PAYROLL required");
+ if(!["company_owner","company_admin","admin"].includes(req.user.role)||req.body.confirm!=="POST PAYROLL"||!mongoose.isValidObjectId(req.params.id))fail("Administrator confirmation POST PAYROLL required");
  const scope=workspaceFilter();await Promise.all([ErpDocument,ErpEntry,ErpSequence,ErpPayslip].map(m=>m.init()));
  const session=await currentDatabase().startSession();let result;
  try{await session.withTransaction(async()=>{
   if(!await ErpSettings.findOneAndUpdate({...scope,key:"ERP",enabled:true},{$inc:{revision:1}},{session}))fail("ERP activation required");
   const slip=await ErpPayslip.findOne({...scope,_id:req.params.id}).session(session);if(!slip||slip.status!=="POSTED")fail("Posted payslip required");
+  if(strictAccess(req.user)&&slip.createdBy===actor(req))fail('A different authorized payroll approver must post the salary accrual');
   if(slip.accountingDocumentId){result=await ErpDocument.findOne({...scope,_id:slip.accountingDocumentId}).session(session).lean();return;}
   const journals=payrollAccrual(slip),sequence=await ErpSequence.findOneAndUpdate({...scope,key:"PAYROLL"},{$inc:{value:1}},{upsert:true,new:true,session});
   const id=new mongoose.Types.ObjectId(),date=new Date(),number=`PAY-${String(sequence.value).padStart(8,"0")}`;
@@ -97,7 +99,7 @@ router.post("/payslips/:id/accrual",write,payrollFinance,asyncHandler(async(req,
  });res.json(result);}finally{await session.endSession();}
 }));
 router.post("/payslips/:id/reverse-accrual",write,payrollFinance,asyncHandler(async(req,res)=>{
- if(!["company_admin","admin"].includes(req.user.role)||req.body.confirm!=="REVERSE PAYROLL"||!mongoose.isValidObjectId(req.params.id)||!String(req.body.reason||"").trim())fail("Administrator confirmation and reversal reason required");
+ if(!["company_owner","company_admin","admin"].includes(req.user.role)||req.body.confirm!=="REVERSE PAYROLL"||!mongoose.isValidObjectId(req.params.id)||!String(req.body.reason||"").trim())fail("Administrator confirmation and reversal reason required");
  const scope=workspaceFilter(),session=await currentDatabase().startSession();let result;
  try{await session.withTransaction(async()=>{
   if(!await ErpSettings.findOneAndUpdate({...scope,key:"ERP",enabled:true},{$inc:{revision:1}},{session}))fail("ERP activation required");
@@ -112,7 +114,7 @@ router.post("/payslips/:id/reverse-accrual",write,payrollFinance,asyncHandler(as
  });res.json(result);}finally{await session.endSession();}
 }));
 router.post("/payslips/:id/void",write,asyncHandler(async(req,res)=>{
-  if(!["company_admin","admin"].includes(req.user.role)||req.body.confirm!=="VOID PAYSLIP"||!String(req.body.reason||"").trim())fail("Administrator confirmation and void reason required");
+  if(!["company_owner","company_admin","admin"].includes(req.user.role)||req.body.confirm!=="VOID PAYSLIP"||!String(req.body.reason||"").trim())fail("Administrator confirmation and void reason required");
   if(!mongoose.isValidObjectId(req.params.id))fail("Invalid payslip ID");
   await ErpSettings.init();const scope=workspaceFilter(),session=await currentDatabase().startSession();let result;
   try{await session.withTransaction(async()=>{

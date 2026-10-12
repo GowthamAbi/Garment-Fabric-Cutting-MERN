@@ -7,11 +7,11 @@ import { useAuth } from "../../context/AuthContext.jsx";
 export default function ProfileSettingsPage({ mode = "profile", notify }) {
   const { logout } = useAuth();
   const [profile, setProfile] = useState(null);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "",currentPassword:"" });
   useEffect(() => {
     api("/auth/profile").then((data) => {
       setProfile(data);
-      setForm({ name: data.name, email: data.email, password: "" });
+      setForm({ name: data.name, email: data.email, password: "",currentPassword:"" });
     });
   }, []);
   async function submit(event) {
@@ -79,7 +79,8 @@ export default function ProfileSettingsPage({ mode = "profile", notify }) {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </label>
-          <label>
+          <label><span>Current password when changing password</span><input type="password" autoComplete="current-password" value={form.currentPassword||''} onChange={e=>setForm({...form,currentPassword:e.target.value})}/></label>
+            <label>
             <span>New Password (optional)</span>
             <input
               type="password"

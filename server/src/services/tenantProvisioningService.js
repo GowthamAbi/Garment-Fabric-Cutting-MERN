@@ -1,3 +1,4 @@
+import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import bcrypt from "bcryptjs";
 import TenantRegistry from "../models/TenantRegistry.js";
@@ -35,7 +36,7 @@ export async function provisionTenant({
   // Older registries did not store admin email. Inspect account metadata only.
   const older=await TenantRegistry.find({adminEmail:{$exists:false}}).select('companyKey databaseName').limit(1001).lean();
   if(older.length>1000)throw new ApiError(409,'Backfill legacy administrator metadata before provisioning more companies');
-  for(const row of older){const found=await runWithTenant({companyKey:row.companyKey,databaseName:row.databaseName},()=>User.exists({role:'company_admin',email:adminEmail}));if(found)throw new ApiError(409,'This administrator email already belongs to an existing company');}
+  for(const row of older){const found=await runWithTenant({companyKey:row.companyKey,databaseName:row.databaseName},()=>User.exists({role:{$in:['company_owner','company_admin']},email:adminEmail}));if(found)throw new ApiError(409,'This administrator email already belongs to an existing company');}
   const companyKey = await availableCompanyKey(companyName);
   const databaseName = tenantDatabaseName(companyKey);
   const registry = await TenantRegistry.create({
@@ -61,9 +62,10 @@ export async function provisionTenant({
           emailVerified: false,
           accountStatus: "INVITED",
           password: passwordHash || await bcrypt.hash(password, 12),
-          role: "company_admin", companyId: company._id,
+          role: "company_owner",accessPolicyVersion:1,accessScope:"COMPANY",permissions:[...ACCESS_PERMISSIONS],assignedFactoryIds:company.factories.map(f=>f._id), companyId: company._id,
           factoryId: company.factories[0]._id,
         });
+        company.accessPolicyVersion=1;company.ownerUserId=user._id;await company.save();
         let activationUrl,activationEmailStatus='ACCEPTED';
         try{activationUrl=await issueEmailVerification(user,companyKey);}catch(error){activationEmailStatus='FAILED'; console.error('Company activation email failed', {companyKey, reason:error.exposeToOwner?error.message:'Account activation storage failed'});}
         return { company, userId, userEmail: user.email, activationUrl,activationEmailStatus };

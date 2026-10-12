@@ -22,7 +22,7 @@ function Application() {
       ? "Production Control"
       : user?.role === "saas_super_admin"
         ? "SaaS Owner Dashboard"
-        : user?.role === "company_admin"
+        : ["company_owner","company_admin"].includes(user?.role)
           ? "Company Dashboard"
           : adminRoles.includes(user?.role)
             ? "Modules"
@@ -40,12 +40,12 @@ function Application() {
 
   useEffect(() => {
     if (!token || !user) return;
-    const nextPage =
+    const nextPage = user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
       window.location.pathname === "/production"
         ? "Production Control"
         : user.role === "saas_super_admin"
           ? "SaaS Owner Dashboard"
-          : user.role === "company_admin"
+          : ["company_owner","company_admin"].includes(user.role)
             ? "Company Dashboard"
             : adminRoles.includes(user.role)
               ? "Modules"

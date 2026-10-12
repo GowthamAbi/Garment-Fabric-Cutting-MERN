@@ -1,3 +1,4 @@
+import {strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import {trialExpiry} from "../utils/subscriptionAccess.js";
 import {DEPARTMENTS} from "../erp/departmentPolicy.js";
@@ -26,7 +27,7 @@ export async function getCompanies(request, response) {
         try {
         const admin = await runWithTenant(
           { companyKey: row.companyKey, databaseName: row.databaseName },
-          () => User.findOne({ role: "company_admin" }, null, { maxTimeMS: 3000 }).select("userId name email").lean(),
+          () => User.findOne({ role: {$in:["company_owner","company_admin"]} }, null, { maxTimeMS: 3000 }).select("userId name email").lean(),
         );
         if (admin) {
           row.adminUserId = admin.userId;
@@ -176,6 +177,11 @@ export async function updateCompanyUser(request, response) {
     const company=await Company.findOneAndUpdate({_id:request.user.companyId},{$inc:{userProvisionRevision:1}},{new:true,session});
     const user=await User.findOne({_id:request.params.userId,companyId:request.user.companyId,factoryId:request.user.factoryId}).select("+sessionVersion").session(session);
     if(!company||!user||user.role==="saas_super_admin") throw new ApiError(404,"Company user not found");
+    if(user.role==='company_owner')throw new ApiError(403,'Ownership cannot change through user updates');
+    if(strictAccess(request.user)){
+      if(!strictAccess(user))throw new ApiError(409,'Use explicit access assignment for legacy users');
+      validateAccessAssignment(request.user,user,{permissions:request.body.permissions||user.permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:request.body.department||user.department},company);
+    }
     const nextActive=typeof request.body.active==="boolean"?request.body.active:user.active;
     const nextDepartment=request.body.department!==undefined?String(request.body.department):user.department;
     if(nextActive){
@@ -248,7 +254,7 @@ export async function resendCompanyActivation(request,response){
  if(registry.activationEmailAt&&Date.now()-registry.activationEmailAt.getTime()<60000)throw new ApiError(429,'Wait one minute before resending activation');
  const {issueEmailVerification}=await import('../services/accountEmailService.js');
  try{await runWithTenant({companyKey:registry.companyKey,databaseName:registry.databaseName},async()=>{
-  const user=await User.findOne({role:'company_admin',...(registry.adminUserId&&{userId:registry.adminUserId})});if(!user)throw new ApiError(404,'Administrator account missing');if(user.emailVerified)throw new ApiError(409,'Administrator email is already verified');
+  const user=await User.findOne({role:{$in:['company_owner','company_admin']},...(registry.adminUserId&&{userId:registry.adminUserId})});if(!user)throw new ApiError(404,'Administrator account missing');if(user.emailVerified)throw new ApiError(409,'Administrator email is already verified');
   await issueEmailVerification(user,registry.companyKey);registry.adminUserId=user.userId;registry.adminName=user.name;
  });registry.activationEmailStatus='ACCEPTED';registry.activationEmailAt=new Date();await registry.save();response.json({activationEmailStatus:'ACCEPTED',message:'Activation email accepted by provider'});
  }catch(error){if(error.statusCode!==409&&error.statusCode!==404){registry.activationEmailStatus='FAILED';await registry.save();}throw error;}

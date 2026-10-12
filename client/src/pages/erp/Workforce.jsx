@@ -6,7 +6,7 @@ import {useAuth} from "../../context/AuthContext.jsx";
 const amount=n=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR"}).format(Number(n||0)/100);
 const fields=["basic","allowance","overtime","pf","esi","tax","otherDeduction"];
 export default function Workforce({notify,company}){
-  const {user}=useAuth(),admin=["company_admin","admin"].includes(user?.role),write=admin||(user?.permissions||[]).includes("erp.accounts");
+  const {user}=useAuth(),admin=["company_owner", "company_admin","admin"].includes(user?.role),write=user?.role==='company_owner'||(user?.accessPolicyVersion?(user.permissions||[]).includes('hr.payroll.write'):admin||(user?.permissions||[]).includes("erp.accounts"));
   const [period,setPeriod]=useState(new Date().toISOString().slice(0,7)),[data,setData]=useState(null),[error,setError]=useState(""),[busy,setBusy]=useState(false),[selected,setSelected]=useState(null);
   const load=async()=>setData(await api(`/erp/workforce?period=${period}`));useEffect(()=>{load().catch(e=>setError(e.message));},[period]);
   async function run(fn){setBusy(true);setError("");try{await fn();await load();notify("Workforce record saved");}catch(e){setError(e.message);}finally{setBusy(false);}}

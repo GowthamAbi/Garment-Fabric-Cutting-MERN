@@ -41,7 +41,7 @@ function tenantPlugin(schema) {
     const tenant = getTenant();
     if (tenant.companyId && tenant.role !== "saas_super_admin") {
       this.pipeline().unshift({
-        $match: { companyId: new mongoose.Types.ObjectId(tenant.companyId) },
+        $match: { companyId: new mongoose.Types.ObjectId(tenant.companyId),...(tenant.accessPolicyVersion>=1&&tenant.accessScope!=='COMPANY'&&tenant.factoryId?{factoryId:new mongoose.Types.ObjectId(tenant.factoryId)}:{}) },
       });
     }
   });

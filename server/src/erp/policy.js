@@ -31,6 +31,14 @@ export function ceilingRatio(a, b, divisor) {
 }
 export function stockKey(sku, location) { if (!LOCATIONS.includes(location) && !/^WIP:[a-f0-9]{24}$/.test(location)) fail("Invalid stock location"); return `${sku}@${location}`; }
 export function authorizeErp(user, action, type = "") {
+  if(user?.role==='company_owner')return true;
+  if(user?.accessPolicyVersion>=1){
+    const permissions=user.permissions||[];
+    if(action==='read')return permissions.includes('erp.read');
+    if(action==='finance')return permissions.includes('erp.finance.read')||permissions.includes('erp.accounts');
+    const area=['QC_RELEASE','QC_REJECT'].includes(type)?'quality':['JOURNAL','RECEIPT','PAYMENT','WORK_COST'].includes(type)?'accounts':['QUOTATION','SALES_ORDER','SALES_INVOICE','DISPATCH','SALES_RETURN'].includes(type)?'sales':['PURCHASE_ORDER','GOODS_RECEIPT','PURCHASE_INVOICE','PURCHASE_RETURN'].includes(type)?'purchase':'stock';
+    return permissions.includes(`erp.${action==='post'?area:action}`);
+  }
   if (["saas_super_admin", "support_viewer"].includes(user?.role)) return false;
   if (["company_admin", "admin"].includes(user?.role)) return true;
   if (action === "read") return ["management", "view_only"].includes(user?.role) || (user?.permissions || []).some(p => p.startsWith("erp."));

@@ -9,6 +9,8 @@ import { supportRequestAllowed } from "../utils/supportPolicy.js";
 import AuditLog from "../models/AuditLog.js";
 import TenantRegistry from "../models/TenantRegistry.js";
 import {sessionIsIdle} from '../utils/sessionIdlePolicy.js';
+import {enforceAccessBoundary} from './accessMiddleware.js';
+import Company from '../models/Company.js';
 
 const SESSION_COOKIE_NAMES = ["__Host-ug_session", "ug_session"];
 
@@ -80,10 +82,19 @@ export async function requireAuth(request, _response, next) {
           return tenantContext.run({ ...request.tenant, ...request.user }, next);
         }
         const activeUser = await User.findById(payload.id)
-          .select("+sessionVersion +lastSessionActivityAt active role companyId factoryId permissions department")
+          .select("+sessionVersion +lastSessionActivityAt active role companyId factoryId permissions department accessPolicyVersion accessRoleKey accessScope assignedFactoryIds assignedWarehouseKeys assignedShopKeys")
           .lean();
 
         if (!activeUser?.active) throw new Error("Inactive session");
+        if(payload.companyKey!=='platform'){
+          const policyCompany=await Company.findById(activeUser.companyId).select('accessPolicyVersion').lean();
+          if(policyCompany?.accessPolicyVersion>=1&&!(activeUser.accessPolicyVersion>=1)){activeUser.accessPolicyVersion=1;activeUser.accessScope='SELF';activeUser.permissions=[];activeUser.assignedFactoryIds=[activeUser.factoryId];}
+        }
+        if(activeUser.role==='company_owner'){
+          const company=await Company.findById(activeUser.companyId).select('ownerUserId').lean();
+          if(String(company?.ownerUserId)!==String(activeUser._id))throw new Error('Owner identity mismatch');
+        }
+        if(activeUser.accessPolicyVersion>=1&&activeUser.role!=='company_owner'&&!(activeUser.assignedFactoryIds||[]).map(String).includes(String(activeUser.factoryId)))throw new Error('Factory not assigned');
         if(sessionIsIdle(activeUser.lastSessionActivityAt,payload.iat))throw new Error('Inactive session expired');
 
         if (Number(activeUser.sessionVersion || 0) !== Number(payload.sessionVersion || 0))
@@ -99,12 +110,20 @@ export async function requireAuth(request, _response, next) {
           factoryId: activeUser.factoryId,
           permissions: activeUser.permissions || [],
           department: activeUser.department || "",
+          accessPolicyVersion:activeUser.accessPolicyVersion,accessRoleKey:activeUser.accessRoleKey,accessScope:activeUser.accessScope,
+          assignedFactoryIds:activeUser.assignedFactoryIds,assignedWarehouseKeys:activeUser.assignedWarehouseKeys,assignedShopKeys:activeUser.assignedShopKeys,
         };
+        if(activeUser.accessPolicyVersion>=1){request.accessCompany=await Company.findById(activeUser.companyId).select('enabledDepartments departmentCatalogueVersion entitlements accessPolicyVersion').lean();if(!request.accessCompany)throw new Error('Company unavailable');}
+        try{enforceAccessBoundary(request);}catch(error){
+          if(error instanceof ApiError&&error.statusCode===403)await AuditLog.create({companyId:activeUser.companyId,factoryId:activeUser.factoryId,actorUserId:activeUser.userId||payload.userId,actorRole:activeUser.role,method:request.method,path:request.originalUrl.split('?')[0],action:'ACCESS_DENIED',changes:{reason:error.message}});
+          throw error;
+        }
         request.tenant = { databaseName: resolvedDatabaseName, companyKey: payload.companyKey, ...(request.operationalDatabaseEntered && registry?.databaseRoutingState === "CUSTOMER" && { customerDatabaseId: String(registry.customerDatabaseId) }) };
         return tenantContext.run({ ...request.tenant, ...request.user }, next);
       },
     );
-  } catch {
+  } catch(error) {
+    if(error instanceof ApiError)return next(error);
     next(new ApiError(401, "Your login is invalid or expired"));
   }
 }

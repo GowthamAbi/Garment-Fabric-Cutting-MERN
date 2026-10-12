@@ -7,7 +7,7 @@ import { ErpApproval, ErpSettings } from "./models.js";
 import { documentInput, requestHash, postDocument, workspaceFilter } from "./service.js";
 import {featureAllowed,featureForRequest} from "./featurePolicy.js";
 const router=Router();
-const admin=req=>["admin","company_admin"].includes(req.user.role);
+const admin=req=>["company_owner","admin","company_admin"].includes(req.user.role);
 const actor=req=>req.user.userId||String(req.user._id);
 router.get("/",asyncHandler(async (req,res)=>{
   const scope=workspaceFilter();

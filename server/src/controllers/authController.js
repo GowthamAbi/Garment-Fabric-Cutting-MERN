@@ -1,3 +1,5 @@
+import {hasPermission,strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
+import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
 import {DEPARTMENT_PERMISSIONS,departmentCode} from '../../../shared/departmentCatalogue.js';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -71,6 +73,7 @@ function createUserResponse(user, companyName = "UG SaaS") {
       factoryId: user.factoryId,
       permissions: user.permissions || [],
       department: user.department || "",
+      accessPolicyVersion:user.accessPolicyVersion,accessScope:user.accessScope,accessRoleKey:user.accessRoleKey,assignedFactoryIds:user.assignedFactoryIds,assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,
       companyName,
       companyKey: tenant.companyKey || "platform",
       loginPath: tenant.companyKey && tenant.companyKey !== "platform"
@@ -108,6 +111,7 @@ export async function getUsers(_request, response) {
 }
 
 export async function createUser(request, response) {
+  if(strictAccess(request.user)&&!hasPermission(request.user,"users.manage"))throw new ApiError(403,"User creation permission required");
   const { name, email, password, role } = request.body;
   const allowedRoles = [
     "company_admin",
@@ -184,6 +188,10 @@ export async function createUser(request, response) {
       const plan=company.entitlements?.maxUsers?company.entitlements:await SaasPlan.findOne({name:company.subscriptionPlan}).session(session).lean();
       const users=await User.collection.find({companyId:new mongoose.Types.ObjectId(targetCompanyId),active:{$ne:false}},{session,projection:{department:1}}).limit(10001).toArray();
       checkUserQuota(plan,users,userData.department,company);
+      if(strictAccess(request.user)||company.accessPolicyVersion>=1){
+        const assignment=validateAccessAssignment(request.user,{_id:new mongoose.Types.ObjectId(),role:userData.role,factoryId:userData.factoryId},{permissions:userData.permissions,accessScope:department?'DEPARTMENT':'LOCATION',assignedFactoryIds:[String(targetFactoryId)],department},company);
+        Object.assign(userData,assignment);
+      }
       [user]=await User.create([userData],{session});
     }); } finally {await session.endSession();}
   }
@@ -306,7 +314,7 @@ export async function login(request, response) {
 
 export async function getSession(request, response) {
   const user = await User.findById(request.user.id)
-    .select("userId name email emailVerified role department permissions active companyId factoryId")
+    .select("userId name email emailVerified role department permissions active companyId factoryId accessPolicyVersion accessScope accessRoleKey assignedFactoryIds assignedWarehouseKeys assignedShopKeys")
     .lean();
   if (!user?.active) throw new ApiError(401, "Session is no longer active");
 
@@ -314,7 +322,7 @@ export async function getSession(request, response) {
     .select("companyName active subscriptionStatus subscriptionEndsAt")
     .lean();
 
-  response.json(createUserResponse(user, company?.companyName));
+  response.json(createUserResponse({...user,permissions:request.user.permissions,accessPolicyVersion:request.user.accessPolicyVersion,accessScope:request.user.accessScope}, company?.companyName));
 }
 
 export async function logout(request, response) {
@@ -335,16 +343,24 @@ export async function getProfile(request, response) {
   response.json(user);
 }
 export async function updateUserPermissions(request, response) {
-  const allowed = [...DEPARTMENT_PERMISSIONS, "erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
+  const allowed = [...ACCESS_PERMISSIONS, ...DEPARTMENT_PERMISSIONS, "erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"];
   const permissions = request.body.permissions;
   if (!Array.isArray(permissions) || permissions.some(p => !allowed.includes(p)&&!(typeof p==="string"&&/^shop\.[A-Za-z0-9_-]{2,60}$/.test(p)))) throw new ApiError(400, "Invalid ERP permissions");
   const user = await User.findOne({ _id: request.params.id, companyId: request.user.companyId, factoryId: request.user.factoryId }).select("+sessionVersion");
   if (!user || user.role === "saas_super_admin") throw new ApiError(404, "Customer user not found");
+  if(strictAccess(request.user)){
+    if(!strictAccess(user))throw new ApiError(409,'Use role/location assignment to migrate this legacy user first');
+    const company=await Company.findById(request.user.companyId).lean();
+    validateAccessAssignment(request.user,user,{permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:user.department},company);
+  }
+  if(user.role==='company_owner')throw new ApiError(403,'Owner permissions cannot be changed here');
   user.permissions = [...new Set(permissions)]; user.sessionVersion = Number(user.sessionVersion || 0) + 1;
   await user.save(); response.json({ message: "ERP permissions updated; user must sign in again" });
 }
 
 export async function updateProfile(request, response) {
+  if(request.user.role==='company_owner'&&request.body.email&&String(request.body.email).trim().toLowerCase()!==String((await User.findById(request.user.id).select('email').lean()).email))throw new ApiError(409,'Owner email changes require a separate verified ownership/contact procedure');
+  if(strictAccess(request.user)&&request.body.password){const current=await User.findById(request.user.id).select('password').lean();if(!request.body.currentPassword||!await bcrypt.compare(request.body.currentPassword,current.password))throw new ApiError(403,'Current password verification required');}
   const updates = {};
   if (request.body.name?.trim()) updates.name = request.body.name.trim();
   if (request.body.email?.trim())

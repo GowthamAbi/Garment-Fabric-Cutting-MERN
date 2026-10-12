@@ -6,7 +6,7 @@ import { saveCustomerDatabase, queueCustomerMigration } from "../services/custom
 import ApiError from "../utils/ApiError.js";
 
 function companyKey(request) {
-  if (request.user?.role !== "company_admin" || !request.user.companyId || getTenant().companyKey === "platform") throw new ApiError(403, "Company administrator access required");
+  if (!["company_owner","company_admin"].includes(request.user?.role) || !request.user.companyId || getTenant().companyKey === "platform") throw new ApiError(403, "Company administrator access required");
   return getTenant().companyKey;
 }
 export async function getCustomerDatabaseStatus(request, response) {

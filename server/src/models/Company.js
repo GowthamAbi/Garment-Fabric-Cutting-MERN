@@ -34,6 +34,8 @@ const companySchema = new mongoose.Schema(
     enabledDepartments: [String],
     departmentCatalogueVersion: Number,
     entitlements: { maxUsers:Number,maxDepartments:Number,modules:[String] },
+    ownerUserId: mongoose.Schema.Types.ObjectId,
+    accessPolicyVersion: Number,
     userProvisionRevision: { type:Number,default:0 },
     preferredLanguage: { type: String, enum: ["en", "ta"], default: "en" },
     onboardingCompleted: { type: Boolean, default: false },

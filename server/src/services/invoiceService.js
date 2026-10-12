@@ -28,7 +28,7 @@ export async function createInvoiceForPayment(payment, issuedBy = "System", sess
   const existing = await SubscriptionInvoice.findOne({ paymentId: payment._id }).session(session);
   if (existing) return existing;
   const company = await Company.findById(payment.companyId).session(session).lean();
-  const admin = await User.findOne({ companyId: payment.companyId, role: "company_admin" }).session(session).lean();
+  const admin = await User.findOne({ companyId: payment.companyId, role: {$in:["company_owner","company_admin"]} }).session(session).lean();
   const taxTotal = Number(payment.taxAmount || 0);
   const subtotal = Number((Number(payment.amount || 0) - taxTotal).toFixed(2));
   const factory=company?.factories?.find(f=>String(f._id)===String(payment.factoryId))||company?.factories?.[0];

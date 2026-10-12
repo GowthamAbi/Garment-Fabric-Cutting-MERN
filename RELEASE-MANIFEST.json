@@ -1,10 +1,10 @@
 {
-  "release": "Owner Part 1 department catalogue",
+  "release": "Owner Part 2 access foundation",
   "validation": {
-    "serverPassed": 122,
+    "serverPassed": 127,
     "serverFailed": 0,
     "serverSkipped": 4,
-    "liveMigration": "NOT_RUN"
+    "liveOwnershipMigration": "NOT_RUN"
   },
   "files": [
     {
@@ -62,6 +62,10 @@
     {
       "path": "OWNER-PART-1-RELEASE.md",
       "sha256": "5f01887428790d4296b27f8ef9f42418aac53770dd3c0de657dd38adec940322"
+    },
+    {
+      "path": "OWNER-PART-2-RELEASE.md",
+      "sha256": "54eec003b515376278d3de41390c2ec0102e8ce6867f8fd16d12a5980a854aee"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -193,7 +197,7 @@
     },
     {
       "path": "client/src/App.jsx",
-      "sha256": "a7804b6c97d1efc5cce77fcd289af62d694656f0b851b81210f4a0a0cd27d7cb"
+      "sha256": "0f45a190e97e6637dd7be2c1473c8c88a9397caee1deeed378360b34ffec1895"
     },
     {
       "path": "client/src/accessibility-theme.css",
@@ -254,6 +258,10 @@
     {
       "path": "client/src/api.js",
       "sha256": "47a1b46feab062c28409ba801c66931d2bff59ae2c98cced73dbb20ee94a9405"
+    },
+    {
+      "path": "client/src/components/AccessAdministration.jsx",
+      "sha256": "0089edc16856eeb1d0ac602873ec6466bc6c09f47f2c23fb4d2de64ec03cf114"
     },
     {
       "path": "client/src/components/CustomerDatabaseSetup.jsx",
@@ -345,7 +353,7 @@
     },
     {
       "path": "client/src/components/layout/MainLayout.jsx",
-      "sha256": "2625647b8b350f0d8eadfbd4dd4e2b9a5bb3fadc46137c7163d243bd73d3aec1"
+      "sha256": "394c03a95b956ce2e0c68f5cf765f0aebde6734e116c30ed9f3a79996d46a906"
     },
     {
       "path": "client/src/components/layout/MobileMenu.jsx",
@@ -357,7 +365,7 @@
     },
     {
       "path": "client/src/components/layout/SubscriptionNotice.jsx",
-      "sha256": "98610faa7a1e01267056f8e23013b6be4b4de6e0e1e41d396dfad2055a37afcf"
+      "sha256": "7ffbfaf5294dee977796b6e61d2c8f61cb4061679efa85b7de518fa89fe9c6ec"
     },
     {
       "path": "client/src/components/layout/SuperAdminLayout.jsx",
@@ -425,7 +433,7 @@
     },
     {
       "path": "client/src/pages/auth/UserManagementPage.jsx",
-      "sha256": "0fec9518c9173c3bab2e4fc5892a626b696d5fdc03768f12132d4fd913140016"
+      "sha256": "5e01e364c8f20d86120afc777ede88dc144a7e5deb151efc9c1c7366f224d0e2"
     },
     {
       "path": "client/src/pages/auth/company-management.css",
@@ -469,7 +477,7 @@
     },
     {
       "path": "client/src/pages/erp/BankReconciliation.jsx",
-      "sha256": "cb495a227a6848b0678f5f7b8513d0d85b1dcb638e94b8787af87729f7e1a44c"
+      "sha256": "815583d121a17268de2bec3bb44a49534a83b974f22c8f85029d91faaed3647f"
     },
     {
       "path": "client/src/pages/erp/CommercialReports.jsx",
@@ -477,11 +485,11 @@
     },
     {
       "path": "client/src/pages/erp/Departments.jsx",
-      "sha256": "5dc468c582d5a08b9fa4a51d21f273a320b1ceaa0d3e44b686e5dbb93965e9a8"
+      "sha256": "d63af24c616a27a96c0663d5efa7c25a469b213d85ebd334b8295da1ac10cefb"
     },
     {
       "path": "client/src/pages/erp/ErpWorkspace.jsx",
-      "sha256": "bc6cfa8cef03316e6082bc1e1a3debab87beb3aff36384205486cfa10390f6b5"
+      "sha256": "d7e999ea71229924d714d693f7824bcebe2164d1c0996a5735cdeec84b03c00f"
     },
     {
       "path": "client/src/pages/erp/LegacyHandoff.jsx",
@@ -505,7 +513,7 @@
     },
     {
       "path": "client/src/pages/erp/ShopFloor.jsx",
-      "sha256": "d4a68b7e4a5c9d965fe3e8212a3e7758ce1805177ef99288ed813e7ef3836709"
+      "sha256": "32bc608dda9f4a35dc0a44f6b931b0154d867054f66f1f0e09b0ec1aabf57b28"
     },
     {
       "path": "client/src/pages/erp/StatutoryReview.jsx",
@@ -517,7 +525,7 @@
     },
     {
       "path": "client/src/pages/erp/Workforce.jsx",
-      "sha256": "6bb410154c6067b85cae6423a505b6b4ff45b6548db5b8e5e74966a1ffeee6b4"
+      "sha256": "e6c2b5072ac049d2fc852a95221709262e69331d9f6175c78a90e66f608834df"
     },
     {
       "path": "client/src/pages/erp/erp.css",
@@ -729,7 +737,7 @@
     },
     {
       "path": "client/src/pages/saas/ProfileSettingsPage.jsx",
-      "sha256": "45b0edba3e4dac9ac71da77d59f5f1929728401348c2f2f77d93312bea1d65dd"
+      "sha256": "6edb7c9b7c563a6c97a2f09392e2bd0ba5fdea50d27555d9affae31bfb6aba6c"
     },
     {
       "path": "client/src/pages/saas/PublicDemoPage.jsx",
@@ -741,7 +749,7 @@
     },
     {
       "path": "client/src/pages/saas/SubscriptionCenterPage.jsx",
-      "sha256": "150635a97399e807d113917153e196b2849234544c6182d37390d99782397b2e"
+      "sha256": "ab948e251cf0fd5051ec726d28bd8bc296a81bc1ed28edd8ecdd9d45433584e3"
     },
     {
       "path": "client/src/pages/saas/SuperAdminDashboardPage.jsx",
@@ -884,6 +892,10 @@
       "sha256": "30f3e2507c2b514a0516b103535e1c9978488a2686f4b62983cbe3626e2412d9"
     },
     {
+      "path": "server/scripts/adopt-company-owner.js",
+      "sha256": "2d1f92f39ce403f5f6e7749928b803b8c4e6a9c25e6ec3fe3de6082f70f3efbc"
+    },
+    {
       "path": "server/scripts/bootstrap-owner.js",
       "sha256": "9d7d2fb3d1c9df9e156a44feba53bcf9337cb693db79e7200e1cce1e33c66ba4"
     },
@@ -953,11 +965,11 @@
     },
     {
       "path": "server/src/config/mongoosePlugins.js",
-      "sha256": "b47a1d8e8a9f0c8555eaded4cd757523e1ad19edeb732552326b115317794843"
+      "sha256": "efc5492e97db033c5c930cb407f09d97b810a067994e2c2a2251cd526bc857f7"
     },
     {
       "path": "server/src/config/tenantDatabase.js",
-      "sha256": "1a6d9b16b77fd197424eea20ddf42a62ef8ee2cd8cddd33c060cac8c16e49232"
+      "sha256": "dd7ae42c33ddd9d73c34b5d7047e5b95eec4023d5d56bacea682ba0493496989"
     },
     {
       "path": "server/src/constants/orderStatus.js",
@@ -965,7 +977,7 @@
     },
     {
       "path": "server/src/constants/roles.js",
-      "sha256": "59a759fbbfee52532c616345c2a9b2941ecd0b99777c34da8495ae17d199ef08"
+      "sha256": "aa52ef18e4df72696ef5ed9629f1812f0ec3e951179209a7f098a15467ccea71"
     },
     {
       "path": "server/src/constants/transactionTypes.js",
@@ -973,7 +985,7 @@
     },
     {
       "path": "server/src/controllers/authController.js",
-      "sha256": "1b1891884548646b9a0ac34bb5de046baa5c72d1793f1c6b1b26079b986b67a1"
+      "sha256": "fbf92b83d4b2914348e559f7ad112c7a7fcab1ef88b341a3f44a3c9f45e83165"
     },
     {
       "path": "server/src/controllers/categoryController.js",
@@ -985,11 +997,11 @@
     },
     {
       "path": "server/src/controllers/companyController.js",
-      "sha256": "01363bf920df33df9d022df194a421f746b9a3e32d1be4a2f6373c9bcfda0c88"
+      "sha256": "5abd77b46618e0358377b28b46504fefd7f6853e74a22af9ac1e484b1de9c4dc"
     },
     {
       "path": "server/src/controllers/customerDatabaseController.js",
-      "sha256": "299df6015ed7a63c505ab49a0e53cc19d713554920ff11b369cd9d174528f351"
+      "sha256": "f9d427d6ee644a44f0fcf73691f66a677d0303274dbef0b56dad062e96a116e6"
     },
     {
       "path": "server/src/controllers/cuttingDcController.js",
@@ -1089,7 +1101,7 @@
     },
     {
       "path": "server/src/erp/approvalRoutes.js",
-      "sha256": "16817f5f206e8ac9d4411fb99aaae2dbbed80b00dbecb5987a7c31c677b2971a"
+      "sha256": "9d37cd6ce8a5356d1f0b77351c77d8f98097c8ed436c950bb6b98718518dbb7f"
     },
     {
       "path": "server/src/erp/bankPolicy.js",
@@ -1109,7 +1121,7 @@
     },
     {
       "path": "server/src/erp/departmentPolicy.js",
-      "sha256": "661612392ebe273681b4cef8b06de383026332362822cf68a454531317eff83b"
+      "sha256": "d091e3c8f16d81d4b2835c0eb673e23b5ae85fa5ed990a7c34fa38a1adcfd9d8"
     },
     {
       "path": "server/src/erp/departmentReports.js",
@@ -1117,7 +1129,7 @@
     },
     {
       "path": "server/src/erp/departmentRoutes.js",
-      "sha256": "749de2862b48bd1ff2cd5356b6e79aa7bd7011725e8a17600c78ff0373d023ea"
+      "sha256": "1936ab857f73722770e8c0ecc362711c6dcaca7a8f5e9f9be2e18bc2ce0d8334"
     },
     {
       "path": "server/src/erp/engine.js",
@@ -1169,7 +1181,7 @@
     },
     {
       "path": "server/src/erp/policy.js",
-      "sha256": "13b5158270964317b6680609b61084c63c451d89a7f3b409622b4cce236bbeca"
+      "sha256": "f55dd7959c5ee3e36e69469c030cec97902fe057e1b592fb1cb7764c7d735c7b"
     },
     {
       "path": "server/src/erp/reports.js",
@@ -1189,7 +1201,7 @@
     },
     {
       "path": "server/src/erp/statutoryRoutes.js",
-      "sha256": "071b2b5941db896854b63429e9d07e5dc3867659793b611333472a422dfda9a1"
+      "sha256": "b9ea1faa2d4c24b2621c77e7f8e3f96ba73df56786e686a0a2a5d6b278158116"
     },
     {
       "path": "server/src/erp/warehousePolicy.js",
@@ -1197,7 +1209,11 @@
     },
     {
       "path": "server/src/erp/workforce.js",
-      "sha256": "fb1b86b5ee700eef3bb17142b4da6bbbb9dedacfdae0c5f68b993e9710e0be9e"
+      "sha256": "125222e84001f0bf4f17841cad4f60d7c4d0c6602a0a2e0d681350673e59a747"
+    },
+    {
+      "path": "server/src/middleware/accessMiddleware.js",
+      "sha256": "afe4ae719c78d7bb82d0006b82b6e18910110d19c8c8f29a147bb4f5eaf00fbf"
     },
     {
       "path": "server/src/middleware/asyncHandler.js",
@@ -1209,7 +1225,7 @@
     },
     {
       "path": "server/src/middleware/authMiddleware.js",
-      "sha256": "64da78e548564f4a40f5d53fce00ee2866cf420129f7cfc305b5aa5be7555dc8"
+      "sha256": "a975c906792ba98a7ab07014e227496047ff56789d747aa9f07905b5ee76cd2f"
     },
     {
       "path": "server/src/middleware/customerDatabaseMiddleware.js",
@@ -1229,7 +1245,7 @@
     },
     {
       "path": "server/src/middleware/roleMiddleware.js",
-      "sha256": "ff29bdc6af484de8e7800173db753aee6bfd7a898054a9cebc6963a33e7023c6"
+      "sha256": "3605c40642e3c37d8bc8b25fb3d552ff487896f7b157722b57c559ec86b5adc8"
     },
     {
       "path": "server/src/middleware/securityMiddleware.js",
@@ -1248,6 +1264,10 @@
       "sha256": "b052c5dcfc843bf13894cf610b13d53d0f220292dff30b804db74f80797dbfb7"
     },
     {
+      "path": "server/src/models/AccessRole.js",
+      "sha256": "1d22404f87a6ffa2aff9f50a492250099e4c07bf1a44cc94953dee7e5e8aa3ac"
+    },
+    {
       "path": "server/src/models/AuditLog.js",
       "sha256": "a3da70e3c3cfd733257115e364e44a7cba6bd8a426d3acd5caeb59b913a48b13"
     },
@@ -1261,7 +1281,7 @@
     },
     {
       "path": "server/src/models/Company.js",
-      "sha256": "e148a27c1c798847a0ac7fd3f1b52907e14439d48a6b3675f10fb3a42deb5df0"
+      "sha256": "c7da6d358480ac8b2c6eef228a3f56b2fa5487595ffa5521b7862fde2cb9fe58"
     },
     {
       "path": "server/src/models/CustomerDatabaseCandidate.js",
@@ -1453,7 +1473,7 @@
     },
     {
       "path": "server/src/models/User.js",
-      "sha256": "8e7f9c2f963f2ebc41e2036d409a47ab97e919b2bb48d27b894e85b7da6be575"
+      "sha256": "14174ffbd88d6b24f95c6505d3e3bceea0add4ff0cfe897e7f961ee8da610f44"
     },
     {
       "path": "server/src/models/WarehouseStock.js",
@@ -1480,8 +1500,12 @@
       "sha256": "e8e7b9fa76bd4bc412019f1bf46681e7523f09c8d83de116d4e3eaf72ab35028"
     },
     {
+      "path": "server/src/routes/access.routes.js",
+      "sha256": "eacb407c01e1b88b6a729add14324f138da17a561a13d1fb0c7332f75501abb8"
+    },
+    {
       "path": "server/src/routes/auth.routes.js",
-      "sha256": "256098138bf6c634f3a905f0e467e1051f22a8576def34f4adb135182ed6ae2f"
+      "sha256": "8beb38ee41f6209547a6c6447d34bbe20368eb20dbc74b82fd34fdb50c1dd0cd"
     },
     {
       "path": "server/src/routes/authRoutes.js",
@@ -1613,7 +1637,7 @@
     },
     {
       "path": "server/src/services/invoiceService.js",
-      "sha256": "6fa9f54c00a003b0f596099ebe796d1b8c6d94be5335e5a94f7c735b1dbec541"
+      "sha256": "1d895d9995b7ecc711c36116f76259b4bac10843562cad126ba4b727fc5ce93d"
     },
     {
       "path": "server/src/services/inwardService.js",
@@ -1649,7 +1673,7 @@
     },
     {
       "path": "server/src/services/tenantProvisioningService.js",
-      "sha256": "dc054c4632454e29f19b3527c42fc5d7814ff03c1474c20bc5f87c15f0374445"
+      "sha256": "42b1dd13940c8848aa9f947bc0c614c896fb7b8b1b3c7ae2fc1f53b09abe542f"
     },
     {
       "path": "server/src/utils/ApiError.js",
@@ -1658,6 +1682,10 @@
     {
       "path": "server/src/utils/ApiResponse.js",
       "sha256": "258582a22ffaf7a3154d85a9be23db95cef7ebec8383c57649cff8243a094175"
+    },
+    {
+      "path": "server/src/utils/accessPolicy.js",
+      "sha256": "31d664edd9da320f0275ec7b350c0781cf00f6cf095475165d931330f8c887b4"
     },
     {
       "path": "server/src/utils/asyncHandler.js",
@@ -1750,6 +1778,10 @@
     {
       "path": "server/src/validators/purchaseOrderValidator.js",
       "sha256": "0b323aa7fb3f4e3b87c83c954250e8240e2c8ac29845c9bfd35a40f5e07bf7e9"
+    },
+    {
+      "path": "server/tests/accessPolicy.test.js",
+      "sha256": "f700db9f9c73f1ab45fd8b1797ae1e7748c6f83d0ae86f93e161ca2101da81ac"
     },
     {
       "path": "server/tests/accountActivation.test.js",
@@ -1890,6 +1922,10 @@
     {
       "path": "server/tests/workspaceContext.test.js",
       "sha256": "a63e48797cfd36671eb30dcfeaaa049e434d7eb85aa725c550ce74622a009f19"
+    },
+    {
+      "path": "shared/accessCatalogue.js",
+      "sha256": "d82bb66198c9156440d4e6c0590a7c516e899b42c05f868b64ec5c61e2ee5c7e"
     },
     {
       "path": "shared/departmentCatalogue.js",

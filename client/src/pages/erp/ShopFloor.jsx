@@ -20,7 +20,7 @@ export function RollView({rollId,onClose}) {
 }
 export default function ShopFloor({notify}) {
   const {user}=useAuth();const [data,setData]=useState(null),[tab,setTab]=useState("Routing"),[error,setError]=useState(""),[busy,setBusy]=useState(false),[events,setEvents]=useState([]),[mrp,setMrp]=useState(null),[selected,setSelected]=useState(null),[roll,setRoll]=useState(null),[week,setWeek]=useState(new Date().toISOString().slice(0,10));
-  const admin=["company_admin","admin"].includes(user?.role),write=admin||(user?.permissions||[]).includes("erp.stock"),masters=admin||(user?.permissions||[]).includes("erp.masters");
+  const admin=["company_owner", "company_admin","admin"].includes(user?.role),write=admin||(user?.permissions||[]).includes("erp.stock"),masters=admin||(user?.permissions||[]).includes("erp.masters");
   async function load(){setData(await api(`${base}/dashboard`));setEvents(await api(`${base}/events`));}
   useEffect(()=>{load().catch(e=>setError(e.message));},[]);
   async function run(action){setBusy(true);setError("");try{await action();}catch(e){setError(e.message);}finally{setBusy(false);}}

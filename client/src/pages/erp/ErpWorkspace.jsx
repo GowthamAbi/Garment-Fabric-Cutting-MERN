@@ -25,8 +25,8 @@ export default function ErpWorkspace({ notify }) {
   const [form, setForm] = useState(blankDoc), [selected, setSelected] = useState(null), [masterKind, setMasterKind] = useState("skus"), [master, setMaster] = useState({}), [notes, setNotes] = useState("");
   const [sourceId, setSourceId] = useState(""), [reportDates, setReportDates] = useState({ from: `${new Date().getFullYear() - (new Date().getMonth() < 3 ? 1 : 0)}-04-01`, to: new Date().toISOString().slice(0, 10) });
   const requestKey = useRef(crypto.randomUUID());
-  const canAdmin = ["company_admin", "admin"].includes(user?.role);
-  const canFinance = canAdmin || user?.role === "management" || (user?.permissions || []).some(p => ["erp.accounts", "erp.finance.read"].includes(p));
+  const canAdmin = ["company_owner", "company_admin", "admin"].includes(user?.role);
+  const canFinance = user?.role==='company_owner' || (!user?.accessPolicyVersion&&canAdmin) || (!user?.accessPolicyVersion&&user?.role === "management") || (user?.permissions || []).some(p => ["erp.accounts", "erp.finance.read"].includes(p));
   async function load() {
     const [w, d, s] = await Promise.all([api("/erp/workspace"), api("/erp/documents"), api("/erp/stock")]);
     setWorkspace(w); setDocs(d); setStock(s);
@@ -66,7 +66,7 @@ export default function ErpWorkspace({ notify }) {
   const activeDocs = docs.filter(d => !d.reversedBy && (sourceTypes[form.type] || []).includes(d.type));
   return <div className="erp-shell">
     <header className="erp-header"><div><span className="erp-eyebrow">UG SAAS · {workspace.company.name}</span><h1>Integrated ERP</h1><p>{workspace.company.factory} · Stock, production and accounts in one posting flow</p></div><span className={`erp-badge ${workspace.settings.enabled ? "on" : ""}`}>{workspace.settings.enabled ? "ERP active · legacy entries locked" : "Opening balance review"}</span></header>
-    <nav className="erp-tabs">{["Overview", "Masters", "Departments", ...(workspace.features?.includes("ERP_SHOP_FLOOR")?["Shop floor"]:[]), "New document", "Approvals", "Documents", "Stock", "Ledger", ...(canFinance&&workspace.features?.includes("ERP_FINANCE") ? ["Financials", "Commercial reports", "Bank matching"] : []),...(canFinance&&workspace.features?.includes("ERP_HR")?["Workforce"]:[])].map(t => <button className={tab === t ? "active" : ""} key={t} onClick={() => { setTab(t); if (t === "Ledger") execute(async () => setEntries(await api("/erp/ledger"))); }}>{t}</button>)}</nav>
+    <nav className="erp-tabs">{["Overview", "Masters", "Departments", ...(workspace.features?.includes("ERP_SHOP_FLOOR")?["Shop floor"]:[]), "New document", "Approvals", "Documents", "Stock", "Ledger", ...(canFinance&&workspace.features?.includes("ERP_FINANCE") ? ["Financials", "Commercial reports", "Bank matching"] : []),...((user?.role==='company_owner'||(user?.accessPolicyVersion?(user.permissions||[]).includes('hr.payroll.read'):canFinance))&&workspace.features?.includes("ERP_HR")?["Workforce"]:[])].map(t => <button className={tab === t ? "active" : ""} key={t} onClick={() => { setTab(t); if (t === "Ledger") execute(async () => setEntries(await api("/erp/ledger"))); }}>{t}</button>)}</nav>
     {tab === "Departments" && <Departments notify={notify} />}
     {tab === "Shop floor" && <ShopFloor notify={notify} />}
     {tab === "Approvals" && <Approvals notify={notify} />}

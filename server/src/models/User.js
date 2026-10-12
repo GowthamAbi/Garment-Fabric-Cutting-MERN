@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: [
         "saas_super_admin",
+        "company_owner",
         "company_admin",
         "admin",
         "store",
@@ -65,6 +66,12 @@ const userSchema = new mongoose.Schema(
       default: "store",
     },
     permissions: [{ type: String }],
+    accessPolicyVersion: Number,
+    accessRoleKey: String,
+    accessScope: {type:String,enum:["COMPANY","LOCATION","DEPARTMENT","SELF"]},
+    assignedFactoryIds: [mongoose.Schema.Types.ObjectId],
+    assignedWarehouseKeys: [String],
+    assignedShopKeys: [String],
     department: {
       type: String,
       enum: ["",...DEPARTMENTS,"FINISHING"],

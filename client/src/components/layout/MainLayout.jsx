@@ -35,16 +35,16 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
-  ["Integrated ERP", Factory, ["company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
-  ["Production & Retail", Factory, ["company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
-  ["Subscription Automation", Clock3, ["company_admin", "admin"]],
+  ["Integrated ERP", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
+  ["Production & Retail", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
+  ["Subscription Automation", Clock3, ["company_owner", "company_admin", "admin"]],
   ["Company Dashboard", LayoutDashboard, ["company_admin"]],
   [
     "Department Dashboard",
     LayoutDashboard,
     ["department_incharge", "department_entry"],
   ],
-  ["Item Master", ClipboardList, ["company_admin", "admin"]],
+  ["Item Master", ClipboardList, ["company_owner", "company_admin", "admin"]],
   ["Company Reports", BarChart3, ["company_admin"]],
   ["Company Timeline", Clock3, ["company_admin"]],
   ["Company Stock", Boxes, ["company_admin"]],
@@ -519,7 +519,7 @@ const departmentRoles = {
   ACCESSORIES: ["store", "accessories_admin", "accessories_entry"],
   DELIVERY: ["delivery_admin", "delivery_entry"],
   ADMIN: ["admin"],
-  COMPANY_ADMIN: ["company_admin", "saas_super_admin"],
+  COMPANY_ADMIN: ["company_owner", "company_admin", "saas_super_admin"],
 };
 
 const departmentTitles = {
@@ -588,6 +588,7 @@ export default function MainLayout({ page, onPageChange, children }) {
     "COMPANY_ADMIN-Company Subscription": true,
   });
   const { user, logout } = useAuth();
+  const visibleRole=user?.role==='company_owner'?'company_admin':user?.role;
   const { language, setLanguage } = useLanguage();
   const departmentPage =
     {
@@ -729,14 +730,14 @@ export default function MainLayout({ page, onPageChange, children }) {
             .filter(
               ([name, , roles]) =>
                 !groupedSidebarPages.has(name) &&
-                (roles.includes(user?.role) ||
+                (roles.includes(visibleRole) ||
                   (["department_incharge", "department_entry"].includes(
                     user?.role,
                   ) &&
                     departmentPage.includes(name))) &&
                 name !== "Garment Flow" &&
                 !(
-                  user?.role === "company_admin" &&
+                  ["company_owner","company_admin"].includes(user?.role) &&
                   ![
                     "Company Dashboard",
                     "Integrated ERP",

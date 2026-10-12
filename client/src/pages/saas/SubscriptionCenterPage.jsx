@@ -133,7 +133,7 @@ export default function SubscriptionCenterPage({ mode }) {
         </div>
       </div>
       {error && <p className="error-text">{error}</p>}
-      {mode === "Subscription Plan" && user?.role === "company_admin" && <CustomerDatabaseSetup />}
+      {mode === "Subscription Plan" && ["company_owner","company_admin"].includes(user?.role) && <CustomerDatabaseSetup />}
       <div className="overview-metrics">
         <article>
           <i>

@@ -1,5 +1,6 @@
 export const ROLES = {
   SAAS_SUPER_ADMIN: "saas_super_admin",
+  COMPANY_OWNER: "company_owner",
   COMPANY_ADMIN: "company_admin",
   ADMIN: "admin",
   STORE: "store",

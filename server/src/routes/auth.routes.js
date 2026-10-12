@@ -1,3 +1,4 @@
+import accessRoutes from './access.routes.js';
 import { Router } from "express";
 import {
   forgotPassword,
@@ -22,6 +23,7 @@ import { loginRateLimit } from "../middleware/securityMiddleware.js";
 import { resolvePublicTenant } from "../middleware/tenantResolver.js";
 
 const router = Router();
+router.use("/access",requireAuth,accessRoutes);
 
 router.get("/setup-status", resolvePublicTenant, asyncHandler(getSetupStatus));
 router.post("/register", resolvePublicTenant, asyncHandler(register));

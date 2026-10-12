@@ -5,7 +5,7 @@ const DATABASE_PREFIX = process.env.TENANT_DB_PREFIX || "ugs_tenant_";
 const CONTROL_DATABASE = process.env.CONTROL_DB_NAME || "ugs_control";
 // Identity and platform billing stay on the platform client. Operational
 // models can use a customer-owned Atlas client without cross-client sessions.
-export const PLATFORM_TENANT_MODELS = new Set(["Company", "User", "SupportGrant", "AuditLog", "SubscriptionPayment", "SubscriptionInvoice"]);
+export const PLATFORM_TENANT_MODELS = new Set(["AccessRole", "Company", "User", "SupportGrant", "AuditLog", "SubscriptionPayment", "SubscriptionInvoice"]);
 export const tenantSchemas = new Map();
 const customerConnections = new Map();
 
