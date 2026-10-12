@@ -1,5 +1,5 @@
 {
-  "release": "Owner Part 8 display and profile help",
+  "release": "Owner Parts 1-9 staging acceptance source",
   "validation": {
     "serverPassed": 148,
     "serverFailed": 0,
@@ -9,7 +9,11 @@
     "indexMigrationAcceptance": "NOT_RUN",
     "loggedInDeviceAcceptance": "NOT_RUN",
     "layoutRenderSmoke": "PASSED",
-    "serverResults": "Historical Part 7; no server changes"
+    "serverResults": "Re-run Part 9",
+    "productionAcceptance": "PENDING_LIVE_GATES",
+    "publicApiHealth": "PASSED",
+    "publicApiDatabaseReadiness": "PASSED",
+    "ownerQueueMonitoring": "NOT_RUN"
   },
   "files": [
     {
@@ -95,6 +99,10 @@
     {
       "path": "OWNER-PART-8-RELEASE.md",
       "sha256": "ee8d3adb61a68ab5b03fbe1ae76121cedf37c789f36a2cffdf1577825365b4e5"
+    },
+    {
+      "path": "OWNER-PART-9-RELEASE.md",
+      "sha256": "aab6fc43baf660d3999d899d5733f8bae0cbfc013d572a4f8079d4e6636a5730"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -923,6 +931,10 @@
     {
       "path": "package.json",
       "sha256": "36d98fb94a01ae7c0322d327e1584dc940b03300576cbd6934ece27d54bffd98"
+    },
+    {
+      "path": "scripts/package-release.py",
+      "sha256": "572714b6a34e301856cbef8ecf74bb94d63a03b9963d1c10a80faddf6c5eaba8"
     },
     {
       "path": "server/.env.example",
