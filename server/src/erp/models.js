@@ -20,6 +20,7 @@ const sku = new Schema({ code: { type: String, required: true }, name: { type: S
 scopedUnique(sku, "code"); export const ErpSku = createTenantModel("ErpSku", sku);
 const bom = new Schema({ code: { type: String, required: true }, outputSku: { type: String, required: true },
   outputQty: { type: Number, required: true }, components: [{ _id: false, sku: String, qty: Number }],
+  approvalVersion:Number,approvalStatus:String,createdBy:String,approvedBy:String,approvedAt:Date,
   active: { type: Boolean, default: true } }, { timestamps: true });
 scopedUnique(bom, "code"); export const ErpBom = createTenantModel("ErpBom", bom);
 const settings = new Schema({ key: { type: String, default: "ERP" }, enabled: { type: Boolean, default: false },

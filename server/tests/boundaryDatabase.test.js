@@ -19,8 +19,8 @@ test('real replica-set standalone ironing: external duplicate prevention, partia
    await Company.create({_id:tenant.companyId,companyName:'Standalone ironing',departmentCatalogueVersion:1,enabledDepartments:['IRONING'],entitlements:{maxUsers:2,maxDepartments:1,modules:['IRONING','ERP_CORE']},factories:[{_id:tenant.factoryId,name:'Main',code:'MAIN'},{_id:otherFactory,name:'Other',code:'OTHER'}]});
    await ErpSettings.create({...tenant,key:'ERP',enabled:true});await ErpSku.create({...tenant,code:'TEE-M',name:'Tee M',kind:'FINISHED',unit:'PCS',location:'FINISHED'});
   });
-  const app=express();app.use(express.json());app.use((req,_res,next)=>runWithTenant({...tenant,...(req.get('x-test-factory')==='OTHER'&&{factoryId:otherFactory})},()=>{req.user={...tenant,userId:'OWNER'};next();}));app.use(router);app.use((e,_req,res,_next)=>res.status(e.statusCode||500).json({message:e.message}));server=app.listen(0,'127.0.0.1');await new Promise(r=>server.on('listening',r));const base=`http://127.0.0.1:${server.address().port}`;
-  const call=async(path,body)=>{const res=await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:crypto.randomUUID(),...body})});return {status:res.status,data:await res.json()};};
+  const app=express();app.use(express.json());app.use((req,_res,next)=>runWithTenant({...tenant,...(req.get('x-test-factory')==='OTHER'&&{factoryId:otherFactory})},()=>{req.user={...tenant,userId:req.get('x-test-actor')||'OWNER'};next();}));app.use(router);app.use((e,_req,res,_next)=>res.status(e.statusCode||500).json({message:e.message}));server=app.listen(0,'127.0.0.1');await new Promise(r=>server.on('listening',r));const base=`http://127.0.0.1:${server.address().port}`;
+  const call=async(path,body,actor='OWNER')=>{const res=await fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json','x-test-actor':actor},body:JSON.stringify({key:crypto.randomUUID(),...body})});return {status:res.status,data:await res.json()};};
   const ok=async(path,body)=>{const r=await call(path,body);assert.equal(r.status,200,JSON.stringify(r.data));return r.data;};
   const input={key:crypto.randomUUID(),department:'IRONING',sku:'TEE-M',quantity:10,totalValue:100,reference:'EXT-001',counterparty:'External checker'};
   const received=await ok('/external-inward',input);assert.equal((await ok('/external-inward',input))._id,received._id);assert.equal((await call('/external-inward',{...input,key:crypto.randomUUID()})).status,409);
@@ -31,5 +31,11 @@ test('real replica-set standalone ironing: external duplicate prevention, partia
   const attempts=await Promise.all(['OUT-002','OUT-003'].map(reference=>call('/external-outward',{department:'IRONING',bundleId:b._id,quantity:1,reference,counterparty:'External packer'})));assert.deepEqual(attempts.map(a=>a.status).sort(),[200,409]);
   await runWithTenant(tenant,async()=>{const balances=await ErpBalance.find().lean();assert.equal(balances.reduce((n,b)=>n+b.qty,0),4000);assert.equal(balances.reduce((n,b)=>n+b.value,0),4000);const entries=await ErpEntry.find({kind:'JOURNAL'}).lean();assert.equal(entries.reduce((n,e)=>n+e.debit-e.credit,0),0);});
   const other=await fetch(base+'/IRONING/dashboard',{headers:{'x-test-factory':'OTHER'}});assert.equal(other.status,200);assert.deepEqual((await other.json()).bundles,[]);
+  await runWithTenant(tenant,()=>Company.updateOne({_id:tenant.companyId},{$set:{enabledDepartments:['IRONING','DISPATCH'],entitlements:{maxUsers:2,maxDepartments:2,modules:['IRONING','DISPATCH','ERP_CORE']}}}));
+  const route=await ok('/routing-masters',{masterKey:'IRON-DIRECT-V1',sku:'TEE-M',stages:['IRONING','DISPATCH']});
+  assert.equal((await call(`/routing-masters/${route.details.master._id}/approve`,{confirm:'APPROVE ROUTE'})).status,409);
+  assert.equal((await call(`/routing-masters/${route.details.master._id}/approve`,{confirm:'APPROVE ROUTE'},'REVIEWER')).status,200);
+  let direct=(await ok('/external-inward',{department:'IRONING',sku:'TEE-M',quantity:3,totalValue:30,reference:'DIRECT-001',counterparty:'Checker',routeKey:'IRON-DIRECT-V1'})).details.bundle;
+  direct=(await ok('/advance',{bundleId:direct._id,quantity:3})).details.bundle;direct=(await ok('/advance',{bundleId:direct._id,quantity:3})).details.bundle;assert.equal(direct.stage,'PACKED');
  }finally{if(server)await new Promise(r=>server.close(r));await databaseForName(tenant.databaseName).dropDatabase();await mongoose.disconnect();}
 });

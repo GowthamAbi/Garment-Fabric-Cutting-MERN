@@ -1,4 +1,5 @@
 import {DepartmentDemand} from "./departmentModels.js";
+import {bomUsable} from "./routingPolicy.js";
 import mongoose from "mongoose";
 import crypto from "node:crypto";
 import { getTenant } from "../utils/tenantContext.js";
@@ -71,6 +72,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
       const [skus, parties, boms] = await Promise.all([
         ErpSku.find(scope).session(session).lean(), ErpParty.find(scope).session(session).lean(), ErpBom.find(scope).session(session).lean(),
       ]);
+      if(!reverseId&&input.bomCode&&!bomUsable(boms.find(b=>b.code===input.bomCode)))fail("Approve this BOM version before production posting");
       const state = { balances, documents, skus, parties, boms, openingAllowed: !settings.enabled };
       const original = reverseId ? await ErpDocument.findOne({ ...scope, _id: reverseId }).session(session) : null;
       if (original?.type === "WORK_ORDER" && await ErpOperation.exists({ ...scope,workOrderId: String(original._id),status: { $ne: "CANCELLED" } }).session(session)) fail("Work order has shop-floor operations; cancel unstarted jobs or complete reviewed corrections before reversal");
@@ -126,7 +128,7 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
       const number = `${plan.type}/${fy}-${String(fy + 1).slice(-2)}/${String(sequence.value).padStart(6, "0")}`;
       const [document] = await ErpDocument.create([{ ...scope, ...plan, number, date, partyCode: input.partyCode,
         sourceId: reverseId || input.sourceId, bomCode: input.bomCode, notes: input.notes,
-        idempotencyKey, requestHash: hash, postedBy: actor }], { session });
+        metadata:{...plan.metadata,...(!reverseId&&input.bomCode&&{bomSnapshot:(()=>{const b=boms.find(b=>b.code===input.bomCode);return b?{code:b.code,outputQty:b.outputQty,components:b.components,approvalStatus:b.approvalStatus||"LEGACY",approvedBy:b.approvedBy}:undefined;})()})},idempotencyKey, requestHash: hash, postedBy: actor }], { session });
       for (const move of plan.moves) {
         await ErpBalance.updateOne({ ...scope, key: move.key }, { $set: { ...scope, sku: move.sku, location: move.location,
           qty: move.qtyAfter, value: move.valueAfter } }, { session, upsert: true });

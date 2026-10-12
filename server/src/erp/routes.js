@@ -93,7 +93,7 @@ router.post("/masters/:kind", gate("masters"), asyncHandler(async (req, res) => 
     const outputSku = code(body.outputSku);
     const skus = await ErpSku.find({ ...scope, code: { $in: [outputSku, ...components.map(c => c.sku)] } }).lean();
     if (skus.length !== components.length + 1 || skus.find(s => s.code === outputSku)?.kind !== "FINISHED") fail("BOM needs distinct valid component SKUs and finished output");
-    data = { code: code(body.code), outputSku, outputQty: quantity(body.outputQuantity), components };
+    data = { code: code(body.code), outputSku, outputQty: quantity(body.outputQuantity), components,approvalVersion:1,approvalStatus:"DRAFT",createdBy:req.user.userId };
   }
   const existing = await model.findOne({ ...scope, code: data.code });
   if (existing) {

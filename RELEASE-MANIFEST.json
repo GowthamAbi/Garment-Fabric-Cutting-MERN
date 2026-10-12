@@ -1,7 +1,7 @@
 {
-  "release": "Owner Part 4 standalone and integrated boundaries",
+  "release": "Owner Part 5 approved routing and BOM versions",
   "validation": {
-    "serverPassed": 135,
+    "serverPassed": 139,
     "serverFailed": 0,
     "serverSkipped": 5,
     "frontendBuild": "PASSED",
@@ -76,6 +76,10 @@
     {
       "path": "OWNER-PART-4-RELEASE.md",
       "sha256": "74356ec394d9ad16dcfe7b2f17f5e21677abc4a7cbc437673226112c78b9864c"
+    },
+    {
+      "path": "OWNER-PART-5-RELEASE.md",
+      "sha256": "fc7903d4396b0d23bc86b300eee7f9be323a333e31662d9344e44835821beb3c"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -499,7 +503,7 @@
     },
     {
       "path": "client/src/pages/erp/Departments.jsx",
-      "sha256": "69de3ac73f1c15f85244ba26ed045edcc822c883f6bec6e70aed451ab6a5ffd0"
+      "sha256": "6b036fb05db2265983d17d576503f8046afdf70c590f9f7eae30fe237f78a0a6"
     },
     {
       "path": "client/src/pages/erp/ErpWorkspace.jsx",
@@ -524,6 +528,10 @@
     {
       "path": "client/src/pages/erp/PayrollCalculator.jsx",
       "sha256": "62bea6ccc9b961bef6766ab20976999ec8f82fbd06288c8a04f1a38a51775bc7"
+    },
+    {
+      "path": "client/src/pages/erp/RoutingMasters.jsx",
+      "sha256": "d44fc409411689e574b777ea578c90c18220ac36d821354cd28455f5bbfbd1ad"
     },
     {
       "path": "client/src/pages/erp/ShopFloor.jsx",
@@ -1139,7 +1147,7 @@
     },
     {
       "path": "server/src/erp/departmentModels.js",
-      "sha256": "e09cd3919727d7a63ba1e3833a81b6fc9cf0e1628c40acfe61f78f47db681b06"
+      "sha256": "bd2ecb628383b27a62b8aecf4def6aba022722990f6e5b322ab0aeb7144bf865"
     },
     {
       "path": "server/src/erp/departmentPolicy.js",
@@ -1151,7 +1159,7 @@
     },
     {
       "path": "server/src/erp/departmentRoutes.js",
-      "sha256": "31d0e0383af627ddff1faf8be8aeef5a0601257b710f226802426aeb845568d4"
+      "sha256": "51fec6237b3c003ad731033249c99d3de6b3210094c22b0f6e2a9f41c81814ee"
     },
     {
       "path": "server/src/erp/engine.js",
@@ -1183,7 +1191,7 @@
     },
     {
       "path": "server/src/erp/models.js",
-      "sha256": "26870e99fac24ae529454e15c4b0db62bd6276c7e3014b38fb4fc8e9fb05a6af"
+      "sha256": "a876c7c544d72dccd6d2a2ab0e2d194c7e6c5a72962db72868fb453433a9d04e"
     },
     {
       "path": "server/src/erp/operationsModels.js",
@@ -1211,11 +1219,15 @@
     },
     {
       "path": "server/src/erp/routes.js",
-      "sha256": "e3c76e89395cdd36031ef7184f68e6bcdeaa3a49317464fe070005e89a8108ed"
+      "sha256": "db792391b1c3c6514909a59eb0291d8d7e562ebae87453efec9d470e1810d1e6"
+    },
+    {
+      "path": "server/src/erp/routingPolicy.js",
+      "sha256": "64295d559d4972ce3f39461a0762267e25ac16779d57875dd412f117b079a872"
     },
     {
       "path": "server/src/erp/service.js",
-      "sha256": "5f9d4aee178789acced31381ab97e6ef58661369d756b1453a40dacb7253cd8b"
+      "sha256": "306111dbdbfc91d13bbfa7a589ef1e6040e5eb14a34e5c51d9088ef84e4dc13c"
     },
     {
       "path": "server/src/erp/statutoryReport.js",
@@ -1831,7 +1843,7 @@
     },
     {
       "path": "server/tests/boundaryDatabase.test.js",
-      "sha256": "232a80cd4f94141537f0183a6562b7d63cb7f379d2bf2d43b113707174ad1a41"
+      "sha256": "87a41272e5693e787bdf4b5c5778808fb1e8e7a2ae6cabd4a59dd09d148c0136"
     },
     {
       "path": "server/tests/boundaryPolicy.test.js",
@@ -1895,7 +1907,7 @@
     },
     {
       "path": "server/tests/httpSmoke.test.js",
-      "sha256": "b1d36981987df092e11fd9b0b3266240658afccde808d1ac382fc82932d22a18"
+      "sha256": "c8f8529298bde39fd661bd90ed7ea35d8413e479b3ced64f20c55a6e018cb8ce"
     },
     {
       "path": "server/tests/inward.test.js",
@@ -1928,6 +1940,10 @@
     {
       "path": "server/tests/purchaseOrder.test.js",
       "sha256": "2a2d911798e574fa20c4be6a75cfb8d790957d20bda3859f9d65ccedb598e42e"
+    },
+    {
+      "path": "server/tests/routingPolicy.test.js",
+      "sha256": "957b9f9486b7d0f4adddf4f552048c38e4e5c1db543b812ba46fa7f3bf1b083c"
     },
     {
       "path": "server/tests/saas.test.js",
