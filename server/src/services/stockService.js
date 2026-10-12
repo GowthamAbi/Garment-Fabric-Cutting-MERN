@@ -38,6 +38,7 @@ export async function createInward(inwardData) {
           session,
         );
 
+        if(purchaseOrder?.status==="Cancelled"||purchaseOrder?.archivedAt)throw new ApiError(409,"Cancelled or archived PO cannot receive stock");
         if (!purchaseOrder) {
           throw new ApiError(404, "PO No. and Item Code combination not found");
         }

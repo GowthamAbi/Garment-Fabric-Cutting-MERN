@@ -23,6 +23,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     deliveryDate: { type: Date, required: true },
     orderQty: { type: Number, required: true, min: 0 },
     inwardQty: { type: Number, default: 0, min: 0 },
+    archivedAt:Date,archivedBy:String,archiveReason:String,cancelledAt:Date,cancelledBy:String,cancelReason:String,cancelledRemainingQty:Number,
     status: {
       type: String,
       enum: ["Open", "Part received", "Completed", "Cancelled"],
@@ -33,10 +34,10 @@ const purchaseOrderSchema = new mongoose.Schema(
 );
 
 // One PO can contain many items, but the same item cannot repeat in that PO.
-purchaseOrderSchema.index({ poNo: 1, itemCode: 1 }, { unique: true });
+purchaseOrderSchema.index({ companyId:1,factoryId:1,poNo: 1, itemCode: 1 }, { unique: true });
 
 purchaseOrderSchema.virtual("pendingQty").get(function () {
-  return Math.max(0, this.orderQty - this.inwardQty);
+  return this.status==="Cancelled"?0:Math.max(0, this.orderQty - this.inwardQty);
 });
 purchaseOrderSchema.set("toJSON", { virtuals: true });
 

@@ -5,7 +5,7 @@ export function planDocument(input, state) {
   const type = input.type;
   if (!TYPES.includes(type)) fail("Unknown ERP document type");
   const source = input.sourceId ? state.documents.find(d => String(d.id || d._id) === input.sourceId) : null;
-  if (input.sourceId && (!source || source.status !== "POSTED" || source.reversedBy)) fail("Source document is unavailable or reversed");
+  if (input.sourceId && (!source || source.status !== "POSTED" || source.reversedBy || source.cancelledAt || source.archivedAt)) fail("Source document is unavailable or reversed");
   const lines = (input.lines || []).map(raw => {
     const sku = state.skus.find(s => s.code === raw.sku && s.active !== false);
     if (!sku) fail(`SKU not found: ${raw.sku}`);

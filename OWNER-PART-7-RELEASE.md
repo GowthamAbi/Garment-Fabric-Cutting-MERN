@@ -1,0 +1,27 @@
+# Owner Part 7 — company navigation, factories/locations and retained PO lifecycle
+
+## Implemented
+- Company Owner/Admin navigation now exposes Factory Management, Production Departments, Warehouse Management, Shop Management, Marketing Analysis and Company Purchase Orders. New department entry points respect subscription/per-user department grants; core PO entry respects purchase permission. Existing subscription, user/role assignment, reports and department tools remain available.
+- Factory management lists assigned factories, creates a new factory and updates its name/billing details. Company-wide settings permission is required for creation/update. Factory codes/IDs remain fixed, duplicate codes are rejected and the owner receives the new factory assignment. Other users must be explicitly assigned through User Management. Factory switch uses the existing session-revoking switch and requires sign-in again.
+- Factory APIs reject SaaS-owner/support access and SELF profile scope. Queries use the authenticated company, not a client-provided company/database identifier.
+- Warehouse/shop master creation continues through their subscribed department workspace. Authorized administrators can update assigned location name, address and contact without changing the key or stock references. Existing bin/rack/stock controls remain in the warehouse workspace.
+- Company dashboard uses the shared fourteen-department catalogue, displays actual bundle WIP by stage and ERP stock grouped by unit. Company-scoped administrators see company totals; narrower factory scope remains limited. Audit timelines require audit permission. Report bounds are indicated rather than claiming unbounded totals.
+- Legacy accessory PO delete actions are replaced with reasoned cancellation/archive. Partial cancellation retains received quantity and records the cancelled balance. Cancellation/archive actor and reason are retained; cancelled/archived POs cannot receive further stock. Completed/closed POs cannot be edited. Header updates cannot forge inward quantity, status, company/factory IDs or item identity.
+- Legacy PO uniqueness now includes company/factory, allowing the same PO/item reference in different factories. Normal existing index synchronization applies the new model index; real database migration acceptance is still required.
+- Core ERP purchase orders have a separate active-factory list with ordered/pending quantities and receipt references. Posted quantities remain immutable: cancel the remainder and create a new PO for revisions. Only completed or cancelled POs can be archived. Existing receipt, invoice, stock and accounts records are retained.
+- Core cancellation/archive serializes through the same ERP settings transaction lock as receipt posting, and appends a hash-linked lifecycle audit. New receipts/source selection reject cancelled/archived orders; supplier invoicing against previously posted receipts remains possible.
+- Company owner identity no longer bypasses the explicit subscription check for mapped legacy department endpoints.
+
+## Validation
+155 server tests: 148 passed, 0 failed, 7 skipped. Frontend production build passed; existing large-chunk warning remains. New policy tests cover factory/billing input, partial cancellation preservation, cancelled/archived source rejection, SELF factory denial and owner department licensing. Anonymous checks cover factory and purchase-order endpoints.
+A new isolated replica-set test covers factory ownership assignment, duplicate codes, factory-scoped PO references, competing full receipt/cancellation and cross-factory PO visibility. It is skipped without TEST_MONGODB_URI, together with the six previous live database tests. Live index migration, browser/device acceptance, real invoice/accounting reconciliation and physical QR checks were not performed.
+
+## Use
+- Company menu → Factory Management: create/edit metadata, then assign factory/location access through User Management. Switch factory and sign in again before operational posting.
+- Warehouse/Shop Management: create a location master key, grant the factory/key assignment, manage stock and edit display details. Keys remain stable.
+- Company Purchase Orders: create new core POs in Integrated ERP → New document; inspect receipt/pending details here, cancel the remaining commitment or archive closed records with a reason.
+- Legacy PO Entry/Pending: existing accessory PO header workflow remains separate, with retained cancellation/archive instead of deletion.
+
+## Boundaries
+Factory/location retirement or deletion is not provided; existing records and keys are retained. Core PO cancellation is metadata closure, not a stock/account reversal or vendor communication. It requires purchase permission but does not introduce a separate multi-level cancellation approval chain. Legacy and core PO datasets are not automatically merged. Dashboard legacy accessory summaries remain separate from unit-wise ERP stock. Billing format checks are not tax/GST certification; future invoices must be accountant-reviewed. Multi-location offline POS/device acceptance and full reconciliation remain release acceptance work.
+Existing legacy access/contracts retain their prior compatibility until explicitly reviewed; new strict owner/department licensing checks apply to mapped endpoints. Parts 8–9 still cover visual/help improvements and final acceptance/artifact packaging.

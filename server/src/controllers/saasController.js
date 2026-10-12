@@ -1,3 +1,4 @@
+import {enabledDepartment} from "../erp/departmentPolicy.js";
 import {subscriptionQuote,assertQuoteFitsUsers,PRICING_MODELS} from "../utils/subscriptionQuote.js";
 import {DEPARTMENTS,planModules,departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import { settleSubscription } from "../services/subscriptionSettlementService.js";
@@ -681,7 +682,7 @@ export async function downloadBackup(request, response) {
 export async function getAccessStatus(request,response){
  const company=await Company.findById(request.user.companyId).lean();
  if(!company)throw new ApiError(404,'Company not found');
- response.json(subscriptionAccess(company));
+ response.json({...subscriptionAccess(company),enabledDepartments:DEPARTMENTS.filter(d=>enabledDepartment(company,d))});
 }
 
 export async function getPaymentStatus(request,response){

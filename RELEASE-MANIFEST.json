@@ -1,12 +1,12 @@
 {
-  "release": "Owner Part 6 document approvals and audit",
+  "release": "Owner Part 7 factories and retained PO lifecycle",
   "validation": {
-    "serverPassed": 144,
+    "serverPassed": 148,
     "serverFailed": 0,
-    "serverSkipped": 6,
+    "serverSkipped": 7,
     "frontendBuild": "PASSED",
     "realDatabaseAcceptance": "NOT_RUN",
-    "liveEscalationEmail": "NOT_RUN",
+    "indexMigrationAcceptance": "NOT_RUN",
     "loggedInDeviceAcceptance": "NOT_RUN"
   },
   "files": [
@@ -85,6 +85,10 @@
     {
       "path": "OWNER-PART-6-RELEASE.md",
       "sha256": "0a00b0806d46f0a769b3332db239aa23b3e2bfaaf7960412686d437e365dd7bd"
+    },
+    {
+      "path": "OWNER-PART-7-RELEASE.md",
+      "sha256": "fd64d3b66fe3931869d1e59a778a47d76626a9a7907ef1e7f4e2c4c3d4353b1a"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -376,7 +380,7 @@
     },
     {
       "path": "client/src/components/layout/MainLayout.jsx",
-      "sha256": "394c03a95b956ce2e0c68f5cf765f0aebde6734e116c30ed9f3a79996d46a906"
+      "sha256": "22c14cacc455859b4d762b8ec95eeea2ea56cb80eca3caa887b9a8e00e0da74c"
     },
     {
       "path": "client/src/components/layout/MobileMenu.jsx",
@@ -443,6 +447,10 @@
       "sha256": "8879741f2727b41a512b92955c0e4e744a97c8e2d4bbe8f7dc9747d259525b1e"
     },
     {
+      "path": "client/src/pages/auth/FactoryManagement.jsx",
+      "sha256": "fc23cb79bf4b9fdab36c18e649173d4ca9d0c8c0418f1dc95926bc05248b8904"
+    },
+    {
       "path": "client/src/pages/auth/ForgotPasswordPage.jsx",
       "sha256": "8cc51e74807e9e1257e45055339b20f6d5412bff385b0a99ccdbed08698615a1"
     },
@@ -464,7 +472,7 @@
     },
     {
       "path": "client/src/pages/dashboard/CompanyAdminDashboardPage.jsx",
-      "sha256": "8a3c1179d25392ffac47d28702a1e248057a72b25e5cc3a31c0cfda05cd1a2cc"
+      "sha256": "a2fcf7c0c2101fe2a4501fb4fea543e5e4ba1f379c60987cf7c0603446e4160d"
     },
     {
       "path": "client/src/pages/dashboard/CompanyInsightsPage.jsx",
@@ -507,12 +515,16 @@
       "sha256": "4c67ecba62361ac2c04057f788d0890f1dd26aa444a8e20ee29e9c4b79e04253"
     },
     {
+      "path": "client/src/pages/erp/CompanyPurchaseOrders.jsx",
+      "sha256": "57d5fdaea4290c5e808580ac3d38763acea7e1b224814460aa69e53b4b374d54"
+    },
+    {
       "path": "client/src/pages/erp/Departments.jsx",
-      "sha256": "6b036fb05db2265983d17d576503f8046afdf70c590f9f7eae30fe237f78a0a6"
+      "sha256": "2e3d95b1b5222e1eb286d2907fdde42fdd6684134cb6bde6acf917ec500f3553"
     },
     {
       "path": "client/src/pages/erp/ErpWorkspace.jsx",
-      "sha256": "d7e999ea71229924d714d693f7824bcebe2164d1c0996a5735cdeec84b03c00f"
+      "sha256": "3d58218506fecf114b4aa971fbc32056f6e7436f5e92873c61b8373cf4722dec"
     },
     {
       "path": "client/src/pages/erp/LegacyHandoff.jsx",
@@ -736,7 +748,7 @@
     },
     {
       "path": "client/src/pages/purchase-order/PurchaseOrderPage.jsx",
-      "sha256": "6ab2c5ce429a6191098e7e65c1383584c1f6fa6960b80b1e20d7a3bf9ff16695"
+      "sha256": "ce6ce9d5c41a7c0e51b2be1474e27496ff5836735249f059bea242dd007b1f06"
     },
     {
       "path": "client/src/pages/reports/ReportsPage.jsx",
@@ -800,7 +812,7 @@
     },
     {
       "path": "client/src/routes/AppRoutes.jsx",
-      "sha256": "aeffe4d31bbeaa263f2c5f5e0ef243bc5c00c3c31c8860b94b0ead6f2ce02b50"
+      "sha256": "d871c3150fd615f3a900868d18a48bded473bacf24dfbe5286969bfba58ff8fc"
     },
     {
       "path": "client/src/routes/ProtectedRoute.jsx",
@@ -1024,7 +1036,7 @@
     },
     {
       "path": "server/src/controllers/companyAdminController.js",
-      "sha256": "63251834716cd6aa61a0fba436867c5ba4847252b9139d621df3e87863f3ae7a"
+      "sha256": "8749bf603b9007a7edc6f4cf9e9e38a90e8bcf07142f3bfb4636fe8ff8e003e8"
     },
     {
       "path": "server/src/controllers/companyController.js",
@@ -1100,7 +1112,7 @@
     },
     {
       "path": "server/src/controllers/purchaseOrderController.js",
-      "sha256": "5f34937f0ddfa287f026f3a077c5b2e791fef4a753879e6a9607e003a6757953"
+      "sha256": "99d4a4e6d7ac9954a3947a9336e0895fa1cb968d904784aca57de9af88c6c11e"
     },
     {
       "path": "server/src/controllers/reportController.js",
@@ -1108,7 +1120,7 @@
     },
     {
       "path": "server/src/controllers/saasController.js",
-      "sha256": "2a527fd2860c654b619b8abf632ea71f69a2c4a516f810a07fd6995258b62125"
+      "sha256": "a31713c73f80d92085a4a2102d8bc0525afddc4b75b00bfb625d01aefc6662d0"
     },
     {
       "path": "server/src/controllers/sectionController.js",
@@ -1160,7 +1172,7 @@
     },
     {
       "path": "server/src/erp/departmentModels.js",
-      "sha256": "bd2ecb628383b27a62b8aecf4def6aba022722990f6e5b322ab0aeb7144bf865"
+      "sha256": "105ecad39b14c57f9a53778eb7526d067adf10ee8d00276082c4a5fd773de5d6"
     },
     {
       "path": "server/src/erp/departmentPolicy.js",
@@ -1172,11 +1184,11 @@
     },
     {
       "path": "server/src/erp/departmentRoutes.js",
-      "sha256": "51fec6237b3c003ad731033249c99d3de6b3210094c22b0f6e2a9f41c81814ee"
+      "sha256": "d6d32c98c299d300449a912a4c158ced6a44e48f08474e6e47f09395da1ebd7e"
     },
     {
       "path": "server/src/erp/engine.js",
-      "sha256": "c75d8a7748867d57b1d4364a6abfc470237cb79d72feccee04b41e7460f6ac15"
+      "sha256": "d30dbae2a36280df258fb7fa8b2865b26adf15d3150719c84f79b3f80a6e6cc3"
     },
     {
       "path": "server/src/erp/featurePolicy.js",
@@ -1204,7 +1216,7 @@
     },
     {
       "path": "server/src/erp/models.js",
-      "sha256": "06a4ca28cd2f79b2b4219270c583ac595b18ec254b2579e38438cfec23629f7a"
+      "sha256": "0db24255b6f662903370dccfa6303c84cea4e03e51624ec61382196546ac3658"
     },
     {
       "path": "server/src/erp/operationsModels.js",
@@ -1232,7 +1244,7 @@
     },
     {
       "path": "server/src/erp/routes.js",
-      "sha256": "db792391b1c3c6514909a59eb0291d8d7e562ebae87453efec9d470e1810d1e6"
+      "sha256": "65923c69c633d0a281426b6272ea3f1808ba018aa9960db424cd5eb05946752d"
     },
     {
       "path": "server/src/erp/routingPolicy.js",
@@ -1260,7 +1272,7 @@
     },
     {
       "path": "server/src/middleware/accessMiddleware.js",
-      "sha256": "afe4ae719c78d7bb82d0006b82b6e18910110d19c8c8f29a147bb4f5eaf00fbf"
+      "sha256": "ebe6dadde7573c33259b1b1930a188cae9c598baf91a6f0d872865558ef9d660"
     },
     {
       "path": "server/src/middleware/asyncHandler.js",
@@ -1328,7 +1340,7 @@
     },
     {
       "path": "server/src/models/Company.js",
-      "sha256": "abf30eb5778c576497ee54ef4872be717fd1cad9533c9e45b7690f6e7be4f058"
+      "sha256": "29355f9e9a84bf8b25e2d4833f5fdaf3f4410564a259116307a7cc11376bf702"
     },
     {
       "path": "server/src/models/CustomerDatabaseCandidate.js",
@@ -1456,7 +1468,7 @@
     },
     {
       "path": "server/src/models/PurchaseOrder.js",
-      "sha256": "1392dfd54017a69e8b051e6326e5fa31e0b1dd3e3505b600f9e2f57158f74abf"
+      "sha256": "2df7f7fb5307f7a607364028a3c5363fa64f06c2fca1d1e97bca17300448e095"
     },
     {
       "path": "server/src/models/SaasPlan.js",
@@ -1552,7 +1564,7 @@
     },
     {
       "path": "server/src/routes/auth.routes.js",
-      "sha256": "8beb38ee41f6209547a6c6447d34bbe20368eb20dbc74b82fd34fdb50c1dd0cd"
+      "sha256": "ee9b5f71f2727865ea5a6b31bfb7c8f483e39dc504504762c66468a1407060fc"
     },
     {
       "path": "server/src/routes/authRoutes.js",
@@ -1581,6 +1593,10 @@
     {
       "path": "server/src/routes/fabricCutting.routes.js",
       "sha256": "f4db50e3ab4bbcdf8bbf6727b53f6d1c568792eaad86a80c69a455ac3fe0c807"
+    },
+    {
+      "path": "server/src/routes/factory.routes.js",
+      "sha256": "6bfa578ca50f343c0f6500fdc2a5a993a650c76eb8e42403de4ca7c8fee271be"
     },
     {
       "path": "server/src/routes/garment.routes.js",
@@ -1616,7 +1632,7 @@
     },
     {
       "path": "server/src/routes/po.routes.js",
-      "sha256": "cc572580a0ed088f08a7c1dce1f148c4342018a6e7e2fdd5641461a8d1ed87c7"
+      "sha256": "23db7adf1e733cd6f15ba4314b15743b5c1166280d1eb04a8d25b59231d88452"
     },
     {
       "path": "server/src/routes/production.routes.js",
@@ -1704,7 +1720,7 @@
     },
     {
       "path": "server/src/services/purchaseOrderService.js",
-      "sha256": "594f81a807b03c53ce8adc444756cbcd9622a60cd7d668fae62dbbcce5fda762"
+      "sha256": "a76eee92ff7b4abb51d1b8256f1edb61a6359f90e1f3648a1334ea7de7cd679d"
     },
     {
       "path": "server/src/services/qrService.js",
@@ -1712,7 +1728,7 @@
     },
     {
       "path": "server/src/services/stockService.js",
-      "sha256": "a888edff22855cd693b34dfa3c4fdd5b19605a83caa48e7215a6ff572742c4b2"
+      "sha256": "b55b5ffe9ec444575db41e4812fb2137a2fe4a59d5eaa35c334229cb12d6f14b"
     },
     {
       "path": "server/src/services/subscriptionSettlementService.js",
@@ -1745,6 +1761,10 @@
     {
       "path": "server/src/utils/companyKey.js",
       "sha256": "781a81a0853591e6680bf25967cf68fb01b933b381947356efc10494cf65e168"
+    },
+    {
+      "path": "server/src/utils/companySetupPolicy.js",
+      "sha256": "4c83a371d64b479840ac5ca89de65b1658645ca357af13f30a9f7acd40616a53"
     },
     {
       "path": "server/src/utils/customerDatabasePolicy.js",
@@ -1875,8 +1895,16 @@
       "sha256": "a59fce678853f49eaf8f4dc130020947385c47a6545653e1250af3bd763e2275"
     },
     {
+      "path": "server/tests/companyLifecycleDatabase.test.js",
+      "sha256": "8ef64aa7ae1eb695e442ace976c3c7d2976c12234b1a1280e25b991b47e265f9"
+    },
+    {
       "path": "server/tests/companyList.test.js",
       "sha256": "e359c0e1c773c9eb0f5988abf4c6efe654bcdc98052bd5a4fef38119fcab4964"
+    },
+    {
+      "path": "server/tests/companySetupPolicy.test.js",
+      "sha256": "9e5477fc6ab040b63154714acc2f770f955f3fe9e00152f5d1a7a9cc52063fc7"
     },
     {
       "path": "server/tests/customerDatabaseAtlas.test.js",
@@ -1928,7 +1956,7 @@
     },
     {
       "path": "server/tests/httpSmoke.test.js",
-      "sha256": "2ba54cdb3153e71bda474ceeffc7c819ddf6b4d78b3cb6bb09c2379f1f50163a"
+      "sha256": "50ac5dfd90dd253c65c425f5eec9d7115bc430b01d337eda3f122944a0afc664"
     },
     {
       "path": "server/tests/inward.test.js",

@@ -73,13 +73,11 @@ export default function PurchaseOrderPage({ pending, notify }) {
     notify("Purchase order saved");
   }
 
-  async function deletePurchaseOrder(order) {
-    if (!confirm(`Delete ${order.poNo}?`)) return;
-    await api(`/pos/${order._id}`, { method: "DELETE" });
-    loadPurchaseOrders();
-  }
+  async function closeOrder(order,action){const reason=prompt(`${action} ${order.poNo} — enter reason (receipts remain)`);if(!reason?.trim())return;try{await api(`/pos/${order._id}/close`,{method:'POST',body:JSON.stringify({action,reason})});await loadPurchaseOrders();notify?.('PO '+action.toLowerCase()+' recorded');}catch(e){notify?.(e.message);}}
 
   const columns = [
+    {key:"status",label:"Status"},
+    {key:"retainedActions",label:"Retained actions",render:r=><span>{!["Completed","Cancelled"].includes(r.status)&&<button onClick={()=>closeOrder(r,"CANCEL")}>Cancel remainder</button>}{["Completed","Cancelled"].includes(r.status)&&!r.archivedAt&&<button onClick={()=>closeOrder(r,"ARCHIVE")}>Archive</button>}{r.archivedAt&&"Archived"}{r.cancelReason&&<small>{r.cancelReason}</small>}</span>},
     { key: "poNo", label: "PO no." },
     { key: "indentNo", label: "Indent no." },
     { key: "vendorName", label: "Vendor name" },
@@ -142,8 +140,8 @@ export default function PurchaseOrderPage({ pending, notify }) {
           columns={columns}
           rows={purchaseOrders}
           loading={loading}
-          onEdit={pending ? null : openEdit}
-          onDelete={pending ? null : deletePurchaseOrder}
+          onEdit={pending ? null : r=>{if(!["Cancelled","Completed"].includes(r.status)&&!r.archivedAt)openEdit(r);else notify?.("Closed PO cannot be edited");}}
+          onDelete={null}
         />
       </Card>
 

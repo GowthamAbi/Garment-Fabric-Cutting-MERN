@@ -1,3 +1,5 @@
+import FactoryManagement from "../pages/auth/FactoryManagement.jsx";
+import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -195,6 +197,12 @@ export default function AppRoutes({ page, notify, onPageChange }) {
       return <FabricInwardPage notify={notify} />;
     case "Item Master":
       return <GarmentItemMasterPage notify={notify} />;
+    case "Factory Management":return <FactoryManagement/>;
+    case "Company Purchase Orders":return <CompanyPurchaseOrders/>;
+    case "Warehouse Management":return <Departments key="warehouse" initialDepartment="WAREHOUSE" notify={notify}/>;
+    case "Shop Management":return <Departments key="shop" initialDepartment="SHOP" notify={notify}/>;
+    case "Marketing Analysis":return <Departments key="marketing" initialDepartment="MARKETING" notify={notify}/>;
+    case "Production Departments":return <Departments notify={notify}/>;
     case "Company Dashboard":
       return (
         <CompanyAdminDashboardPage

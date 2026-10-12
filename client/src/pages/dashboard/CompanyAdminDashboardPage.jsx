@@ -28,13 +28,14 @@ export default function CompanyAdminDashboardPage({ notify, onPageChange }) {
           <h1>{data.company?.companyName}</h1>
           <p>
             Department performance, stock, timeline and approvals. Operational
-            entry is restricted.
+            access follows assigned roles and permissions.
           </p>
         </div>
         <span>
           {data.subscription.plan} · {data.subscription.status}
         </span>
       </div>
+      <div className="classic-card">{data.reportingLimited&&<p>Report reached its row limit. Review individual factory exports before relying on totals.</p>}<h3>ERP stock by unit (units are not combined)</h3>{data.stockByUnit?.map(r=><p key={r.unit}>{r.unit}: {r.quantity}</p>)}<h3>Production bundle WIP by stage</h3>{data.productionWip?.map(r=><p key={r._id}>{r._id} · {r.pieces} pieces · {r.bundles} bundles</p>)}</div>
       <div className="executive-stats">
         <Metric
           icon={<Users />}

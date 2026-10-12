@@ -14,13 +14,16 @@ export function legacyDepartment(path){
  return null;
 }
 export function enforceAccessBoundary(req){
- const user=req.user;if(!strictAccess(user)||companyOwner(user))return;
+ const user=req.user;if(!strictAccess(user))return;
  const path=req.originalUrl.split('?')[0].replace(/^\/api/,'');
+ if(companyOwner(user)){const department=legacyDepartment(path);if(department&&req.accessCompany&&!enabledDepartment(req.accessCompany,department))throw new ApiError(403,'Legacy department is not subscribed');return;}
  if(/^\/auth\/(session|logout|profile)$/.test(path)||path==='/saas/access-status')return;
+ if(path.startsWith('/auth/factories')){if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');if(req.method==='GET'||hasPermission(user,'company.settings'))return;throw new ApiError(403,'Company settings permission required');}
  if(path.startsWith('/auth/access')){if(path==='/auth/access/factory'||hasPermission(user,'users.roles.assign')||hasPermission(user,'roles.manage'))return;throw new ApiError(403,'Role administration permission required');}
  if(path.startsWith('/auth/users')){if(hasPermission(user,'users.manage'))return;throw new ApiError(403,'User management permission required');}
  if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');
  if(path.startsWith('/saas/')){if(path.startsWith('/saas/support')&&req.method!=='GET')throw new ApiError(403,'Only the company owner can issue or revoke owner support access');const permission=path.startsWith('/saas/customer-database')?'company.settings':path.includes('/support')?'support.manage':path.includes('/audit')?'audit.read':'billing.manage';if(hasPermission(user,permission))return;throw new ApiError(403,'Company account permission required');}
+ if(path==='/dashboard/company-overview'&&hasPermission(user,'erp.read')&&user.accessScope!=='DEPARTMENT'&&!user.assignedShopKeys?.length&&!user.assignedWarehouseKeys?.length)return;
  if(path.startsWith('/companies')){if(req.method==='GET'&&hasPermission(user,'users.manage'))return;if(hasPermission(user,'company.settings'))return;throw new ApiError(403,'Company settings permission required');}
  if(path.startsWith('/erp/departments')){
   if(path==='/erp/departments/reconciliation'&&(!hasPermission(user,'erp.reconcile')||user.accessScope==='DEPARTMENT'||((user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)&&user.accessScope!=='COMPANY')))throw new ApiError(403,'Factory-wide reconciliation permission required');

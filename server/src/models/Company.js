@@ -10,6 +10,7 @@ const factorySchema = new mongoose.Schema(
     gstin: { type: String, default: "", uppercase: true, trim: true },
     stateCode: { type: String, default: "", trim: true },
     placeOfSupply: { type: String, default: "", trim: true },
+    active: {type:Boolean,default:true},
     billingEmail: { type: String, default: "", lowercase: true, trim: true },
   },
   { timestamps: true },

@@ -1,3 +1,4 @@
+import factoryRoutes from "./factory.routes.js";
 import accessRoutes from './access.routes.js';
 import { Router } from "express";
 import {
@@ -23,6 +24,7 @@ import { loginRateLimit } from "../middleware/securityMiddleware.js";
 import { resolvePublicTenant } from "../middleware/tenantResolver.js";
 
 const router = Router();
+router.use("/factories",requireAuth,factoryRoutes);
 router.use("/access",requireAuth,accessRoutes);
 
 router.get("/setup-status", resolvePublicTenant, asyncHandler(getSetupStatus));

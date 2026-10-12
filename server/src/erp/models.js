@@ -34,6 +34,7 @@ const document = new Schema({ number: { type: String, required: true }, type: { 
   idempotencyKey: { type: String, required: true }, requestHash: { type: String, required: true },
   lines: [Schema.Types.Mixed], moves: [Schema.Types.Mixed], journals: [Schema.Types.Mixed],
   totals: Schema.Types.Mixed, metadata: Schema.Types.Mixed, postedBy: String,
+  cancelledAt:Date,cancelledBy:String,cancelReason:String,archivedAt:Date,archivedBy:String,archiveReason:String,
   clearedAt: Date, bankReference: String }, { timestamps: true });
 scopedUnique(document, "number"); scopedUnique(document, "idempotencyKey");
 document.index({ companyId: 1, factoryId: 1, sourceId: 1 });

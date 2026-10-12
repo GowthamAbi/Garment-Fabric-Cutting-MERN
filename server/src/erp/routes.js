@@ -1,3 +1,5 @@
+import {appendApprovalAudit} from "./approvalAudit.js";
+import {ErpApprovalAudit} from "./models.js";
 import { Router } from "express";
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -39,6 +41,10 @@ router.use("/operations", operationsRoutes);
 router.use("/approvals", approvalRoutes);
 router.use("/workforce", workforceRoutes);
 router.use("/bank", bankRoutes);
+router.get('/purchase-orders',asyncHandler(async(req,res)=>{if(!authorizeErp(req.user,'post','PURCHASE_ORDER'))throw new ApiError(403,'Purchase permission required');const scope=workspaceFilter(),orders=await ErpDocument.find({...scope,type:'PURCHASE_ORDER',reversedBy:{$exists:false}}).sort({_id:-1}).limit(500).lean(),receipts=await ErpDocument.find({...scope,type:'GOODS_RECEIPT',sourceId:{$in:orders.map(o=>String(o._id))},reversedBy:{$exists:false}}).lean();res.json(orders.map(o=>({...o,receipts:receipts.filter(r=>r.sourceId===String(o._id)).map(r=>({id:r._id,number:r.number,lines:r.lines})),pending:o.lines.map(l=>({sku:l.sku,quantity:o.cancelledAt?0:Math.max(0,l.qty-receipts.filter(r=>r.sourceId===String(o._id)).flatMap(r=>r.lines).filter(r=>r.sku===l.sku).reduce((n,r)=>n+r.qty,0))}))})));}));
+router.post('/purchase-orders/:id/lifecycle',asyncHandler(async(req,res)=>{if(!authorizeErp(req.user,'post','PURCHASE_ORDER'))throw new ApiError(403,'Purchase permission required');if(!mongoose.isValidObjectId(req.params.id)||!['CANCEL','ARCHIVE'].includes(req.body.action)||!String(req.body.reason||'').trim())fail('Action, PO ID and reason required');const scope=workspaceFilter();await ErpApprovalAudit.init();const session=await currentDatabase().startSession();try{let result;await session.withTransaction(async()=>{if(!await ErpSettings.findOneAndUpdate({...scope,key:'ERP',enabled:true},{$inc:{revision:1}},{new:true,session}))fail('ERP activation required');const po=await ErpDocument.findOne({...scope,_id:req.params.id,type:'PURCHASE_ORDER',reversedBy:{$exists:false}}).session(session);if(!po)fail('PO not found');const receipts=await ErpDocument.find({...scope,type:'GOODS_RECEIPT',sourceId:String(po._id),reversedBy:{$exists:false}}).session(session).lean(),complete=po.lines.every(l=>receipts.flatMap(r=>r.lines).filter(r=>r.sku===l.sku).reduce((n,r)=>n+r.qty,0)>=l.qty);
+ if(req.body.action==='CANCEL'){if(po.cancelledAt||po.archivedAt||complete)fail('Completed/closed PO cannot be cancelled');po.cancelledAt=new Date();po.cancelledBy=req.user.userId;po.cancelReason=String(req.body.reason).slice(0,1000);}else{if(po.archivedAt||!po.cancelledAt&&!complete)fail('Archive only completed or cancelled POs');po.archivedAt=new Date();po.archivedBy=req.user.userId;po.archiveReason=String(req.body.reason).slice(0,1000);}
+ await po.save({session});await appendApprovalAudit(scope,session,{action:'PO_'+req.body.action,actor:req.user.userId,reference:String(po._id),reason:String(req.body.reason).slice(0,1000)});result=po;});res.json(result);}finally{await session.endSession();}}));
 router.get("/workspace", asyncHandler(async (req, res) => {
   const scope = workspaceFilter();
   const [settings, skus, parties, boms, company] = await Promise.all([

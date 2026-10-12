@@ -30,7 +30,9 @@ import {
   Truck,
   CreditCard,
 } from "lucide-react";
-import { useState } from "react";
+import { api } from "../../api.js";
+import {DEPARTMENTS} from "../../../../shared/departmentCatalogue.js";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
@@ -460,6 +462,12 @@ const departmentNavigation = {
     { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
   ],
   COMPANY_ADMIN: [
+    {label:"Factory Management",icon:Factory,page:"Factory Management"},
+    {label:"Production Departments",icon:Factory,page:"Production Departments"},
+    {label:"Warehouse Management",icon:Boxes,page:"Warehouse Management"},
+    {label:"Shop Management",icon:ShoppingCart,page:"Shop Management"},
+    {label:"Marketing Analysis",icon:BarChart3,page:"Marketing Analysis"},
+    {label:"Company Purchase Orders",icon:ClipboardList,page:"Company Purchase Orders"},
     {
       label: "Company Dashboard",
       icon: LayoutDashboard,
@@ -519,7 +527,13 @@ const departmentRoles = {
   ACCESSORIES: ["store", "accessories_admin", "accessories_entry"],
   DELIVERY: ["delivery_admin", "delivery_entry"],
   ADMIN: ["admin"],
-  COMPANY_ADMIN: ["company_owner", "company_admin", "saas_super_admin"],
+  COMPANY_ADMIN: [
+    {label:"Factory Management",icon:Factory,page:"Factory Management"},
+    {label:"Production Departments",icon:Factory,page:"Production Departments"},
+    {label:"Warehouse Management",icon:Boxes,page:"Warehouse Management"},
+    {label:"Shop Management",icon:ShoppingCart,page:"Shop Management"},
+    {label:"Marketing Analysis",icon:BarChart3,page:"Marketing Analysis"},
+    {label:"Company Purchase Orders",icon:ClipboardList,page:"Company Purchase Orders"},"company_owner", "company_admin", "saas_super_admin"],
 };
 
 const departmentTitles = {
@@ -542,6 +556,8 @@ const departmentOrder = [
 ];
 
 export default function MainLayout({ page, onPageChange, children }) {
+  const [access,setAccess]=useState(null);
+  useEffect(()=>{if(['saas_super_admin','support_viewer'].includes(user?.role))return;let alive=true;api('/saas/access-status').then(v=>{if(alive)setAccess(v);}).catch(()=>{});return()=>{alive=false;};},[user?._id,user?.role]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mastersOpen, setMastersOpen] = useState(
     ["Production Masters", "Machine Register", "Employee Register"].includes(
@@ -663,17 +679,18 @@ export default function MainLayout({ page, onPageChange, children }) {
             )
             .filter(
               ([department]) =>
-                ["saas_super_admin", "company_admin"].includes(user?.role) ||
+                (!DEPARTMENTS.includes(department)||access?.accessAllowed&&access.enabledDepartments?.includes(department)&&(!user?.accessPolicyVersion||user.role==='company_owner'||user.permissions?.some(p=>['department.'+department.toLowerCase()+'.read','department.'+department.toLowerCase()+'.write'].includes(p))))&&
+                (["saas_super_admin", "company_owner", "company_admin"].includes(user?.role) ||
                 (user?.role === "admin" && department !== "COMPANY_ADMIN") ||
                 user?.department === department ||
-                departmentRoles[department]?.includes(user?.role),
+                departmentRoles[department]?.includes(user?.role)),
             )
             .map(([department, groups]) => (
               <section className="department-nav" key={department}>
                 <div className="department-nav-title">
                   {departmentTitles[department]}
                 </div>
-                {groups.map(
+                {groups.filter(g=>{const needed={'Warehouse Management':'WAREHOUSE','Shop Management':'SHOP','Marketing Analysis':'MARKETING'}[g.page];if(needed)return access?.accessAllowed&&access.enabledDepartments?.includes(needed)&&(!user.accessPolicyVersion||user.role==='company_owner'||user.permissions?.some(p=>['department.'+needed.toLowerCase()+'.read','department.'+needed.toLowerCase()+'.write'].includes(p)));if(g.page==='Company Purchase Orders')return access?.accessAllowed&&(user.role==='company_owner'||!user.accessPolicyVersion||user.permissions?.includes('erp.purchase'));if(g.page==='Production Departments')return access?.accessAllowed&&(user.role==='company_owner'||!user.accessPolicyVersion||user.permissions?.some(p=>p.startsWith('department.')));return true;}).map(
                   ({ label, icon: Icon, page: directPage, items }) => {
                     const key = `${department}-${label}`;
                     const active = directPage === page || items?.includes(page);

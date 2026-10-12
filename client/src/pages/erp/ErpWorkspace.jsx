@@ -38,6 +38,7 @@ export default function ErpWorkspace({ notify }) {
   async function chooseSource(id) {
     setSourceId(id); if (!id) { update({ sourceId: "" }); return; }
     const source = await api(`/erp/documents/${id}`);
+    if(source.cancelledAt||source.archivedAt||source.reversedBy)throw new Error("Source is closed or reversed; choose an active document");
     let lines = source.lines.map(l => ({ sku: l.sku, quantity: l.qty / 1000, rate: l.rate / 100, taxPercent: l.taxBps / 100, location: l.location, target: "CUTTING" }));
     if (["MATERIAL_ISSUE", "MATERIAL_RETURN"].includes(form.type)) lines = source.metadata.bom.components.map(c => ({ ...emptyLine, sku: c.sku, quantity: Math.ceil(c.qty * source.lines[0].qty / source.metadata.bom.outputQty) / 1000, location: workspace.skus.find(s => s.code === c.sku)?.location || "FABRIC" }));
     update({ sourceId: id, partyCode: source.partyCode || "", lines });
@@ -63,7 +64,7 @@ export default function ErpWorkspace({ notify }) {
   }
   if (!workspace) return <div className="erp-shell"><h2>Integrated ERP</h2><p>{error || "Loading workspace…"}</p></div>;
   const noItems = ["RECEIPT", "PAYMENT", "WORK_COST", "JOURNAL"].includes(form.type);
-  const activeDocs = docs.filter(d => !d.reversedBy && (sourceTypes[form.type] || []).includes(d.type));
+  const activeDocs = docs.filter(d => !d.reversedBy && !d.cancelledAt && !d.archivedAt && (sourceTypes[form.type] || []).includes(d.type));
   return <div className="erp-shell">
     <header className="erp-header"><div><span className="erp-eyebrow">UG SAAS · {workspace.company.name}</span><h1>Integrated ERP</h1><p>{workspace.company.factory} · Stock, production and accounts in one posting flow</p></div><span className={`erp-badge ${workspace.settings.enabled ? "on" : ""}`}>{workspace.settings.enabled ? "ERP active · legacy entries locked" : "Opening balance review"}</span></header>
     <nav className="erp-tabs">{["Overview", "Masters", "Departments", ...(workspace.features?.includes("ERP_SHOP_FLOOR")?["Shop floor"]:[]), "New document", "Approvals", "Documents", "Stock", "Ledger", ...(canFinance&&workspace.features?.includes("ERP_FINANCE") ? ["Financials", "Commercial reports", "Bank matching"] : []),...((user?.role==='company_owner'||(user?.accessPolicyVersion?(user.permissions||[]).includes('hr.payroll.read'):canFinance))&&workspace.features?.includes("ERP_HR")?["Workforce"]:[])].map(t => <button className={tab === t ? "active" : ""} key={t} onClick={() => { setTab(t); if (t === "Ledger") execute(async () => setEntries(await api("/erp/ledger"))); }}>{t}</button>)}</nav>
