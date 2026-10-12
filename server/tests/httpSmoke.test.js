@@ -16,7 +16,7 @@ test("HTTP liveness, readiness, anonymous ERP denial and idempotency CORS header
     for(const path of ["operations/dashboard","approvals","commercial","bank","workforce","departments/reconciliation","departments/marketing/analysis"]){
       const denied=await fetch(`${base}/api/erp/${path}`);assert.equal(denied.status,401);
     }
-    for(const path of ["departments/sale","workforce/payroll-rules","workforce/payroll-preview","workforce/payslips/000000000000000000000001/accrual"]){
+    for(const path of ["departments/external-inward","departments/external-outward","departments/external-materials","departments/integrated-core-transfer","departments/external-market-observation","departments/sale","workforce/payroll-rules","workforce/payroll-preview","workforce/payslips/000000000000000000000001/accrual"]){
       const denied=await fetch(`${base}/api/erp/${path}`,{method:"POST",headers:{Origin:"http://localhost:5173","Content-Type":"application/json"},body:"{}"});assert.equal(denied.status,401);
     }
     const cors = await fetch(`${base}/api/erp/documents`, { method: "OPTIONS", headers: { Origin: "http://localhost:5173", "Access-Control-Request-Method": "POST", "Access-Control-Request-Headers": "idempotency-key,content-type" } });

@@ -1,13 +1,12 @@
 {
-  "release": "Owner Part 3 subscription purchase and invoices",
+  "release": "Owner Part 4 standalone and integrated boundaries",
   "validation": {
-    "serverPassed": 131,
+    "serverPassed": 135,
     "serverFailed": 0,
-    "serverSkipped": 4,
+    "serverSkipped": 5,
     "frontendBuild": "PASSED",
-    "liveEmail": "NOT_RUN",
-    "liveRazorpay": "NOT_RUN",
-    "realDatabaseAcceptance": "NOT_RUN"
+    "realDatabaseAcceptance": "NOT_RUN",
+    "loggedInDeviceAcceptance": "NOT_RUN"
   },
   "files": [
     {
@@ -73,6 +72,10 @@
     {
       "path": "OWNER-PART-3-RELEASE.md",
       "sha256": "335ec6d27411c1ca1418667c8859988c4ff0fcca40323e696dc91281c6dd75c9"
+    },
+    {
+      "path": "OWNER-PART-4-RELEASE.md",
+      "sha256": "74356ec394d9ad16dcfe7b2f17f5e21677abc4a7cbc437673226112c78b9864c"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -496,7 +499,7 @@
     },
     {
       "path": "client/src/pages/erp/Departments.jsx",
-      "sha256": "d63af24c616a27a96c0663d5efa7c25a469b213d85ebd334b8295da1ac10cefb"
+      "sha256": "69de3ac73f1c15f85244ba26ed045edcc822c883f6bec6e70aed451ab6a5ffd0"
     },
     {
       "path": "client/src/pages/erp/ErpWorkspace.jsx",
@@ -1127,12 +1130,16 @@
       "sha256": "4f3ed27f67832a2db3635bd55881a555e2208deb16bb4638f59941bdaa3fb1ea"
     },
     {
+      "path": "server/src/erp/boundaryPolicy.js",
+      "sha256": "0f80484e713f0df730a0cba89b895df6497d0f2b50c0e7233593f71dabd012a2"
+    },
+    {
       "path": "server/src/erp/commercialPolicy.js",
       "sha256": "d3f94dc5bb4b7b50a12830c91818e626a8c236ab5cb48585d2a03ec6c9dce954"
     },
     {
       "path": "server/src/erp/departmentModels.js",
-      "sha256": "6fcebaa1dd361ac2d859a8f424e49720fdfe9ee65594b535a72f957c53bc48d6"
+      "sha256": "e09cd3919727d7a63ba1e3833a81b6fc9cf0e1628c40acfe61f78f47db681b06"
     },
     {
       "path": "server/src/erp/departmentPolicy.js",
@@ -1144,7 +1151,7 @@
     },
     {
       "path": "server/src/erp/departmentRoutes.js",
-      "sha256": "1936ab857f73722770e8c0ecc362711c6dcaca7a8f5e9f9be2e18bc2ce0d8334"
+      "sha256": "31d0e0383af627ddff1faf8be8aeef5a0601257b710f226802426aeb845568d4"
     },
     {
       "path": "server/src/erp/engine.js",
@@ -1196,7 +1203,7 @@
     },
     {
       "path": "server/src/erp/policy.js",
-      "sha256": "f55dd7959c5ee3e36e69469c030cec97902fe057e1b592fb1cb7764c7d735c7b"
+      "sha256": "14b68f258692b9a5b75771fa64c31ea52cbc860f56b286ede57c6f935905ac67"
     },
     {
       "path": "server/src/erp/reports.js",
@@ -1823,6 +1830,14 @@
       "sha256": "cd555d3933fe1c28cdac15dd341096667f4c5980548ec1b71f222e40d317a3c1"
     },
     {
+      "path": "server/tests/boundaryDatabase.test.js",
+      "sha256": "232a80cd4f94141537f0183a6562b7d63cb7f379d2bf2d43b113707174ad1a41"
+    },
+    {
+      "path": "server/tests/boundaryPolicy.test.js",
+      "sha256": "f2d6e497eec0f8c82916c9fccbada0548441fc6a57a69638acea5980ab3270f6"
+    },
+    {
       "path": "server/tests/companyKey.test.js",
       "sha256": "a59fce678853f49eaf8f4dc130020947385c47a6545653e1250af3bd763e2275"
     },
@@ -1880,7 +1895,7 @@
     },
     {
       "path": "server/tests/httpSmoke.test.js",
-      "sha256": "7595ad2b96dabf4a75d076caf00b6768d3e9ad5909e20067308b33077e98cbe7"
+      "sha256": "b1d36981987df092e11fd9b0b3266240658afccde808d1ac382fc82932d22a18"
     },
     {
       "path": "server/tests/inward.test.js",
