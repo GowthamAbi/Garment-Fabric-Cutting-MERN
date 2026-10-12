@@ -1,3 +1,4 @@
+import SubscriptionPayment from "../models/SubscriptionPayment.js";
 import {strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import {trialExpiry} from "../utils/subscriptionAccess.js";
@@ -229,10 +230,10 @@ export async function createCompany(request, response) {
   if(selected.length>selectedPlan.maxDepartments)throw new ApiError(400,"Selected departments exceed subscription limit");
   const licensed=licensedDepartments(selectedPlan.modules);
   if(!licensed.length||selected.some(d=>!licensed.includes(d)))throw new ApiError(400,"Department is not included in this plan");
-  const expiresAt = selectedPlan.code==="TRIAL" ? trialExpiry() : new Date(Date.now() + validityDays * 86400000);
+  const expiresAt = selectedPlan.code==="TRIAL" ? trialExpiry() : undefined;
   const provisioned = await provisionTenant({
     companyName, adminName, adminEmail, password: adminPassword,
-    city: address, plan: subscriptionPlan || "Trial", expiresAt,factoryName,factoryCode:request.body.factoryCode,
+    city: address, plan: selectedPlan.code==="TRIAL"?"Trial":selectedPlan.name, expiresAt,factoryName,factoryCode:request.body.factoryCode,
     enabledDepartments:selected,entitlements:{maxUsers:selectedPlan.maxUsers,maxDepartments:selectedPlan.maxDepartments,modules:selectedPlan.modules},
     createdBy: request.user.userId || request.user.name,
   });
@@ -300,12 +301,16 @@ export async function controlCompanySubscription(request, response) {
       400,
       "Action must be ACTIVATE, PAUSE, REVOKE or ARCHIVE",
     );
-  if (action === "ACTIVATE" && request.body.validityDays)
-    updates.subscriptionEndsAt = new Date(
-      Date.now() + Number(request.body.validityDays) * 86400000,
-    );
+  if(action==='ACTIVATE'&&request.body.validityDays)throw new ApiError(400,'Validity is set by approved trial or settled payment, not an activation override');
   const registry = await TenantRegistry.findById(request.params.id);
   if (!registry) throw new ApiError(404, "Company workspace not found");
+  if(action==='ACTIVATE')await runWithTenant({companyKey:registry.companyKey,databaseName:registry.databaseName},async()=>{
+    const company=await Company.findOne().lean(), now=new Date();
+    if(!company?.subscriptionEndsAt||company.subscriptionEndsAt<=now)throw new ApiError(402,'Renew before activation');
+    const approvedTrial=company.subscriptionPlan==='Trial'&&registry.trialEndsAt&&new Date(registry.trialEndsAt)>now&&new Date(company.subscriptionEndsAt)<=new Date(registry.trialEndsAt);
+    const paid=await SubscriptionPayment.exists({companyId:company._id,status:'PAID',periodStart:{$lte:now},periodEnd:company.subscriptionEndsAt});
+    if(!approvedTrial&&!paid)throw new ApiError(403,'No approved trial or settled payment permits activation');
+  });
   registry.status = action === "ACTIVATE" ? "ACTIVE" : action === "PAUSE" ? "SUSPENDED" : "ARCHIVED";
   if (updates.subscriptionEndsAt) registry.subscriptionEndsAt = updates.subscriptionEndsAt;
   await registry.save();

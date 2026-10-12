@@ -26,7 +26,7 @@ const companySchema = new mongoose.Schema(
     },
     subscriptionStatus: {
       type: String,
-      enum: ["Active", "Suspended", "Expired"],
+      enum: ["Active", "Suspended", "Expired", "PaymentPending"],
       default: "Active",
     },
     subscriptionStartsAt: Date,

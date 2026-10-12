@@ -2,6 +2,7 @@ import ApiError from "../utils/ApiError.js";
 export const allowRoles =
   (...roles) =>
   (req, _res, next) => {
+    if(req.user?.accessPolicyVersion>=1&&(req.user.permissions||[]).includes("billing.manage")&&/^\/api\/saas\/(subscription(?:\/|$)|invoices(?:\/|$))/.test(req.originalUrl.split("?")[0])&&!req.originalUrl.includes("/approve"))return next();
     if(req.user?.accessPolicyVersion>=1&&req.originalUrl.split('?')[0]==='/api/saas/audit'&&(req.user.permissions||[]).includes('audit.read'))return next();
     if(req.user?.accessPolicyVersion>=1&&req.authorizedLegacyDepartment)return next();
     if(req.user?.role==='company_owner'&&(roles.includes('company_admin')||roles.includes('admin')))return next();

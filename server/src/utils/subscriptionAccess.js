@@ -5,7 +5,7 @@ export function subscriptionAccess(company,now=Date.now()){
  const valid=expiry&&Number.isFinite(expiry.getTime());
  const expired=!valid||expiry.getTime()<=now;
  const daysRemaining=valid?Math.max(0,Math.ceil((expiry.getTime()-now)/86400000)):0;
- return {kind:company?.subscriptionPlan==='Trial'?'TRIAL':'PAID',expiresAt:valid?expiry.toISOString():null,daysRemaining,expired,accessAllowed:Boolean(company?.active!==false&&company?.subscriptionStatus==='Active'&&!expired),alert:expired?'EXPIRED':daysRemaining<=3?'EXPIRING':'ACTIVE'};
+ return {kind:company?.subscriptionPlan==='Trial'?'TRIAL':'PAID',expiresAt:valid?expiry.toISOString():null,daysRemaining,expired,accessAllowed:Boolean(company?.active!==false&&company?.subscriptionStatus==='Active'&&!expired),alert:company?.subscriptionStatus==='PaymentPending'?'PAYMENT_PENDING':expired?'EXPIRED':daysRemaining<=3?'EXPIRING':'ACTIVE'};
 }
 
 export function reminderBucket(expiresAt,now=Date.now()){

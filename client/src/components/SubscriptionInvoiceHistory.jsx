@@ -1,0 +1,8 @@
+import {downloadInvoice} from "../utils/subscriptionInvoicePdf.js";
+import {useEffect,useState} from 'react';
+import {api} from '../api.js';
+export default function SubscriptionInvoiceHistory({companyId}){
+ const [data,setData]=useState(null),[error,setError]=useState('');
+ useEffect(()=>{let alive=true;setData(null);setError('');api(companyId?`/saas/owner-companies/${companyId}/billing`:'/saas/subscription').then(d=>{if(alive)setData(d);}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[companyId]);
+ return <section className="classic-card"><h3>Subscription invoices</h3>{data?.payments?.length>0&&<details><summary>Payment history</summary>{data.payments.map(p=><p key={p._id||p.referenceNo}>{p.referenceNo} · {p.plan} · ₹{Number(p.amount).toFixed(2)} · {p.status}</p>)}</details>}{error&&<p role="alert">{error}</p>}{!data&&!error&&<p>Loading invoices...</p>}{data&&!data.invoices?.length&&<p>No recorded invoices. Invoices are issued after settlement. Older invoices remain in Subscription Bills.</p>}{data?.invoices?.map(i=><details key={i._id||i.invoiceNumber}><summary>{i.invoiceNumber} · ₹{Number(i.grandTotal).toFixed(2)} · {i.status}</summary><p>{i.customer?.companyName} · {new Date(i.invoiceDate).toLocaleDateString()} · {i.taxType==='NO_TAX'?'Without GST':i.taxType}</p><p>Subtotal ₹{Number(i.subtotal).toFixed(2)} · Tax ₹{Number(i.taxTotal).toFixed(2)}</p>{i.lineItems?.map((l,n)=><p key={n}>{l.description} · {new Date(l.periodStart).toLocaleDateString()} to {new Date(l.periodEnd).toLocaleDateString()}</p>)}<button type="button" onClick={()=>downloadInvoice(i)}>Download PDF</button></details>)}</section>;
+}

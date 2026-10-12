@@ -1,3 +1,4 @@
+import SubscriptionInvoiceHistory from "../../components/SubscriptionInvoiceHistory.jsx";
 import {DEPARTMENTS,DEPARTMENT_CATALOGUE,ERP_MODULES,departmentCode} from '../../../../shared/departmentCatalogue.js';
 import { useEffect, useState } from "react";
 import "./company-management.css";
@@ -205,6 +206,7 @@ export default function CompanyManagementPage({ notify }) {
             {(selected.enabledDepartments || []).map((department) => <span key={department}>{department}</span>)}
           </div>
           {!selected.enabledDepartments?.length && <p className="company-muted">Legacy department selection is not recorded. Configure departments within the plan limit.</p>}
+          <SubscriptionInvoiceHistory companyId={selected._id}/>
           <button type="button" className="company-button company-button-secondary" onClick={() => setSelected(null)}>Close details</button>
         </Card>
       )}

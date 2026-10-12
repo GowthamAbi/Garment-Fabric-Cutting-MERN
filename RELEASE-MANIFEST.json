@@ -1,10 +1,13 @@
 {
-  "release": "Owner Part 2 access foundation",
+  "release": "Owner Part 3 subscription purchase and invoices",
   "validation": {
-    "serverPassed": 127,
+    "serverPassed": 131,
     "serverFailed": 0,
     "serverSkipped": 4,
-    "liveOwnershipMigration": "NOT_RUN"
+    "frontendBuild": "PASSED",
+    "liveEmail": "NOT_RUN",
+    "liveRazorpay": "NOT_RUN",
+    "realDatabaseAcceptance": "NOT_RUN"
   },
   "files": [
     {
@@ -66,6 +69,10 @@
     {
       "path": "OWNER-PART-2-RELEASE.md",
       "sha256": "54eec003b515376278d3de41390c2ec0102e8ce6867f8fd16d12a5980a854aee"
+    },
+    {
+      "path": "OWNER-PART-3-RELEASE.md",
+      "sha256": "335ec6d27411c1ca1418667c8859988c4ff0fcca40323e696dc91281c6dd75c9"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -197,11 +204,15 @@
     },
     {
       "path": "client/src/App.jsx",
-      "sha256": "0f45a190e97e6637dd7be2c1473c8c88a9397caee1deeed378360b34ffec1895"
+      "sha256": "c2b8cbd9be071dbb2c13609fbc6de693637b2227c8fb4dd75f50da1476ceec20"
     },
     {
       "path": "client/src/accessibility-theme.css",
       "sha256": "c2dcbc70f11bab07661060b292a0373f2b4d33687d5e8c1bb33fe5aa7cc6fa23"
+    },
+    {
+      "path": "client/src/api.js",
+      "sha256": "47a1b46feab062c28409ba801c66931d2bff59ae2c98cced73dbb20ee94a9405"
     },
     {
       "path": "client/src/api/authApi.js",
@@ -256,10 +267,6 @@
       "sha256": "6a7b7bad0af9165d5a1583f8631a63dab9fbf19518b17183866c85b03051b06d"
     },
     {
-      "path": "client/src/api.js",
-      "sha256": "47a1b46feab062c28409ba801c66931d2bff59ae2c98cced73dbb20ee94a9405"
-    },
-    {
       "path": "client/src/components/AccessAdministration.jsx",
       "sha256": "0089edc16856eeb1d0ac602873ec6466bc6c09f47f2c23fb4d2de64ec03cf114"
     },
@@ -274,6 +281,10 @@
     {
       "path": "client/src/components/Modal.jsx",
       "sha256": "a1092aa2ea31de93a838e74d7d9dd842167b55180f74ee5ec9b6422aebef2bc6"
+    },
+    {
+      "path": "client/src/components/SubscriptionInvoiceHistory.jsx",
+      "sha256": "881de795c3bc7c96f49bd22e0bb81b1cf1b6f14300505da8ec23a65f2b984c74"
     },
     {
       "path": "client/src/components/common/AlertMessage.jsx",
@@ -365,7 +376,7 @@
     },
     {
       "path": "client/src/components/layout/SubscriptionNotice.jsx",
-      "sha256": "7ffbfaf5294dee977796b6e61d2c8f61cb4061679efa85b7de518fa89fe9c6ec"
+      "sha256": "82a9c3596b9a4fd40accdcebcd98cee46d1b79501b61769c3428385aac72289c"
     },
     {
       "path": "client/src/components/layout/SuperAdminLayout.jsx",
@@ -417,7 +428,7 @@
     },
     {
       "path": "client/src/pages/auth/CompanyManagementPage.jsx",
-      "sha256": "5cc3b1b64c5f735ae066d6b021c723e2317c7556494329aff25686cea06c5396"
+      "sha256": "8879741f2727b41a512b92955c0e4e744a97c8e2d4bbe8f7dc9747d259525b1e"
     },
     {
       "path": "client/src/pages/auth/ForgotPasswordPage.jsx",
@@ -729,7 +740,7 @@
     },
     {
       "path": "client/src/pages/saas/OwnerPlansPage.jsx",
-      "sha256": "bbfb3f6fd01e12af791565b5196f0f57250551e865897f9bd9c66a7b9de6f502"
+      "sha256": "c9dbfbf128aaa446af3945c8906d8e20b00aaecc9bd883a37a6c74c39c8e06bf"
     },
     {
       "path": "client/src/pages/saas/OwnerSalesPage.jsx",
@@ -737,7 +748,7 @@
     },
     {
       "path": "client/src/pages/saas/ProfileSettingsPage.jsx",
-      "sha256": "6edb7c9b7c563a6c97a2f09392e2bd0ba5fdea50d27555d9affae31bfb6aba6c"
+      "sha256": "3ab6dc4a88821264142da1a41e9a39bf02158d200527033cba2795b672238597"
     },
     {
       "path": "client/src/pages/saas/PublicDemoPage.jsx",
@@ -749,7 +760,7 @@
     },
     {
       "path": "client/src/pages/saas/SubscriptionCenterPage.jsx",
-      "sha256": "ab948e251cf0fd5051ec726d28bd8bc296a81bc1ed28edd8ecdd9d45433584e3"
+      "sha256": "5cdd6ca8dce7b3fd0d3b23b73f656c662fb01e3be9d6fc9db2788f48c2a0956b"
     },
     {
       "path": "client/src/pages/saas/SuperAdminDashboardPage.jsx",
@@ -800,6 +811,10 @@
       "sha256": "3c89921096f1e619bb3fa6df6204941f5c14fb537d8872b8e9bde6a6e21a599e"
     },
     {
+      "path": "client/src/styles.css",
+      "sha256": "92feacb34d74503a159b6c2eebece4a80414b6a229c38af952a92eb809d8d56d"
+    },
+    {
       "path": "client/src/styles/forms.css",
       "sha256": "18b0bc02f2a8fc8bb58bac37bf9893f78d18481a528acf71a341c48ddd5fb7af"
     },
@@ -818,10 +833,6 @@
     {
       "path": "client/src/styles/variables.css",
       "sha256": "2c35e098ae276581ab71e906d7ab89a9fe09067f9d3c31e3c0c968e0070ada5e"
-    },
-    {
-      "path": "client/src/styles.css",
-      "sha256": "92feacb34d74503a159b6c2eebece4a80414b6a229c38af952a92eb809d8d56d"
     },
     {
       "path": "client/src/utils/constants.js",
@@ -850,6 +861,10 @@
     {
       "path": "client/src/utils/sessionPolicy.js",
       "sha256": "f98937f8f52d20a006c2b3a7b4be687c6091bc98ae3262bbb5eb6719161b3e10"
+    },
+    {
+      "path": "client/src/utils/subscriptionInvoicePdf.js",
+      "sha256": "85b9f11bbd4ff942d9d1022872ba4a63b68fdf13720a05c89fc9bf6b16af2a0a"
     },
     {
       "path": "client/src/utils/tenantClient.js",
@@ -985,7 +1000,7 @@
     },
     {
       "path": "server/src/controllers/authController.js",
-      "sha256": "fbf92b83d4b2914348e559f7ad112c7a7fcab1ef88b341a3f44a3c9f45e83165"
+      "sha256": "2502d37af9c8a3f7ee604a6219709c6a4f64f9153a5a7f59e6d4aea62bb486aa"
     },
     {
       "path": "server/src/controllers/categoryController.js",
@@ -997,7 +1012,7 @@
     },
     {
       "path": "server/src/controllers/companyController.js",
-      "sha256": "5abd77b46618e0358377b28b46504fefd7f6853e74a22af9ac1e484b1de9c4dc"
+      "sha256": "2fd1f2cd608b5eb7b5fd7c7faee77bd62d2f1a6921d9f47e51af921eccea9d25"
     },
     {
       "path": "server/src/controllers/customerDatabaseController.js",
@@ -1037,7 +1052,7 @@
     },
     {
       "path": "server/src/controllers/invoiceController.js",
-      "sha256": "7604dd265b6027e211a3c21470852b2fac52f73475b93f1471c60f21305ad4d0"
+      "sha256": "4ee3b560744881cc5d90d4a587ca07f18c1009a37b224d068518f8b47d23c64b"
     },
     {
       "path": "server/src/controllers/inwardController.js",
@@ -1077,7 +1092,7 @@
     },
     {
       "path": "server/src/controllers/saasController.js",
-      "sha256": "c9c2757dfd0edbcda01602598ca70ec5884e013ed40fac685a7c2f71b6a832cd"
+      "sha256": "2a527fd2860c654b619b8abf632ea71f69a2c4a516f810a07fd6995258b62125"
     },
     {
       "path": "server/src/controllers/sectionController.js",
@@ -1245,7 +1260,7 @@
     },
     {
       "path": "server/src/middleware/roleMiddleware.js",
-      "sha256": "3605c40642e3c37d8bc8b25fb3d552ff487896f7b157722b57c559ec86b5adc8"
+      "sha256": "d28751559c2cbcd4e9ea8f5af0c5ce0f54bf6863f5cdc5cd8dc30c5697971b18"
     },
     {
       "path": "server/src/middleware/securityMiddleware.js",
@@ -1253,7 +1268,7 @@
     },
     {
       "path": "server/src/middleware/subscriptionMiddleware.js",
-      "sha256": "f4d63e7ea1ec2843b14c4c7dfc529c873b69a58fbeee375601893861f88d48ce"
+      "sha256": "e985436204951ee7f24eb628bf59766eecbc82a0947a47e444f09f0a3457b983"
     },
     {
       "path": "server/src/middleware/tenantResolver.js",
@@ -1273,7 +1288,7 @@
     },
     {
       "path": "server/src/models/BillingRequest.js",
-      "sha256": "6d28eb11074f9993a9a1115bdac80967e573349cccd7699461c7f914aa0c28b9"
+      "sha256": "08e43996e0a09d4f6e33d7718230816301664b5868635dc2f04fd2e68e20a1c8"
     },
     {
       "path": "server/src/models/Category.js",
@@ -1281,7 +1296,7 @@
     },
     {
       "path": "server/src/models/Company.js",
-      "sha256": "c7da6d358480ac8b2c6eef228a3f56b2fa5487595ffa5521b7862fde2cb9fe58"
+      "sha256": "abf30eb5778c576497ee54ef4872be717fd1cad9533c9e45b7690f6e7be4f058"
     },
     {
       "path": "server/src/models/CustomerDatabaseCandidate.js",
@@ -1413,7 +1428,7 @@
     },
     {
       "path": "server/src/models/SaasPlan.js",
-      "sha256": "bbb9c56fa4b8ba819dcd03a93c4c04e89685a5eda1e823b451884301f78f36df"
+      "sha256": "6f7834dc914bea9d1854f4528672eb8ca87e9ad43b3d4f993445334f86f243e4"
     },
     {
       "path": "server/src/models/SalesLead.js",
@@ -1593,7 +1608,7 @@
     },
     {
       "path": "server/src/routes/saas.routes.js",
-      "sha256": "02c7831c1dd4bad7d2e05d822074a54545261cc414d133e86e9cca43e61ce5e7"
+      "sha256": "b172a2566832818b1f7be768450967fab1fc19617ea86e70ee6999aeb8695de8"
     },
     {
       "path": "server/src/routes/sectionRoutes.js",
@@ -1617,7 +1632,7 @@
     },
     {
       "path": "server/src/services/accountEmailService.js",
-      "sha256": "f8e57e47b0d2de9cdcf6e6de0dc0878d4580ff861ba4965fab453a6b4f3b7796"
+      "sha256": "9ca9071312a65c6b1dc21903b95499db83d85faa327443ad11dd4799a5c6b42c"
     },
     {
       "path": "server/src/services/authService.js",
@@ -1669,11 +1684,11 @@
     },
     {
       "path": "server/src/services/subscriptionSettlementService.js",
-      "sha256": "363b04e1a988c027a8fd49eaee2f19495307141ec09ba4805fe7fa717d4bc4f8"
+      "sha256": "a49805d594c37cacbef892c6351588d3d81e74a98e5170aace67b86d682cd2ce"
     },
     {
       "path": "server/src/services/tenantProvisioningService.js",
-      "sha256": "42b1dd13940c8848aa9f947bc0c614c896fb7b8b1b3c7ae2fc1f53b09abe542f"
+      "sha256": "666a74a5e62918f163edbaa734e8daacb231c0cb94d77ed502d73eddd6faee96"
     },
     {
       "path": "server/src/utils/ApiError.js",
@@ -1745,11 +1760,15 @@
     },
     {
       "path": "server/src/utils/subscriptionAccess.js",
-      "sha256": "e6de0480f815f8ef0866b52133fe6be5fed25258a5f97296798f5727bad1dd66"
+      "sha256": "69d5055c91ba40cf18d8ed5a33374f7ab223453c4ceed7424eb65b17d96bff0d"
     },
     {
       "path": "server/src/utils/subscriptionPeriod.js",
       "sha256": "a1488659fd0dcc25065be7b397ccd92dfafd03c193eb14848036efe63877d900"
+    },
+    {
+      "path": "server/src/utils/subscriptionQuote.js",
+      "sha256": "4872e83bf783da972b5b6e11be06d9d4b4bfcbee3aafa970106f71f9ce321e7b"
     },
     {
       "path": "server/src/utils/supportPolicy.js",
@@ -1910,6 +1929,10 @@
     {
       "path": "server/tests/subscriptionPeriod.test.js",
       "sha256": "f4e540f406ae781221b434632dd19e72b2781873fc8b6165d29897c9dbbb684c"
+    },
+    {
+      "path": "server/tests/subscriptionQuote.test.js",
+      "sha256": "8a3d3f9bd5d029a86fb78701dd3175c66d0f35b56977354d47180275c8019c35"
     },
     {
       "path": "server/tests/supportPaymentPolicy.test.js",

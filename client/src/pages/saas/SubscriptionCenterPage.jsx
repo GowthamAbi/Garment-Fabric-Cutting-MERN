@@ -1,3 +1,4 @@
+import {licensedDepartments} from "../../../../shared/departmentCatalogue.js";
 import { useEffect, useState } from "react";
 import {
   CheckCircle2,
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 import { api } from "../../api.js";
 import DataTable from "../../components/DataTable.jsx";
-import { jsPDF } from "jspdf";
+import {downloadInvoice} from "../../utils/subscriptionInvoicePdf.js";
 import CustomerDatabaseSetup from "../../components/CustomerDatabaseSetup.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 
@@ -38,6 +39,7 @@ const content = {
 };
 export default function SubscriptionCenterPage({ mode }) {
   const { user } = useAuth();
+  const [quote,setQuote]=useState(null);
   const [data, setData] = useState(null),
     [paymentNotice, setPaymentNotice] = useState(""),
     [error, setError] = useState(""),
@@ -45,15 +47,17 @@ export default function SubscriptionCenterPage({ mode }) {
     [form, setForm] = useState({
       plan: "Professional",
       paymentMethod: "MANUAL",
+      seats:1,departments:[],
       notes: "",
     });
   const load = () =>
     api("/saas/subscription")
-      .then(setData)
+      .then(value=>{setData(value);setForm(f=>{const plan=value.plans?.find(p=>p.name===f.plan&&p.code!=="TRIAL")||value.plans?.find(p=>p.code!=="TRIAL");return f.departments.length?f:{...f,plan:plan?.name||"",seats:plan?.maxUsers||1,departments:(value.company?.enabledDepartments||[]).filter(d=>licensedDepartments(plan?.modules).includes(d)).slice(0,plan?.maxDepartments||1)};});})
       .catch((e) => setError(e.message));
   useEffect(() => {
     load();
   }, []);
+  useEffect(()=>{setQuote(null);if(mode!=="Subscription Purchase"||!form.plan||!form.departments.length)return;let alive=true;api("/saas/subscription/quote",{method:"POST",body:JSON.stringify(form)}).then(q=>{if(alive){setQuote(q);setError("");}}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[mode,form.plan,form.seats,form.departments]);
   const [Icon, title, subtitle] = content[mode] || content["Subscription Plan"];
   async function status(action) {
     try {
@@ -207,15 +211,18 @@ export default function SubscriptionCenterPage({ mode }) {
               <span>Plan</span>
               <select
                 value={form.plan}
-                onChange={(e) => setForm({ ...form, plan: e.target.value })}
+                onChange={(e) => {const p=data.plans.find(p=>p.name===e.target.value);setForm({...form,plan:p.name,seats:p.maxUsers,departments:form.departments.filter(d=>licensedDepartments(p.modules).includes(d)).slice(0,p.maxDepartments)});}}
               >
-                {(data.plans || []).map((x) => (
+                {(data.plans || []).filter(p=>p.code!=="TRIAL").map((x) => (
                   <option key={x._id} value={x.name}>
                     {x.name} · ₹{x.price}
                   </option>
                 ))}
               </select>
             </label>
+            <label><span>Purchased user seats (includes company owner)</span><input type="number" min="1" max={data.plans.find(p=>p.name===form.plan)?.maxUsers||1} value={form.seats} onChange={e=>setForm({...form,seats:Number(e.target.value)})}/></label>
+            <fieldset><legend>Purchased departments</legend>{licensedDepartments(data.plans.find(p=>p.name===form.plan)?.modules).map(d=><label key={d}><input type="checkbox" checked={form.departments.includes(d)} disabled={!form.departments.includes(d)&&form.departments.length>=(data.plans.find(p=>p.name===form.plan)?.maxDepartments||1)} onChange={e=>setForm({...form,departments:e.target.checked?[...form.departments,d]:form.departments.filter(x=>x!==d)})}/>{d}</label>)}</fieldset>
+            {quote&&<p role="status">Subtotal ₹{(quote.subtotalPaise/100).toFixed(2)} · Tax ₹{quote.taxAmount.toFixed(2)} · Total ₹{quote.total.toFixed(2)} · {quote.validityDays} days. Final amount is revalidated on the server when ordering.</p>}
             <label>
               <span>Payment</span>
               <select
@@ -237,7 +244,7 @@ export default function SubscriptionCenterPage({ mode }) {
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
               />
             </label>
-            <button className="primary" disabled={purchasing}>
+            <button className="primary" disabled={purchasing||!quote}>
               {form.paymentMethod === "RAZORPAY"
                 ? "Pay with Razorpay"
                 : "Create Manual Request"}
@@ -306,36 +313,6 @@ export default function SubscriptionCenterPage({ mode }) {
       )}
     </section>
   );
-}
-
-function downloadInvoice(invoice) {
-  const doc = new jsPDF();
-  const item = invoice.lineItems?.[0] || {};
-  doc.setFontSize(18);
-  doc.text("UG SaaS - TAX INVOICE", 105, 18, { align: "center" });
-  doc.setFontSize(10);
-  doc.text(`Invoice No: ${invoice.invoiceNumber}`, 15, 32);
-  doc.text(`Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`, 15, 39);
-  doc.text(`Supplier: ${invoice.supplier?.legalName || "UG SaaS"}`, 15, 52);
-  doc.text(`GSTIN: ${invoice.supplier?.gstin || "Not configured"}`, 15, 59);
-  doc.text(`Bill To: ${invoice.customer?.companyName || "Customer"}`, 15, 72);
-  doc.text(`Customer GSTIN: ${invoice.customer?.gstin || "Not provided"}`, 15, 79);
-  doc.line(15, 88, 195, 88);
-  doc.text("Description", 15, 97);
-  doc.text("Taxable", 125, 97);
-  doc.text("Total", 170, 97);
-  doc.text(item.description || "SaaS Subscription", 15, 108);
-  doc.text(`INR ${Number(invoice.subtotal || 0).toFixed(2)}`, 125, 108);
-  doc.text(`INR ${Number(invoice.grandTotal || 0).toFixed(2)}`, 170, 108);
-  doc.line(15, 116, 195, 116);
-  doc.text(`CGST: INR ${Number(invoice.cgstAmount || 0).toFixed(2)}`, 125, 128);
-  doc.text(`SGST: INR ${Number(invoice.sgstAmount || 0).toFixed(2)}`, 125, 135);
-  doc.text(`IGST: INR ${Number(invoice.igstAmount || 0).toFixed(2)}`, 125, 142);
-  doc.setFontSize(12);
-  doc.text(`Grand Total: INR ${Number(invoice.grandTotal || 0).toFixed(2)}`, 125, 154);
-  doc.setFontSize(9);
-  doc.text("Computer-generated invoice. Tax configuration must be verified by the business accountant.", 15, 180);
-  doc.save(`${invoice.invoiceNumber.replaceAll("/", "-")}.pdf`);
 }
 
 async function openRazorpay(order, key, verified) {

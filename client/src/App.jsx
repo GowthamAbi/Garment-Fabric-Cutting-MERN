@@ -1,3 +1,4 @@
+import {api} from "./api.js";
 import { useEffect, useState } from "react";
 import MainLayout from "./components/layout/MainLayout.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -18,7 +19,7 @@ function Application() {
   const { token, user, checkingSession } = useAuth();
   const adminRoles = ["saas_super_admin", "admin"];
   const [page, setPage] = useState(
-    window.location.pathname === "/production"
+    user?.subscriptionAccess?.accessAllowed===false&&["company_owner","company_admin","admin"].includes(user?.role)?"Subscription Purchase":window.location.pathname === "/production"
       ? "Production Control"
       : user?.role === "saas_super_admin"
         ? "SaaS Owner Dashboard"
@@ -40,7 +41,7 @@ function Application() {
 
   useEffect(() => {
     if (!token || !user) return;
-    const nextPage = user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
+    const nextPage = user.subscriptionAccess?.accessAllowed===false&&["company_owner","company_admin","admin"].includes(user.role)?"Subscription Purchase":user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
       window.location.pathname === "/production"
         ? "Production Control"
         : user.role === "saas_super_admin"
@@ -72,6 +73,8 @@ function Application() {
                         : "Dashboard";
     setPage(nextPage);
   }, [token, user?._id, user?.role]);
+
+  useEffect(()=>{if(!token||!["company_owner","company_admin","admin"].includes(user?.role))return;let alive=true;api("/saas/access-status").then(s=>{if(alive&&!s.accessAllowed)setPage("Subscription Purchase");}).catch(()=>{});return()=>{alive=false;};},[token,user?._id]);
 
   function notify(text) {
     setMessage(text);

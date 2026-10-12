@@ -10,7 +10,7 @@ export async function requireActiveSubscription(request, _response, next) {
     return next(new ApiError(403, "Company account is inactive"));
   if (!subscriptionAccess(company).accessAllowed)
     return next(
-      new ApiError(402, "Subscription expired. Contact your administrator"),
+      new ApiError(402, company.subscriptionStatus==="PaymentPending"?"Payment pending. Open Subscription Purchase to activate paid access":"Subscription expired or suspended. Open Subscription Purchase to renew"),
     );
   next();
 }

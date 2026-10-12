@@ -17,7 +17,7 @@ export async function issueEmailVerification(user, companyKey) {
   user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
   await user.save();
   const activationUrl = `${clientUrl}/c/${companyKey}/login?verifyToken=${rawToken}`;
-  await sendAccountEmail({to:user.email,subject:"Activate your UG SaaS account",html:`<h2>UG SaaS account activation</h2><p>Your User ID is <b>${user.userId}</b>.</p><p><a href="${activationUrl}">Verify email and activate account</a></p><p>This link expires in 24 hours. UG SaaS will never email your password.</p>`});
+  await sendAccountEmail({to:user.email,subject:"Activate your UG SaaS account",html:`<h2>UG SaaS account activation</h2><p>Your User ID is <b>${user.userId}</b>.</p><p><a href="${activationUrl}">Verify email and activate account</a></p><p>After verification, sign in to review your trial or choose a paid package in Subscription Purchase. Paid access starts only after confirmed payment; failed or pending payments do not activate paid features.</p><p><a href="${clientUrl}/c/${companyKey}/login">Sign in for subscription and invoices</a></p><p>This link expires in 24 hours. UG SaaS will never email your password.</p>`});
   return activationUrl;
 }
 

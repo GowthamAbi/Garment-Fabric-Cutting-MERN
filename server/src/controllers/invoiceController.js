@@ -1,18 +1,22 @@
+import {getTenant,runWithTenant} from "../utils/tenantContext.js";
 import SubscriptionInvoice from "../models/SubscriptionInvoice.js";
 import ApiError from "../utils/ApiError.js";
 import { queueInvoice } from "../automation/queue.js";
 
 export async function listInvoices(_request, response) {
+  if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>listInvoices(_request,response));
   response.json(await SubscriptionInvoice.find().sort({ invoiceDate: -1 }).lean());
 }
 
 export async function getInvoice(request, response) {
+  if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>getInvoice(request,response));
   const invoice = await SubscriptionInvoice.findById(request.params.id).lean();
   if (!invoice) throw new ApiError(404, "Invoice not found");
   response.json(invoice);
 }
 
 export async function emailInvoice(request, response) {
+  if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>emailInvoice(request,response));
   const invoice = await SubscriptionInvoice.findById(request.params.id);
   if (!invoice) throw new ApiError(404, "Invoice not found");
   const job = await queueInvoice(invoice);

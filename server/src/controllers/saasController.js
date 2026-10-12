@@ -1,3 +1,4 @@
+import {subscriptionQuote,assertQuoteFitsUsers,PRICING_MODELS} from "../utils/subscriptionQuote.js";
 import {DEPARTMENTS,planModules,departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import { settleSubscription } from "../services/subscriptionSettlementService.js";
 import { PaymentInbox } from "../automation/models.js";
@@ -53,6 +54,7 @@ async function ensurePlans() {
 }
 
 export async function getSubscription(request, response) {
+  if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>getSubscription(request,response));
   await ensurePlans();
   const company = await Company.findById(request.user.companyId).lean();
   const payments = await SubscriptionPayment.find()
@@ -77,7 +79,22 @@ export async function getSubscription(request, response) {
   });
 }
 
+export async function getOwnerCompanyBilling(request,response){
+  const registry=await TenantRegistry.findById(request.params.id).select("companyKey").lean();
+  if(!registry)throw new ApiError(404,"Company not found");
+  const payments=await BillingRequest.find({companyKey:registry.companyKey}).sort({createdAt:-1}).limit(100).select("referenceNo plan amount status paymentMethod createdAt invoiceSnapshot").lean();
+  response.json({payments:payments.map(({invoiceSnapshot,...p})=>p),invoices:payments.flatMap(p=>p.invoiceSnapshot?[{...p.invoiceSnapshot,...(p.status==='REFUNDED'&&{status:'REFUNDED'})}]:[])});
+}
+
+export async function getSubscriptionQuote(request,response){
+  if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>getSubscriptionQuote(request,response));
+  const plan=await SaasPlan.findOne({name:request.body.plan,active:true}).lean();
+  if(!plan||plan.code==='TRIAL')throw new ApiError(400,'Select a paid package');
+  try{const quote=subscriptionQuote(plan,request.body);assertQuoteFitsUsers(quote,await User.find({companyId:request.user.companyId,active:true}).select('department').lean());response.json(quote);}catch(error){throw new ApiError(400,error.message);}
+}
+
 export async function createSubscription(request, response) {
+  if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>createSubscription(request,response));
   await ensurePlans();
   const planRecord = await SaasPlan.findOne({
     $or: [
@@ -92,18 +109,14 @@ export async function createSubscription(request, response) {
   if (!planRecord || !["MANUAL", "RAZORPAY"].includes(method))
     throw new ApiError(400, "Valid plan and payment method are required");
   if(planRecord.taxPercent>0&&!process.env.UG_SAAS_GSTIN)throw new ApiError(409,"Configure supplier GSTIN before selling a GST subscription plan");
-  const taxAmount = Number(
-    (
-      ((planRecord.price + planRecord.setupFee) * planRecord.taxPercent) /
-      100
-    ).toFixed(2),
-  );
-  const total = Number((planRecord.price + planRecord.setupFee + taxAmount).toFixed(2));
   if(planRecord.code==='TRIAL')throw new ApiError(400,'Trial requires owner approval, not purchase');
-  if(!Number.isFinite(total)||total<=0)throw new ApiError(409,'Configure a positive package price before selling subscriptions');
-  const snapshot={validityDays:planRecord.validityDays,entitlements:{maxUsers:planRecord.maxUsers,maxDepartments:planRecord.maxDepartments,modules:planRecord.modules}};
-  if(!validBillingSnapshot(snapshot))throw new ApiError(409,'Package duration or feature limits are invalid');
-  if(!planRecord.modules.includes('ERP_CORE'))throw new ApiError(409,'Configure explicit ERP_CORE and purchased feature modules before selling this package');
+  const company=await Company.findById(request.user.companyId).lean();
+  let quote;
+  try {
+    quote=subscriptionQuote(planRecord,{seats:request.body.seats,departments:request.body.departments??company?.enabledDepartments});
+    assertQuoteFitsUsers(quote,await User.find({companyId:request.user.companyId,active:true}).select('department').lean());
+  }catch(error){throw new ApiError(400,error.message);}
+  const {total,taxAmount}=quote;
   await Promise.all([SubscriptionPayment.init(),BillingRequest.init()]);
   let payment,billingRequest;
   const creationSession=await mongoose.startSession();
@@ -113,7 +126,7 @@ export async function createSubscription(request, response) {
     referenceNo: generateReferenceNo("SUB"),
     plan: planRecord.name,
     amount: total,
-    setupFee: planRecord.setupFee,
+    setupFee: quote.setupFee,
     taxAmount,
     taxPercent: planRecord.taxPercent,
     paymentMethod: method,
@@ -129,7 +142,7 @@ export async function createSubscription(request, response) {
     plan: payment.plan,
     amount: payment.amount,
     validityDays: planRecord.validityDays,
-    entitlements: { maxUsers:planRecord.maxUsers,maxDepartments:planRecord.maxDepartments,modules:planRecord.modules },
+    entitlements: quote.entitlements, quote,
     paymentMethod: method,
     status: payment.status,
     notes: payment.notes,
@@ -224,6 +237,7 @@ export async function savePlan(request, response) {
     code,
     name,
     description,
+    pricingModel,perUserPrice,perDepartmentPrice,
     price,
     cost,
     setupFee,
@@ -239,6 +253,7 @@ export async function savePlan(request, response) {
     code,
     name,
     description,
+    pricingModel,perUserPrice,perDepartmentPrice,
     price,
     cost,
     setupFee,
@@ -255,6 +270,9 @@ export async function savePlan(request, response) {
   if(!Array.isArray(payload.modules)||payload.modules.some(x=>typeof x!=="string"||x.length>60))throw new ApiError(400,"Module list required");
   try{payload.modules=planModules(payload.modules);}catch(e){throw new ApiError(400,e.message);}
   if(!Number.isInteger(Number(payload.maxDepartments))||Number(payload.maxDepartments)<1||Number(payload.maxDepartments)>14)throw new ApiError(400,'Department limit must be 1–14');
+  if((payload.code==='TRIAL')!==(payload.name==='Trial'))throw new ApiError(400,"Trial code and name are reserved together");
+  if(!PRICING_MODELS.includes(payload.pricingModel||"FIXED"))throw new ApiError(400,"Invalid pricing model");
+  for(const key of ["price","perUserPrice","perDepartmentPrice","setupFee"]){const n=Number(payload[key]??0);if(!Number.isFinite(n)||n<0||n>100000000||Math.abs(n*100-Math.round(n*100))>0.00001)throw new ApiError(400,"Invalid price amount");}
   const plan = request.params.id
     ? await SaasPlan.findByIdAndUpdate(request.params.id, payload, {
         new: true,

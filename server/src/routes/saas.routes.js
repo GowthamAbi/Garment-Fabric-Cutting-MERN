@@ -6,6 +6,8 @@ import {
   getPaymentStatus,
   approveSubscription,
   createSubscription,
+  getSubscriptionQuote,
+  getOwnerCompanyBilling,
   downloadBackup,
   getAuditHistory,
   getOwnerOverview,
@@ -26,6 +28,8 @@ import { getCustomerDatabaseStatus, saveCustomerDatabaseConnection, startCustome
 import { enterOperationalDatabase } from "../middleware/customerDatabaseMiddleware.js";
 
 const router = Router();
+router.get("/owner-companies/:id/billing",allowRoles("saas_super_admin"),asyncHandler(getOwnerCompanyBilling));
+router.post("/subscription/quote",allowRoles("company_admin","admin"),asyncHandler(getSubscriptionQuote));
 router.get('/operations-status', allowRoles('saas_super_admin'), asyncHandler(getOperationsStatus));
 // These controllers enforce exact company_admin identity and workspace. The
 // legacy operational-entry role guard must not block account configuration.

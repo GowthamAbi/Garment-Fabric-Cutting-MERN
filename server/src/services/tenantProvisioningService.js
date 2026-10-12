@@ -1,5 +1,6 @@
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
+import {provisioningAccess} from "../utils/subscriptionQuote.js";
 import bcrypt from "bcryptjs";
 import TenantRegistry from "../models/TenantRegistry.js";
 import Company from "../models/Company.js";
@@ -52,7 +53,7 @@ export async function provisionTenant({
       async () => {
         const company = await Company.create({
           companyName, address: city, subscriptionPlan: plan,enabledDepartments,departmentCatalogueVersion:1,entitlements,
-          subscriptionStatus: "Active", subscriptionStartsAt: new Date(),
+          subscriptionStatus: provisioningAccess(plan), subscriptionStartsAt: plan === "Trial" ? new Date() : undefined,
           subscriptionEndsAt: expiresAt,
           factories: [{ name: factoryName||`${companyName} Main`, code: factoryCode||"MAIN", address: city }],
         });

@@ -9,13 +9,14 @@ const blank = {
   name: "",
   description: "",
   price: 0,
+  pricingModel:"FIXED",perUserPrice:0,perDepartmentPrice:0,
   cost: 0,
   setupFee: 0,
   taxPercent: 0,
   validityDays: 30,
   maxUsers: 5,
   maxDepartments: 3,
-  modules: ["FABRIC", "CUTTING"],
+  modules: ["FABRIC", "CUTTING", "ERP_CORE"],
   active: true,
   featured: false,
   sortOrder: 10,
@@ -73,11 +74,13 @@ export default function OwnerPlansPage({ notify }) {
             </button>
           )}
         </div>
-        <div className="saas-form-grid">
+        <div className="saas-form-grid"><label><span>Pricing model</span><select value={form.pricingModel||"FIXED"} onChange={e=>field("pricingModel",e.target.value)}>{["FIXED","PER_USER","PER_DEPARTMENT","COMBINED"].map(m=><option key={m}>{m}</option>)}</select></label>
           {[
             ["code", "Plan Code"],
             ["name", "Plan Name"],
             ["price", "Price ₹", "number"],
+            ["perUserPrice", "Per user ₹", "number"],
+            ["perDepartmentPrice", "Per department ₹", "number"],
             ["cost", "Internal Cost ₹", "number"],
             ["setupFee", "Setup Fee ₹", "number"],
             ["taxPercent", "GST % (0 = without GST)", "number"],

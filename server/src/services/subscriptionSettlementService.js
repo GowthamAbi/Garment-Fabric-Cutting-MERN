@@ -1,3 +1,5 @@
+import User from "../models/User.js";
+import {assertQuoteFitsUsers} from "../utils/subscriptionQuote.js";
 import mongoose from "mongoose";
 import BillingRequest from "../models/BillingRequest.js";
 import SubscriptionPayment from "../models/SubscriptionPayment.js";
@@ -42,6 +44,11 @@ export async function settleSubscription(billing, { actor, capturedPayment = nul
         if(!validBillingSnapshot(fresh))throw new ApiError(409,"Billing snapshot missing or invalid; reconcile before settlement");
         const company = await Company.findById(payment.companyId).session(session);
         if (!company) throw new ApiError(409, "Company or plan missing");
+        if(fresh.quote?.version===1) {
+          try{assertQuoteFitsUsers(fresh.quote,await User.find({companyId:company._id,active:true}).select("department").session(session).lean());}catch(error){throw new ApiError(409,error.message);}
+          company.enabledDepartments=fresh.quote.departments;company.departmentCatalogueVersion=1;
+          company.userProvisionRevision=Number(company.userProvisionRevision||0)+1;
+        }
         Object.assign(payment, purchasedSubscriptionPeriod(company, fresh.validityDays), {
           status: "PAID", approvedBy: actor,
           ...(capturedPayment && { providerPaymentId: capturedPayment.id }),
@@ -54,9 +61,11 @@ export async function settleSubscription(billing, { actor, capturedPayment = nul
         const registry = await TenantRegistry.updateOne({ companyKey: fresh.companyKey }, { $set: {
           status: "ACTIVE", subscriptionPlan: payment.plan, subscriptionEndsAt: payment.periodEnd,
           renewalCancelledAt: null,
+          ...(fresh.quote?.version===1&&{enabledDepartments:fresh.quote.departments,departmentCatalogueVersion:1}),
         } }, { session });
         if (registry.matchedCount !== 1) throw new ApiError(409, "Tenant registry missing");
         const invoice = await createInvoiceForPayment(payment, actor, session);
+        fresh.invoiceSnapshot=invoice.toObject();
         Object.assign(fresh, { status: "PAID", approvedBy: actor, approvedAt: new Date() });
         await fresh.save({ session });
         result = { payment, invoice, alreadySettled: false };

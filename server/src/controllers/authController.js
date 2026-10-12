@@ -1,3 +1,4 @@
+import {subscriptionAccess} from "../utils/subscriptionAccess.js";
 import {hasPermission,strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
 import {DEPARTMENT_PERMISSIONS,departmentCode} from '../../../shared/departmentCatalogue.js';
@@ -74,6 +75,7 @@ function createUserResponse(user, companyName = "UG SaaS") {
       permissions: user.permissions || [],
       department: user.department || "",
       accessPolicyVersion:user.accessPolicyVersion,accessScope:user.accessScope,accessRoleKey:user.accessRoleKey,assignedFactoryIds:user.assignedFactoryIds,assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,
+      subscriptionAccess:user.subscriptionAccess,
       companyName,
       companyKey: tenant.companyKey || "platform",
       loginPath: tenant.companyKey && tenant.companyKey !== "platform"
@@ -309,7 +311,9 @@ export async function login(request, response) {
   user.lastLoginAt = new Date();
   user.lastSessionActivityAt = new Date();
   await user.save();
-  response.json(startSession(response, user, company?.companyName));
+  const sessionResponse=startSession(response,user,company?.companyName);
+  sessionResponse.user.subscriptionAccess=user.role==='saas_super_admin'?undefined:subscriptionAccess(company);
+  response.json(sessionResponse);
 }
 
 export async function getSession(request, response) {
@@ -319,10 +323,10 @@ export async function getSession(request, response) {
   if (!user?.active) throw new ApiError(401, "Session is no longer active");
 
   const company = await Company.findById(user.companyId)
-    .select("companyName active subscriptionStatus subscriptionEndsAt")
+    .select("companyName active subscriptionPlan subscriptionStatus subscriptionEndsAt")
     .lean();
 
-  response.json(createUserResponse({...user,permissions:request.user.permissions,accessPolicyVersion:request.user.accessPolicyVersion,accessScope:request.user.accessScope}, company?.companyName));
+  response.json(createUserResponse({...user,subscriptionAccess:user.role==='saas_super_admin'?undefined:subscriptionAccess(company),permissions:request.user.permissions,accessPolicyVersion:request.user.accessPolicyVersion,accessScope:request.user.accessScope}, company?.companyName));
 }
 
 export async function logout(request, response) {

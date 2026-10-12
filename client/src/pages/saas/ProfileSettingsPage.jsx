@@ -1,3 +1,4 @@
+import SubscriptionInvoiceHistory from "../../components/SubscriptionInvoiceHistory.jsx";
 import { useEffect, useState } from "react";
 import { api } from "../../api.js";
 import Card from "../../components/common/Card.jsx";
@@ -5,7 +6,7 @@ import PageTitle from "../../components/common/PageTitle.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function ProfileSettingsPage({ mode = "profile", notify }) {
-  const { logout } = useAuth();
+  const { logout,user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({ name: "", email: "", password: "",currentPassword:"" });
   useEffect(() => {
@@ -92,6 +93,7 @@ export default function ProfileSettingsPage({ mode = "profile", notify }) {
           <button className="primary">Save Profile</button>
         </form>
       </Card>
+      {(["company_owner","company_admin","admin"].includes(user?.role)||(user?.permissions||[]).includes("billing.manage"))&&<SubscriptionInvoiceHistory/>}
     </>
   );
 }
