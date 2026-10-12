@@ -527,13 +527,7 @@ const departmentRoles = {
   ACCESSORIES: ["store", "accessories_admin", "accessories_entry"],
   DELIVERY: ["delivery_admin", "delivery_entry"],
   ADMIN: ["admin"],
-  COMPANY_ADMIN: [
-    {label:"Factory Management",icon:Factory,page:"Factory Management"},
-    {label:"Production Departments",icon:Factory,page:"Production Departments"},
-    {label:"Warehouse Management",icon:Boxes,page:"Warehouse Management"},
-    {label:"Shop Management",icon:ShoppingCart,page:"Shop Management"},
-    {label:"Marketing Analysis",icon:BarChart3,page:"Marketing Analysis"},
-    {label:"Company Purchase Orders",icon:ClipboardList,page:"Company Purchase Orders"},"company_owner", "company_admin", "saas_super_admin"],
+  COMPANY_ADMIN: ["company_owner", "company_admin", "saas_super_admin"],
 };
 
 const departmentTitles = {
@@ -556,6 +550,7 @@ const departmentOrder = [
 ];
 
 export default function MainLayout({ page, onPageChange, children }) {
+  const { user, logout } = useAuth();
   const [access,setAccess]=useState(null);
   useEffect(()=>{if(['saas_super_admin','support_viewer'].includes(user?.role))return;let alive=true;api('/saas/access-status').then(v=>{if(alive)setAccess(v);}).catch(()=>{});return()=>{alive=false;};},[user?._id,user?.role]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -603,7 +598,6 @@ export default function MainLayout({ page, onPageChange, children }) {
     "ELASTIC-Warehouse": true,
     "COMPANY_ADMIN-Company Subscription": true,
   });
-  const { user, logout } = useAuth();
   const visibleRole=user?.role==='company_owner'?'company_admin':user?.role;
   const { language, setLanguage } = useLanguage();
   const departmentPage =
@@ -666,7 +660,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <b className="brand-title">UG SaaS</b>
             <small className="brand-subtitle">BUSINESS FLOW MANAGER</small>
           </div>
-          <button className="brand-close" onClick={() => setMenuOpen(false)}>
+          <button aria-label="Close navigation" className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />
           </button>
         </div>
@@ -977,7 +971,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             <b>{user?.name}</b>
             <small>{user?.role}</small>
           </div>
-          <button onClick={handleLogout}>
+          <button aria-label="Logout" onClick={handleLogout}>
             <LogOut />
           </button>
         </div>
@@ -987,8 +981,8 @@ export default function MainLayout({ page, onPageChange, children }) {
 
       <main>
         <header className="topbar">
-          <DisplayTools page={page}/>
-          <button className="menu" onClick={() => setMenuOpen(true)}>
+          <DisplayTools page={page} user={user} onProfile={()=>selectPage("Profile Settings")}/>
+          <button aria-label="Open navigation" aria-expanded={menuOpen} className="menu" onClick={() => setMenuOpen(true)}>
             <Menu />
           </button>
           <div>

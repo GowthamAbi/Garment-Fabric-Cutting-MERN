@@ -104,8 +104,8 @@ export default function SuperAdminLayout({ page, onPageChange, children }) {
       {menuOpen && <div className="shade" onClick={() => setMenuOpen(false)} />}
       <main>
         <header className="owner-topbar">
-          <DisplayTools page={page}/>
-          <button className="menu" onClick={() => setMenuOpen(true)}>
+          <DisplayTools page={page} user={user} onProfile={()=>select("Profile Settings")}/>
+          <button aria-label="Open navigation" aria-expanded={menuOpen} className="menu" onClick={() => setMenuOpen(true)}>
             <Menu />
           </button>
           <div>

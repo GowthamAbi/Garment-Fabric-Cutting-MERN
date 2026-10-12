@@ -1,5 +1,5 @@
 {
-  "release": "Owner Part 7 factories and retained PO lifecycle",
+  "release": "Owner Part 8 display and profile help",
   "validation": {
     "serverPassed": 148,
     "serverFailed": 0,
@@ -7,7 +7,9 @@
     "frontendBuild": "PASSED",
     "realDatabaseAcceptance": "NOT_RUN",
     "indexMigrationAcceptance": "NOT_RUN",
-    "loggedInDeviceAcceptance": "NOT_RUN"
+    "loggedInDeviceAcceptance": "NOT_RUN",
+    "layoutRenderSmoke": "PASSED",
+    "serverResults": "Historical Part 7; no server changes"
   },
   "files": [
     {
@@ -89,6 +91,10 @@
     {
       "path": "OWNER-PART-7-RELEASE.md",
       "sha256": "fd64d3b66fe3931869d1e59a778a47d76626a9a7907ef1e7f4e2c4c3d4353b1a"
+    },
+    {
+      "path": "OWNER-PART-8-RELEASE.md",
+      "sha256": "ee8d3adb61a68ab5b03fbe1ae76121cedf37c789f36a2cffdf1577825365b4e5"
     },
     {
       "path": "PHASE-1-PROGRESS.md",
@@ -224,7 +230,7 @@
     },
     {
       "path": "client/src/accessibility-theme.css",
-      "sha256": "c2dcbc70f11bab07661060b292a0373f2b4d33687d5e8c1bb33fe5aa7cc6fa23"
+      "sha256": "f3037233263590156e09a1b70d97e0976055dc6431b9e8d45924ea259017fd05"
     },
     {
       "path": "client/src/api.js",
@@ -320,7 +326,7 @@
     },
     {
       "path": "client/src/components/common/DisplayTools.jsx",
-      "sha256": "9367b6f4c7e6af5bb07af66bbc3a6cddcf59c112b781cfdd33f4c6da38f5775d"
+      "sha256": "8fe766ffac557eef6bd42502c48ce1c06dcf9ef286876c482766ddb18a7c0ff4"
     },
     {
       "path": "client/src/components/common/EmptyState.jsx",
@@ -352,7 +358,7 @@
     },
     {
       "path": "client/src/components/common/OptionGuide.jsx",
-      "sha256": "9bea9530689a83f66af474c3bb901ad416dba4d42e2f4adae13bb8687800cacb"
+      "sha256": "962488c742d49ef96c573c0c60d11614bcdc39b3098dd97d5b5e94007da429f5"
     },
     {
       "path": "client/src/components/common/PageTitle.jsx",
@@ -380,7 +386,7 @@
     },
     {
       "path": "client/src/components/layout/MainLayout.jsx",
-      "sha256": "22c14cacc455859b4d762b8ec95eeea2ea56cb80eca3caa887b9a8e00e0da74c"
+      "sha256": "a1143605f75a2849eb8c0db1d6141e73d83fba80577fb433c3930b32fd99ad6a"
     },
     {
       "path": "client/src/components/layout/MobileMenu.jsx",
@@ -396,7 +402,7 @@
     },
     {
       "path": "client/src/components/layout/SuperAdminLayout.jsx",
-      "sha256": "1cb03e54e598c07986000e1da5041adfb0319dd0730e9028e990695694bbebf0"
+      "sha256": "c9d59641cf763e82ec8d408a872a32aedc3653ecc1ae1b1851b2a68a4c5a3147"
     },
     {
       "path": "client/src/components/qr/QRGenerator.jsx",
