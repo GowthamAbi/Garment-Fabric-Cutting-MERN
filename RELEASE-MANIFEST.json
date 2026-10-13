@@ -1,7 +1,7 @@
 {
-  "release": "Owner Parts 1-10 acceptance automation source",
+  "release": "ERP source with provider evidence acceptance checks",
   "validation": {
-    "serverPassed": 148,
+    "serverPassed": 151,
     "serverFailed": 0,
     "serverSkipped": 7,
     "frontendBuild": "PASSED",
@@ -14,7 +14,8 @@
     "publicApiHealth": "PASSED",
     "publicApiDatabaseReadiness": "PASSED",
     "ownerQueueMonitoring": "NOT_RUN",
-    "acceptanceRunner": "Local checks passed; strict missing-database gate returned exit 1 as expected"
+    "acceptanceRunner": "Local checks passed; strict missing-database gate returned exit 1 as expected",
+    "providerEvidence": "PENDING_CONFIGURATION"
   },
   "files": [
     {
@@ -56,6 +57,10 @@
     {
       "path": "IMPLEMENTATION-SUMMARY.md",
       "sha256": "a2b283c7ae7cd5e8871264f9f45cbc7136a7f30b9c31ef2083bfc5f427e871df"
+    },
+    {
+      "path": "LIVE-ACCEPTANCE-SETUP.md",
+      "sha256": "10b209a45129e9af2c0780d90b6b2d42af3fe495300e38845b0f415f68d8a21d"
     },
     {
       "path": "MILESTONE-2.md",
@@ -1006,6 +1011,10 @@
       "sha256": "05197178f96a01f383782ec50b7bef9d7cfead98d8297692ac284283aeaf3340"
     },
     {
+      "path": "server/scripts/verify-provider-evidence.js",
+      "sha256": "f31158a39dfa17ea2a195ac560b182b2e97c9755643513a9b12cbe7a51406a9f"
+    },
+    {
       "path": "server/src/app.js",
       "sha256": "f4aa0ba5aad6bf61bd78aec3556fe5204406b309043dd4eb2d3496ec1d3c303c"
     },
@@ -1834,6 +1843,10 @@
       "sha256": "073894d1287517e9fc97f974998f68a095dad163c555cd39ffc7bfc67f24bd86"
     },
     {
+      "path": "server/src/utils/providerAcceptance.js",
+      "sha256": "f624c6de427af7c20feae13c73cdf9ae59bca99fa4d7c0019c78b6d016eff230"
+    },
+    {
       "path": "server/src/utils/sessionIdlePolicy.js",
       "sha256": "92e7591527452227e3fe9d8bc0b93907b83bb6b3836f61671937c42639bf0ab2"
     },
@@ -2016,6 +2029,10 @@
     {
       "path": "server/tests/production.test.js",
       "sha256": "2043096c73554fda203b036141916cd8984413ca0dae9370c05aab22c2188302"
+    },
+    {
+      "path": "server/tests/providerAcceptance.test.js",
+      "sha256": "1ce4103a02363f6fb32a7878fbb4b080bdb4d42a451e7f99f8e7e777304e3639"
     },
     {
       "path": "server/tests/purchaseOrder.test.js",
