@@ -26,6 +26,7 @@ export default function OwnerPlansPage({ notify }) {
     [editing, setEditing] = useState(null),
     [form, setForm] = useState(blank);
   const [loading,setLoading]=useState(true),[loadError,setLoadError]=useState("");
+  const [saving, setSaving] = useState(false);
   const load = () => {setLoading(true);setLoadError("");return api("/saas/plans")
       .then(setPlans)
       .catch((e) => {setLoadError(e.message);notify?.(e.message);}).finally(()=>setLoading(false));};
@@ -35,6 +36,8 @@ export default function OwnerPlansPage({ notify }) {
   const field = (key, value) => setForm({ ...form, [key]: value });
   async function save(e) {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     try {
       await api(editing ? `/saas/plans/${editing}` : "/saas/plans", {
         method: editing ? "PUT" : "POST",
@@ -46,7 +49,7 @@ export default function OwnerPlansPage({ notify }) {
       notify?.("Plan saved");
     } catch (x) {
       notify?.(x.message);
-    }
+    } finally {setSaving(false);}
   }
   function edit(p) {
     setEditing(p._id);
@@ -97,6 +100,9 @@ export default function OwnerPlansPage({ notify }) {
               <input
                 required={!["setupFee", "price", "cost"].includes(k)}
                 type={t || "text"}
+                min={t === "number" ? (["validityDays", "maxUsers", "maxDepartments"].includes(k) ? 1 : 0) : undefined}
+                max={k === "maxDepartments" ? DEPARTMENTS.length : k === "taxPercent" ? 28 : ["price","perUserPrice","perDepartmentPrice","setupFee"].includes(k) ? 100000000 : undefined}
+                step={t === "number" ? (["price","perUserPrice","perDepartmentPrice","cost","setupFee","taxPercent"].includes(k) ? "0.01" : "1") : undefined}
                 value={form[k]}
                 onChange={(e) =>
                   field(
@@ -114,7 +120,7 @@ export default function OwnerPlansPage({ notify }) {
               onChange={(e) => field("description", e.target.value)}
             />
           </label>
-          <fieldset className="wide"><legend>Licensed departments and ERP features</legend>{[...DEPARTMENT_CATALOGUE,...ERP_MODULES.map(code=>({code,label:code}))].map(({code,label})=><label className="check" key={code}><input type="checkbox" checked={(form.modules||[]).includes(code)} onChange={e=>{const modules=e.target.checked?[...form.modules,code]:form.modules.filter(m=>m!==code);setForm({...form,modules,maxDepartments:Math.max(1,modules.filter(m=>DEPARTMENTS.includes(m)).length)});}}/>{label}</label>)}</fieldset>
+          <fieldset className="wide"><legend>Licensed departments and ERP features</legend>{[...DEPARTMENT_CATALOGUE,...ERP_MODULES.map(code=>({code,label:code}))].map(({code,label})=><label className="check" key={code}><input type="checkbox" checked={(form.modules||[]).includes(code)} onChange={e=>{const modules=e.target.checked?[...form.modules,code]:form.modules.filter(m=>m!==code);setForm({...form,modules});}}/>{label}</label>)}</fieldset>
           <label className="check">
             <input
               type="checkbox"
@@ -132,8 +138,8 @@ export default function OwnerPlansPage({ notify }) {
             Recommended
           </label>
         </div>
-        <button className="primary">
-          <Save /> Save Plan
+        <button className="primary" disabled={saving}>
+          <Save /> {saving ? "Saving…" : "Save Plan"}
         </button>
       </form>
       <div className="saas-plan-grid">
@@ -159,11 +165,12 @@ export default function OwnerPlansPage({ notify }) {
                 <Check /> {p.maxUsers} users
               </li>
               <li>
-                <Check /> {p.maxDepartments} departments
+                <Check /> Select up to {Math.min(DEPARTMENTS.length, p.maxDepartments)} departments
               </li>
+              <li>Licensed coverage:</li>
               {(p.modules || []).map((x) => (
                 <li key={x}>
-                  <Check /> {x}
+                  <Check /> {DEPARTMENT_CATALOGUE.find(d => d.code === departmentCode(x))?.label || x}
                 </li>
               ))}
             </ul>

@@ -57,7 +57,7 @@ export default function SuperAdminLayout({ page, onPageChange, children }) {
             <b>UG SaaS</b>
             <small>SAAS OWNER CONSOLE</small>
           </div>
-          <button onClick={() => setMenuOpen(false)}>
+          <button aria-label="Close navigation" onClick={() => setMenuOpen(false)}>
             <X />
           </button>
         </div>
@@ -66,6 +66,7 @@ export default function SuperAdminLayout({ page, onPageChange, children }) {
             <button
               key={name}
               className={page === name ? "active" : ""}
+              aria-current={page === name ? "page" : undefined}
               onClick={() => select(name)}
             >
               <Icon />
@@ -104,7 +105,7 @@ export default function SuperAdminLayout({ page, onPageChange, children }) {
       {menuOpen && <div className="shade" onClick={() => setMenuOpen(false)} />}
       <main>
         <header className="owner-topbar">
-          <DisplayTools page={page} user={user} onProfile={()=>select("Profile Settings")}/>
+          <DisplayTools page={page} user={user}/>
           <button aria-label="Open navigation" aria-expanded={menuOpen} className="menu" onClick={() => setMenuOpen(true)}>
             <Menu />
           </button>

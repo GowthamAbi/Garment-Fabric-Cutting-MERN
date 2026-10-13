@@ -5,6 +5,8 @@ import "./styles.css";
 import "./rich-theme.css";
 import './accessibility-theme.css';
 import './plain-layout.css';
+import './styles/owner-console.css';
+import './styles/theme-toggle.css';
 import { installGlobalFetchLoader } from "./services/loadingService.js";
 
 installGlobalFetchLoader();

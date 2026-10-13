@@ -143,7 +143,7 @@ export default function SuperAdminDashboardPage({ notify }) {
     () => ({
       companies: companies.length,
       active: companies.filter(
-        (company) => company.active && company.subscriptionStatus === "Active",
+        (company) => company.status === "ACTIVE",
       ).length,
       users: companies.reduce(
         (sum, company) => sum + (company.userCount || 0),
@@ -383,10 +383,10 @@ export default function SuperAdminDashboardPage({ notify }) {
         />
         <Summary
           icon={<ShieldCheck />}
-          label="Active Companies"
-          value={totals.active}
+          label="Active Workspaces"
+          value={overview?.metrics?.activeCompanies ?? totals.active}
         />
-        <Summary icon={<Users />} label="Total Users" value={totals.users} />
+        <Summary icon={<Users />} label="Customer Users" value="Company managed" />
         <Summary
           icon={<Factory />}
           label="Trial Companies"
@@ -474,23 +474,22 @@ export default function SuperAdminDashboardPage({ notify }) {
                 <p>
                   {company.factories
                     ?.map((factory) => factory.name)
-                    .join(", ") || "No factory"}
+                    .join(", ") || "Company-managed factories"}
                 </p>
               </div>
               <span
                 className={
-                  company.active && company.subscriptionStatus === "Active"
+                  company.status === "ACTIVE"
                     ? "company-active"
                     : "company-inactive"
                 }
               >
-                {company.subscriptionStatus}
+                {company.status}
               </span>
               <footer>
                 <small>{company.subscriptionPlan} Plan</small>
                 <small>
-                  {company.activeUsers || 0}/{company.userCount || 0} active
-                  users
+                  {company.enabledDepartments?.length || 0} licensed departments
                 </small>
               </footer>
             </button>

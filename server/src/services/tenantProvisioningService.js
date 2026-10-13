@@ -1,6 +1,7 @@
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import {provisioningAccess} from "../utils/subscriptionQuote.js";
+import {trialExpiry} from "../utils/subscriptionAccess.js";
 import bcrypt from "bcryptjs";
 import TenantRegistry from "../models/TenantRegistry.js";
 import Company from "../models/Company.js";
@@ -44,7 +45,7 @@ export async function provisionTenant({
     companyKey, companyName, databaseName,enabledDepartments,departmentCatalogueVersion:1,adminEmail,adminName,
     loginPath: `/c/${companyKey}/login`,
     status: "PROVISIONING", subscriptionPlan: plan,
-    subscriptionEndsAt: expiresAt, trialEndsAt: new Date(Date.now() + 7 * 86400000), createdBy,
+    subscriptionEndsAt: expiresAt, trialEndsAt: plan === "Trial" ? expiresAt || trialExpiry() : undefined, trialStartedAt: plan === "Trial" ? new Date() : undefined, createdBy,
   }).catch(error=>{if(error.code===11000)throw new ApiError(409,"Administrator email or company workspace already exists; refresh the companies list");throw error;});
 
   try {

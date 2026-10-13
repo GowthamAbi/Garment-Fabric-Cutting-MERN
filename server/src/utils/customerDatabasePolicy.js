@@ -1,8 +1,9 @@
+import {TRIAL_DAYS} from "./subscriptionAccess.js";
 import { createHash } from "node:crypto";
 import { EJSON } from "bson";
 
 export function databaseSetupEligible(registry, now = new Date()) {
-  const end = new Date(registry.trialEndsAt || new Date(registry.createdAt).getTime() + 7 * 86400000);
+  const end = new Date(registry.trialEndsAt || new Date(registry.createdAt).getTime() + TRIAL_DAYS * 86400000);
   return Number.isFinite(end.getTime()) && now >= end;
 }
 export function targetFingerprint(host, name) {

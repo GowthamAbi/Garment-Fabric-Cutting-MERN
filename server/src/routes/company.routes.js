@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { editCompanyEmail } from "../controllers/companyEmailController.js";
 import {
   controlCompanySubscription,
   configureCompanyDepartments,
@@ -19,6 +20,7 @@ router.get(
   asyncHandler(getCompanies),
 );
 router.post("/", allowRoles("saas_super_admin"), asyncHandler(createCompany));
+router.patch("/:id/admin-email", allowRoles("saas_super_admin"), asyncHandler(editCompanyEmail));
 router.patch('/:id/departments',allowRoles('saas_super_admin'),asyncHandler(configureCompanyDepartments));
 router.post('/:id/resend-activation',allowRoles('saas_super_admin'),asyncHandler(resendCompanyActivation));
 router.get(

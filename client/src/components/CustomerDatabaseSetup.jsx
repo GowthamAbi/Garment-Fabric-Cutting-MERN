@@ -42,7 +42,7 @@ export default function CustomerDatabaseSetup() {
     {notice && <p role="status">{notice}</p>}
     {status ? <>
       <p><strong>Storage:</strong> {status.routing === "CUSTOMER" ? "Customer Atlas" : status.routing === "MIGRATING" ? "Transfer in progress — ERP maintenance" : "Platform trial database"}</p>
-      {!status.eligible && <p>Transfer becomes available after your 7-day trial period, on {new Date(status.trialEndsAt).toLocaleString()}. You can validate your connection now.</p>}
+      {!status.eligible && <p>Transfer becomes available after your 14-day trial period, on {new Date(status.trialEndsAt).toLocaleString()}. You can validate your connection now.</p>}
       {candidate && <p><strong>Database:</strong> {candidate.databaseName} · {candidate.state.replaceAll("_", " ")}</p>}
       {candidate?.lastError && <p className="error-text" role="alert">{candidate.lastError}</p>}
       {status.routing !== "CUSTOMER" && <>

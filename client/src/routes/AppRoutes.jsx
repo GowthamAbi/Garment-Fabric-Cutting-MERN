@@ -52,6 +52,8 @@ import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
 import OwnerPlansPage from "../pages/saas/OwnerPlansPage.jsx";
 import OwnerSalesPage from "../pages/saas/OwnerSalesPage.jsx";
+import OwnerSubscriptionsPage from "../pages/saas/OwnerSubscriptionsPage.jsx";
+import OwnerUsersPage from "../pages/saas/OwnerUsersPage.jsx";
 import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
 import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
@@ -222,7 +224,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Subscription Purchase":
     case "Subscription Bills":
     case "Subscription Usage":
-      return <SubscriptionCenterPage mode={page} />;
+      return <SubscriptionCenterPage mode={page} onPageChange={onPageChange} />;
     case "Support Access":
       return <SupportAccessPage />;
     case "Production Plan Data Entry":
@@ -253,7 +255,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Companies":
       return <CompanyManagementPage notify={notify} />;
     case "Subscriptions":
-      return <SaasControlPage notify={notify} />;
+      return user?.role === "saas_super_admin" ? <OwnerSubscriptionsPage /> : <SaasControlPage notify={notify} />;
     case "Plans":
       return <OwnerPlansPage notify={notify} />;
     case "Payments & Sales":
@@ -261,7 +263,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "Lead CRM":
       return <LeadCrmPage notify={notify} />;
     case "Owner Users":
-      return <UserManagementPage notify={notify} />;
+      return <OwnerUsersPage onPageChange={onPageChange} />;
     case "Account Details":
       return <ProfileSettingsPage mode="details" notify={notify} />;
     case "Profile Settings":
@@ -321,7 +323,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     case "SaaS Companies":
       return <CompanyManagementPage notify={notify} />;
     case "Subscription":
-      return <SaasControlPage notify={notify} />;
+      return user?.role === "saas_super_admin" ? <OwnerSubscriptionsPage /> : <SaasControlPage notify={notify} />;
     case "Audit & Backup":
       return <AuditBackupPage notify={notify} />;
     case "Setup Guide":

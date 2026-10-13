@@ -38,6 +38,7 @@ export default function LeadCrmPage({ notify }) {
     [filter, setFilter] = useState(""),
     [form, setForm] = useState(blank),
     [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
   const load = () =>
     api("/saas/leads")
       .then(setRows)
@@ -51,6 +52,8 @@ export default function LeadCrmPage({ notify }) {
   );
   async function save(e) {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     try {
       await api(editing ? `/saas/leads/${editing}` : "/saas/leads", {
         method: editing ? "PUT" : "POST",
@@ -62,7 +65,7 @@ export default function LeadCrmPage({ notify }) {
       notify?.("Lead saved");
     } catch (x) {
       notify?.(x.message);
-    }
+    } finally {setSaving(false);}
   }
   function edit(x) {
     setEditing(x._id);
@@ -125,6 +128,7 @@ export default function LeadCrmPage({ notify }) {
             <Download /> Excel
           </button>
         </div>
+        {editing && <button type="button" onClick={() => {setEditing(null);setForm(blank);}}>Cancel edit</button>}
         <div className="saas-form-grid">
           {[
             ["companyName", "Company Name"],
@@ -180,8 +184,8 @@ export default function LeadCrmPage({ notify }) {
             </label>
           ))}
         </div>
-        <button className="primary">
-          <Save /> Save Lead
+        <button className="primary" disabled={saving}>
+          <Save /> {saving ? "Saving…" : "Save Lead"}
         </button>
       </form>
       <div className="classic-card">
@@ -194,6 +198,7 @@ export default function LeadCrmPage({ notify }) {
             ))}
           </select>
         </div>
+        {!shown.length && <p role="status">No leads match this status.</p>}
         <div className="crm-board">
           {shown.map((x) => (
             <article key={x._id}>
@@ -251,11 +256,11 @@ export default function LeadCrmPage({ notify }) {
                     </button>
                   </>
                 )}
-                <button onClick={() => activity(x, "CALL")}>Call</button>
-                <button onClick={() => activity(x, "WHATSAPP")}>
+                <button disabled={!x.phone} onClick={() => activity(x, "CALL")}>Call</button>
+                <button disabled={!x.phone} onClick={() => activity(x, "WHATSAPP")}>
                   WhatsApp
                 </button>
-                <button onClick={() => activity(x, "EMAIL")}>Email</button>
+                <button disabled={!x.email} onClick={() => activity(x, "EMAIL")}>Email</button>
                 <button onClick={() => activity(x, "VISIT")}>Visit</button>
                 <button onClick={() => activity(x, "DEMO")}>Demo</button>
                 <button onClick={() => edit(x)}>Edit</button>

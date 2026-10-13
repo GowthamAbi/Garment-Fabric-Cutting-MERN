@@ -1,0 +1,41 @@
+/* Owner-only screen styling; printed production documents are unaffected. */
+@media screen {
+  .owner-shell {font-family:Arial, sans-serif}
+  .owner-shell > main {min-width:0}
+  .owner-shell .page {padding:24px; overflow-wrap:anywhere}
+  .owner-shell :is(h1,h2,h3) {font-family:inherit}
+  .owner-shell .owner-topbar {position:sticky;top:0;z-index:20;gap:16px}
+  .owner-shell .owner-topbar h1 {font-size:24px;line-height:1.3}
+  .owner-shell .owner-stats {gap:12px}
+  .owner-shell :is(.owner-stats > div,.overview-metrics > article,.saas-plan-grid > article) {border-radius:4px;box-shadow:none;background-image:none;border:1px solid #d7dfe4;padding:16px}
+  .owner-shell :is(.saas-form-grid,.pending-form) {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .owner-shell label {min-width:0}
+  .owner-shell label > :is(input:not([type=checkbox]),select,textarea) {width:100%}
+  .owner-shell .saas-form-grid .wide {grid-column:1/-1}
+  .owner-shell fieldset {display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;border:1px solid #d7dfe4;padding:16px}
+  .owner-shell fieldset label {display:flex;align-items:center;gap:8px}
+  .owner-shell fieldset label span {margin:0}
+  .owner-shell .table-wrap {max-width:100%;overflow:auto}
+  .owner-shell th {position:sticky;top:0}
+  .owner-shell .owner-subscription-details {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .owner-subscription-details dt {font-size:14px;color:#64748b}
+  .owner-subscription-details dd {margin:4px 0 0;font-weight:600}
+  .owner-shell button:disabled {opacity:.6;cursor:not-allowed}
+  .owner-create-company {border:1px solid #d7dfe4;background:var(--rich-paper);border-radius:4px}
+  .owner-create-company > summary {padding:16px;cursor:pointer;font-weight:600;min-height:44px;box-sizing:border-box}
+  .owner-shell :is(button,input,select,textarea):focus-visible {outline:2px solid #0f766e;outline-offset:3px}
+  html[data-theme=dark] .owner-shell :is(.owner-stats > div,.overview-metrics > article,.saas-plan-grid > article) {background:#122a32;color:#e4f0ed;border-color:#41616a}
+}
+@media screen and (max-width:1000px) {
+  .owner-shell :is(.saas-form-grid,.pending-form) {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media screen and (max-width:760px) {
+  .owner-shell .owner-topbar {flex-wrap:wrap;padding:12px;gap:10px}
+  .owner-shell .owner-topbar h1 {font-size:20px}
+  .owner-shell .owner-topbar .owner-secure {display:none}
+  .owner-shell .page {padding:12px}
+  .owner-shell :is(.saas-form-grid,.pending-form,.owner-subscription-details,.classic-two-column,.saas-plan-grid) {grid-template-columns:1fr}
+  .owner-shell :is(.table-toolbar,.row-actions) {flex-wrap:wrap;gap:8px}
+  .owner-shell :is(input,select,textarea) {font-size:16px}
+  .owner-shell button {min-height:44px}
+}

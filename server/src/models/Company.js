@@ -31,6 +31,8 @@ const companySchema = new mongoose.Schema(
       default: "Active",
     },
     subscriptionStartsAt: Date,
+    trialStartedAt: Date,
+    trialUpgradePlan: String,
     subscriptionEndsAt: Date,
     enabledDepartments: [String],
     departmentCatalogueVersion: Number,

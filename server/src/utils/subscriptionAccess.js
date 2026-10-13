@@ -1,4 +1,4 @@
-export const TRIAL_DAYS=7;
+export const TRIAL_DAYS=14;
 export function trialExpiry(now=Date.now()){return new Date(now+TRIAL_DAYS*86400000);}
 export function subscriptionAccess(company,now=Date.now()){
  const expiry=company?.subscriptionEndsAt?new Date(company.subscriptionEndsAt):null;

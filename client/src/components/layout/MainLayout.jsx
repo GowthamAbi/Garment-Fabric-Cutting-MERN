@@ -981,7 +981,7 @@ export default function MainLayout({ page, onPageChange, children }) {
 
       <main>
         <header className="topbar">
-          <DisplayTools page={page} user={user} onProfile={()=>selectPage("Profile Settings")}/>
+          <DisplayTools page={page} user={user} onRenew={()=>selectPage("Subscription Purchase")}/>
           <button aria-label="Open navigation" aria-expanded={menuOpen} className="menu" onClick={() => setMenuOpen(true)}>
             <Menu />
           </button>

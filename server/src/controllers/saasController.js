@@ -1,4 +1,5 @@
 import {ensurePlanCatalogue} from "../services/planCatalogueService.js";
+import {trialEligible} from "../utils/trialPolicy.js";
 import {enabledDepartment} from "../erp/departmentPolicy.js";
 import {subscriptionQuote,assertQuoteFitsUsers,PRICING_MODELS} from "../utils/subscriptionQuote.js";
 import {DEPARTMENTS,planModules,departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
@@ -57,6 +58,20 @@ async function ensurePlans() {
 }
 
 export async function getSubscription(request, response) {
+  // Owner billing is central; never query the owner's login-company history.
+  if (request.user.role === "saas_super_admin") {
+    const [requests, companies] = await Promise.all([
+      BillingRequest.find().sort({ createdAt: -1 }).limit(100).select("referenceNo companyKey plan amount status paymentMethod createdAt quote").lean(),
+      TenantRegistry.find().select("companyKey companyName").lean(),
+    ]);
+    const names = new Map(companies.map(company => [company.companyKey, company.companyName]));
+    return response.json({ payments: requests.map(({ quote, ...payment }) => ({
+      ...payment,
+      companyId: { companyName: names.get(payment.companyKey) || payment.companyKey },
+      taxAmount: quote?.taxAmount || 0,
+      setupFee: quote?.setupFee || 0,
+    })) });
+  }
   if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>getSubscription(request,response));
   await ensurePlans();
   const company = await Company.findById(request.user.companyId).lean();
@@ -590,7 +605,7 @@ export async function decideLeadRequest(request, response) {
   await lead.save();
 
   response.json({
-    message: "7-day trial approved. Verify activation email before login.",
+    message: "14-day trial approved. Verify activation email before login.",
     activationEmailStatus: provisioned.activationEmailStatus,
     expiresAt: expiry,
     companyKey: provisioned.registry.companyKey,
@@ -682,9 +697,12 @@ export async function downloadBackup(request, response) {
 }
 
 export async function getAccessStatus(request,response){
+ if(getTenant().factoryId)return runWithTenant({...getTenant(),factoryId:undefined},()=>getAccessStatus(request,response));
  const company=await Company.findById(request.user.companyId).lean();
  if(!company)throw new ApiError(404,'Company not found');
- response.json({...subscriptionAccess(company),enabledDepartments:DEPARTMENTS.filter(d=>enabledDepartment(company,d))});
+ const registry=await TenantRegistry.findOne({companyKey:getTenant().companyKey}).lean();
+ const paid=await SubscriptionPayment.exists({companyId:company._id,status:{$in:["PAID","REFUNDED"]}});
+ response.json({...subscriptionAccess(company),trialEligible:trialEligible(company,registry,paid),enabledDepartments:DEPARTMENTS.filter(d=>enabledDepartment(company,d))});
 }
 
 export async function getPaymentStatus(request,response){

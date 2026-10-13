@@ -1,0 +1,30 @@
+@media screen {
+  :is(.topbar,.owner-topbar) {position:relative;padding-right:150px}
+  :is(.topbar,.owner-topbar) > .corner-display-tools {position:absolute;right:16px;top:16px;width:auto;margin:0;display:flex;flex-wrap:nowrap;gap:10px;align-items:center;z-index:30}
+  .theme-swap {position:relative;display:flex;align-items:center;justify-content:space-between;width:76px;height:40px;min-width:76px;border:1px solid #d5a034;border-radius:24px!important;background:linear-gradient(120deg,#fff0b2,#f8c966)!important;padding:0 9px;cursor:pointer}
+  .theme-swap svg {z-index:2;transition:color .25s,transform .35s}
+  .theme-sun {color:#a45300}.theme-moon {color:#755a21}
+  .theme-thumb {position:absolute;left:4px;top:4px;width:30px;height:30px;border-radius:50%;background:#fff9de;box-shadow:0 1px 4px #0003;transition:transform .3s ease,background .3s}
+  .theme-swap[aria-checked=true] {background:linear-gradient(120deg,#263d83,#6840a0)!important;border-color:#7169b2}
+  .theme-swap[aria-checked=true] .theme-thumb {transform:translateX(36px);background:#e5eaff}
+  .theme-swap[aria-checked=true] .theme-moon {color:#3b3486;transform:rotate(-12deg)}
+  .theme-swap[aria-checked=true] .theme-sun {color:#d5d5ee}
+  .subscription-bell {position:relative}
+  .subscription-bell > button {position:relative;display:grid;place-items:center;width:40px;height:40px;border:1px solid #cbd5e1;border-radius:50%;background:#fff;color:#334155}
+  .notification-dot {position:absolute;top:5px;right:5px;width:8px;height:8px;background:#f97316;border-radius:50%}
+  .subscription-notification-panel {position:absolute;right:0;top:50px;width:290px;max-width:calc(100vw - 28px);padding:16px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#172c3b;box-shadow:0 8px 24px #0002;font-size:14px}
+  .subscription-notification-panel p {line-height:1.5}
+  html[data-theme=dark] .subscription-notification-panel {background:#122a32;color:#e4f0ed;border-color:#66828a}
+  .subscription-choice {display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .subscription-quote {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px;border:1px solid #cbd5e1;grid-column:1/-1}
+  .subscription-quote dt {font-size:14px}.subscription-quote dd {margin:6px 0;font-weight:700}
+}
+@media screen and (max-width:760px) {
+  :is(.topbar,.owner-topbar) {padding-right:145px!important;min-height:78px}
+  :is(.topbar,.owner-topbar) > .corner-display-tools {top:12px;right:12px;width:auto!important}
+  :is(.topbar,.owner-topbar) h1 {font-size:18px!important;overflow-wrap:anywhere}
+  .subscription-quote {grid-template-columns:1fr}
+  .theme-swap,.subscription-bell > button {height:44px;min-height:44px}
+  .theme-thumb {top:6px}
+}
+@media (prefers-reduced-motion:reduce) {.theme-swap * {transition:none!important}}

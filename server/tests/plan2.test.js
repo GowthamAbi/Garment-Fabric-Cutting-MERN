@@ -5,10 +5,10 @@ import {requireActiveSubscription} from '../src/middleware/subscriptionMiddlewar
 import Company from '../src/models/Company.js';
 import {runWithTenant} from '../src/utils/tenantContext.js';
 const now=Date.UTC(2026,9,11);
-test('trial expiry starts at approval and lasts exactly seven days',()=>{assert.equal(trialExpiry(now).getTime()-now,7*86400000);});
+test('trial expiry starts at approval and lasts exactly fourteen days',()=>{assert.equal(trialExpiry(now).getTime()-now,14*86400000);});
 test('expiry boundary and missing dates cannot grant perpetual access',()=>{
  const company={active:true,subscriptionStatus:'Active',subscriptionPlan:'Trial',subscriptionEndsAt:trialExpiry(now)};
- assert.equal(subscriptionAccess(company,now).daysRemaining,7);assert.equal(subscriptionAccess(company,now).accessAllowed,true);
+ assert.equal(subscriptionAccess(company,now).daysRemaining,14);assert.equal(subscriptionAccess(company,now).accessAllowed,true);
  assert.equal(subscriptionAccess(company,trialExpiry(now).getTime()).accessAllowed,false);
  assert.equal(subscriptionAccess({...company,subscriptionEndsAt:undefined},now).accessAllowed,false);
  assert.equal(subscriptionAccess({...company,subscriptionStatus:'Suspended'},now).accessAllowed,false);

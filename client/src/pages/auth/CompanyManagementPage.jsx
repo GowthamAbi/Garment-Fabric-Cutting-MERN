@@ -53,6 +53,8 @@ export default function CompanyManagementPage({ notify }) {
       notify?.(error.message);
     }
   }
+  const [emailEdit,setEmailEdit]=useState(null),[emailSaving,setEmailSaving]=useState(false);
+  async function saveEmail(event){event.preventDefault();if(emailSaving)return;setEmailSaving(true);try{const result=await api(`/companies/${emailEdit.id}/admin-email`,{method:'PATCH',body:JSON.stringify({email:emailEdit.email})});setEmailEdit(null);await load();notify?.(result.message);}catch(e){notify?.(e.message);}finally{setEmailSaving(false);}}
   async function resend(row){try{const result=await api(`/companies/${row._id}/resend-activation`,{method:"POST",body:"{}"});notify?.(result.message);await load();}catch(e){notify?.(e.message);}}
   async function configure(row){const value=window.prompt("Enabled departments, comma-separated: "+DEPARTMENTS.join(","),(row.enabledDepartments||[]).join(","));if(value===null)return;try{await api(`/companies/${row._id}/departments`,{method:"PATCH",body:JSON.stringify({enabledDepartments:value.split(",").map(x=>x.trim().toUpperCase()).filter(Boolean)})});await load();notify?.("Departments updated; existing data retained");}catch(e){notify?.(e.message);}}
   async function control(row, action) {
@@ -64,7 +66,7 @@ export default function CompanyManagementPage({ notify }) {
     try {
       await api(`/companies/${row._id}/subscription`, {
         method: "PATCH",
-        body: JSON.stringify({ action, validityDays: 30 }),
+        body: JSON.stringify({ action }),
       });
       await load();
       notify?.(`Company ${action.toLowerCase()} completed`);
@@ -114,7 +116,8 @@ export default function CompanyManagementPage({ notify }) {
       )}
 
       {user?.role === "saas_super_admin" && (
-        <Card title="Create company">
+        <details className="owner-create-company"><summary>Create company</summary>
+        <Card title="New company workspace">
           <div className="company-form-intro">
             <span className="company-section-mark">＋</span>
             <div>
@@ -189,8 +192,10 @@ export default function CompanyManagementPage({ notify }) {
             </div>
           )}
         </Card>
+        </details>
       )}
 
+      {emailEdit && <Card title="Edit administrator email"><form onSubmit={saveEmail}><p>{emailEdit.name}: updating email revokes existing sessions and requires verification of the new email.</p><label>New email<input type="email" required maxLength={160} value={emailEdit.email} onChange={e=>setEmailEdit({...emailEdit,email:e.target.value})}/></label><div className="row-actions"><button className="primary" disabled={emailSaving}>Save and send activation</button><button type="button" disabled={emailSaving} onClick={()=>setEmailEdit(null)}>Cancel</button></div></form></Card>}
       {selected && (
         <Card title={`${selected.companyName} — department access`}>
           <div className="company-selected-details">
@@ -235,6 +240,7 @@ export default function CompanyManagementPage({ notify }) {
                 render: (row) => (
                   <div className="company-row-actions">
                     <button type="button" onClick={() => setSelected(row)}>Details</button>
+                    <button type="button" onClick={()=>setEmailEdit({id:row._id,name:row.companyName,email:row.adminEmail || ""})}>Edit email</button>
                     <button type="button" onClick={() => resend(row)}>Resend email</button>
                     <button type="button" onClick={() => control(row, "ACTIVATE")}>Activate</button>
                     <button type="button" onClick={() => control(row, "PAUSE")}>Pause</button>

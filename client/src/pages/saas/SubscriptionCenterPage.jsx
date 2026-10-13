@@ -37,9 +37,11 @@ const content = {
     "Users, factories and subscription validity.",
   ],
 };
-export default function SubscriptionCenterPage({ mode }) {
+export default function SubscriptionCenterPage({ mode, onPageChange }) {
   const { user } = useAuth();
   const [quote,setQuote]=useState(null);
+  const [access,setAccess]=useState(null),[trialStarting,setTrialStarting]=useState(false);
+  const [choice,setChoice]=useState("choose");
   const [data, setData] = useState(null),
     [paymentNotice, setPaymentNotice] = useState(""),
     [error, setError] = useState(""),
@@ -52,13 +54,18 @@ export default function SubscriptionCenterPage({ mode }) {
     });
   const load = () =>
     api("/saas/subscription")
-      .then(value=>{setData(value);setForm(f=>{const plan=value.plans?.find(p=>p.name===f.plan&&p.code!=="TRIAL")||value.plans?.find(p=>p.code!=="TRIAL");return f.departments.length?f:{...f,plan:plan?.name||"",seats:plan?.maxUsers||1,departments:(value.company?.enabledDepartments||[]).filter(d=>licensedDepartments(plan?.modules).includes(d)).slice(0,plan?.maxDepartments||1)};});})
+      .then(value=>{setData(value);setForm(f=>{const plan=value.plans?.find(p=>p.name===(value.company?.trialUpgradePlan || value.company?.subscriptionPlan)&&p.code!=="TRIAL")||value.plans?.find(p=>p.name===f.plan&&p.code!=="TRIAL")||value.plans?.find(p=>p.code!=="TRIAL");return f.departments.length?f:{...f,plan:plan?.name||"",seats:plan?.maxUsers||1,departments:(value.company?.enabledDepartments||[]).filter(d=>licensedDepartments(plan?.modules).includes(d)).slice(0,plan?.maxDepartments||1)};});return api("/saas/access-status").then(setAccess);})
       .catch((e) => setError(e.message));
   useEffect(() => {
     load();
   }, []);
   useEffect(()=>{setQuote(null);if(mode!=="Subscription Purchase"||!form.plan||!form.departments.length)return;let alive=true;api("/saas/subscription/quote",{method:"POST",body:JSON.stringify(form)}).then(q=>{if(alive){setQuote(q);setError("");}}).catch(e=>{if(alive)setError(e.message);});return()=>{alive=false;};},[mode,form.plan,form.seats,form.departments]);
   const [Icon, title, subtitle] = content[mode] || content["Subscription Plan"];
+  async function startTrial(){
+    if(trialStarting)return;setTrialStarting(true);setError("");
+    try{const result=await api("/saas/subscription/trial",{method:"POST",body:"{}"});setPaymentNotice(result.message);await load();onPageChange?.("Company Dashboard");}
+    catch(e){setError(e.message);}finally{setTrialStarting(false);}
+  }
   async function status(action) {
     try {
       await api("/saas/subscription/status", {
@@ -97,7 +104,7 @@ export default function SubscriptionCenterPage({ mode }) {
             if(!settled)setPaymentNotice("Activation is not confirmed yet. Refresh payment history before paying again.");
           }
         });
-      } else await load();
+      } else {setPaymentNotice("Payment request submitted. Waiting for owner approval; paid access is not activated yet.");await load();}
       setForm({ ...form, notes: "" });
     } catch (x) {
       setError(x.message);
@@ -206,7 +213,13 @@ export default function SubscriptionCenterPage({ mode }) {
       )}
       {mode === "Subscription Purchase" && (
         <div className="classic-card">
-          <form className="pending-form" onSubmit={purchase}>
+          <div className="subscription-choice">
+            {access?.trialEligible && <button type="button" disabled={trialStarting} onClick={startTrial}>{trialStarting?"Starting trial…":"Start 14-day trial"}</button>}
+            <button type="button" className="primary" onClick={()=>setChoice("payment")}>Payment / Upgrade / Renew</button>
+            {access?.kind==="TRIAL" && !access.expired && <p>Trial active: {access.daysRemaining} day(s) remaining. Choose payment to upgrade.</p>}
+          </div>
+          {access?.trialEligible && choice==="choose" && <p>Evaluate your selected departments for 14 days, or pay for your configured package. Each company can start one free trial.</p>}
+          {(!access?.trialEligible || choice==="payment") && <form className="pending-form" onSubmit={purchase}>
             <label>
               <span>Plan</span>
               <select
@@ -223,7 +236,11 @@ export default function SubscriptionCenterPage({ mode }) {
             {data.plans.find(p=>p.name===form.plan)?.code==="OWN_PLAN"&&<p>Own Plan: choose your departments below. The owner-configured rates determine the quote; payment confirmation is required for access.</p>}
             <label><span>Purchased user seats (includes company owner)</span><input type="number" min="1" max={data.plans.find(p=>p.name===form.plan)?.maxUsers||1} value={form.seats} onChange={e=>setForm({...form,seats:Number(e.target.value)})}/></label>
             <fieldset><legend>Purchased departments</legend>{licensedDepartments(data.plans.find(p=>p.name===form.plan)?.modules).map(d=><label key={d}><input type="checkbox" checked={form.departments.includes(d)} disabled={!form.departments.includes(d)&&form.departments.length>=(data.plans.find(p=>p.name===form.plan)?.maxDepartments||1)} onChange={e=>setForm({...form,departments:e.target.checked?[...form.departments,d]:form.departments.filter(x=>x!==d)})}/>{d}</label>)}</fieldset>
-            {quote&&<p role="status">Subtotal ₹{(quote.subtotalPaise/100).toFixed(2)} · Tax ₹{quote.taxAmount.toFixed(2)} · Total ₹{quote.total.toFixed(2)} · {quote.validityDays} days. Final amount is revalidated on the server when ordering.</p>}
+            {quote&&<dl className="subscription-quote" aria-label="Payment quote">
+              <div><dt>Selected departments</dt><dd>{quote.departments.length}</dd>{["PER_DEPARTMENT","COMBINED"].includes(quote.pricingModel)&&<span>₹{Number(data.plans.find(p=>p.name===form.plan)?.perDepartmentPrice || 0).toFixed(2)} per department</span>}</div>
+              <div><dt>Subtotal incl. setup</dt><dd>₹{(quote.subtotalPaise/100).toFixed(2)}</dd><dt>GST {quote.taxPercent}%</dt><dd>₹{quote.taxAmount.toFixed(2)}</dd></div>
+              <div><dt>Total payable</dt><dd>₹{quote.total.toFixed(2)}</dd><span>{quote.validityDays} days · {quote.seats} user seats</span></div>
+            </dl>}
             <label>
               <span>Payment</span>
               <select
@@ -250,7 +267,9 @@ export default function SubscriptionCenterPage({ mode }) {
                 ? "Pay with Razorpay"
                 : "Create Manual Request"}
             </button>
-          </form>
+          </form>}
+          <h3>Latest payment requests</h3>
+          <DataTable rows={data.payments || []} columns={[{key:"referenceNo",label:"Reference"},{key:"plan",label:"Plan"},{key:"amount",label:"Amount ₹"},{key:"status",label:"Approval status"}]}/>
         </div>
       )}
       {mode === "Subscription Bills" && (

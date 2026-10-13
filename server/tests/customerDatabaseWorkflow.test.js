@@ -14,10 +14,10 @@ import TenantRegistry from "../src/models/TenantRegistry.js";
 
 const query = value => ({ lean: async () => value, select() { return this; } });
 
-test("transfer waits for the full 7 days and invalid dates cannot enable it", () => {
+test("transfer waits for the full 14 days and invalid dates cannot enable it", () => {
   const registry = { createdAt: new Date("2026-10-01T10:00:00Z") };
-  assert.equal(databaseSetupEligible(registry, new Date("2026-10-08T09:59:59Z")), false);
-  assert.equal(databaseSetupEligible(registry, new Date("2026-10-08T10:00:00Z")), true);
+  assert.equal(databaseSetupEligible(registry, new Date("2026-10-15T09:59:59Z")), false);
+  assert.equal(databaseSetupEligible(registry, new Date("2026-10-15T10:00:00Z")), true);
   assert.equal(databaseSetupEligible({ createdAt: "invalid" }), false);
   assert.equal(databaseSetupEligible({ ...registry, trialEndsAt: "2026-10-10T10:00:00Z" }, new Date("2026-10-09")), false);
 });

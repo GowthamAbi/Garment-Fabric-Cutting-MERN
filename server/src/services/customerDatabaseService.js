@@ -114,12 +114,12 @@ export async function saveCustomerDatabase({ companyKey, companyId, actor, conne
     if (error instanceof ApiError) throw error;
     throw new DatabaseSetupError(503, "Atlas validation failed. Check read/write permissions, transaction support and encryption configuration.");
   } finally { if (connection) await connection.close(); }
-  return { message: "Connection validated and encrypted. Transfer can begin after the 7-day trial period; no live data has moved yet." };
+  return { message: "Connection validated and encrypted. Transfer can begin after the 14-day trial period; no live data has moved yet." };
 }
 
 export async function queueCustomerMigration(companyKey) {
   const registry = await TenantRegistry.findOne({ companyKey }).lean();
-  if (!registry || !databaseSetupEligible(registry)) throw new ApiError(409, "Customer database transfer is available after the 7-day trial period");
+  if (!registry || !databaseSetupEligible(registry)) throw new ApiError(409, "Customer database transfer is available after the 14-day trial period");
   // Publish the job and its maintenance lock atomically. A polling worker must
   // never see MIGRATING before the registry has blocked operational admission.
   const session = await mongoose.startSession();

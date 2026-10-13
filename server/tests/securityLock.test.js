@@ -58,6 +58,6 @@ test("public trial remains pending until the SaaS Owner decides", async () => {
 
   assert.match(controller, /status:\s*"TRIAL_PENDING"/);
   assert.match(controller, /pendingPasswordHash:\s*await bcrypt\.hash/);
-  assert.match(controller, /7-day trial approved\. Verify activation email before login/);
+  assert.match(controller, /14-day trial approved\. Verify activation email before login/);
   assert.match(model, /pendingPasswordHash:.*select:\s*false/);
 });

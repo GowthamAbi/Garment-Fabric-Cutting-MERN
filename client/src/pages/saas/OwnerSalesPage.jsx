@@ -6,26 +6,30 @@ import PageTitle from "../../components/common/PageTitle.jsx";
 export default function OwnerSalesPage({ notify }) {
   const [overview, setOverview] = useState(null),
     [sub, setSub] = useState({ payments: [] });
+  const [error, setError] = useState("");
+  const [approving, setApproving] = useState("");
   const load = () =>
     Promise.all([api("/saas/owner-overview"), api("/saas/subscription")])
       .then(([a, b]) => {
         setOverview(a);
         setSub(b);
       })
-      .catch((e) => notify?.(e.message));
+      .catch((e) => {setError(e.message);notify?.(e.message);});
   useEffect(() => {
     load();
   }, []);
   async function approve(id) {
+    if (approving) return;
+    setApproving(id);
     try {
       await api(`/saas/subscription/${id}/approve`, { method: "PATCH" });
       await load();
       notify?.("Manual payment approved and subscription activated");
     } catch (e) {
       notify?.(e.message);
-    }
+    } finally {setApproving("");}
   }
-  if (!overview) return <p>Loading sales...</p>;
+  if (!overview) return error ? <p role="alert">{error} <button onClick={() => {setError("");load();}}>Retry</button></p> : <p role="status">Loading sales...</p>;
   const m = overview.metrics;
   const max = Math.max(1, ...overview.planSales.map((x) => x.revenue));
   const companyName = (company) =>
@@ -51,7 +55,7 @@ export default function OwnerSalesPage({ notify }) {
         />
         <Metric
           icon={<Building2 />}
-          label="Active Companies"
+          label="Active Workspaces"
           value={m.activeCompanies}
         />
         <Metric
@@ -113,6 +117,7 @@ export default function OwnerSalesPage({ notify }) {
               </tr>
             </thead>
             <tbody>
+              {!sub.payments?.length && <tr><td colSpan={8}>No payment transactions found.</td></tr>}
               {(sub.payments || []).map((x) => (
                 <tr key={x._id}>
                   <td>{x.referenceNo}</td>
@@ -120,6 +125,8 @@ export default function OwnerSalesPage({ notify }) {
                   <td>{x.plan}</td>
                   <td>{x.paymentMethod}</td>
                   <td>
+                    Base ₹{Math.max(0, Number(x.amount || 0) - Number(x.taxAmount || 0) - Number(x.setupFee || 0)).toLocaleString("en-IN")}
+                    <br />
                     Tax ₹{x.taxAmount || 0}
                     <br />
                     Setup ₹{x.setupFee || 0}
@@ -130,9 +137,10 @@ export default function OwnerSalesPage({ notify }) {
                     {x.status === "PENDING_APPROVAL" ? (
                       <button
                         className="primary"
+                        disabled={Boolean(approving)}
                         onClick={() => approve(x._id)}
                       >
-                        Approve
+                        {approving === x._id ? "Approving…" : "Approve"}
                       </button>
                     ) : (
                       "—"

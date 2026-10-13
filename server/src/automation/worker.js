@@ -75,7 +75,7 @@ export async function scheduleRenewals() {
   for (const tenant of tenants) await runWithTenant({ companyKey: tenant.companyKey, databaseName: tenant.databaseName }, async () => {
     const company = await Company.findOne(); if (!company?.subscriptionEndsAt) return;
     const days = reminderBucket(company.subscriptionEndsAt);
-    const admin = await User.findOne({ role: "company_admin", active: true }).lean();
+    const admin = await User.findOne({ role: {$in:["company_owner","company_admin"]}, active: true, emailVerified:true }).lean();
     if (!tenant.renewalCancelledAt && admin?.email && days!==null) {
       const dedupeKey = `renewal-${tenant.companyKey}-${company.subscriptionEndsAt.getTime()}-${days}`;
       await EmailOutbox.updateOne({ dedupeKey }, { $setOnInsert: { dedupeKey, companyKey: tenant.companyKey,

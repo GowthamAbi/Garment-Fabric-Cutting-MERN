@@ -1,4 +1,5 @@
 import { Router } from "express";
+import {startCompanyTrial} from "../controllers/trialController.js";
 import { getOperationsStatus } from '../controllers/operationsStatusController.js';
 import {
   addLeadActivity,
@@ -28,6 +29,7 @@ import { getCustomerDatabaseStatus, saveCustomerDatabaseConnection, startCustome
 import { enterOperationalDatabase } from "../middleware/customerDatabaseMiddleware.js";
 
 const router = Router();
+router.post("/subscription/trial",allowRoles("company_owner","company_admin"),asyncHandler(startCompanyTrial));
 router.get("/owner-companies/:id/billing",allowRoles("saas_super_admin"),asyncHandler(getOwnerCompanyBilling));
 router.post("/subscription/quote",allowRoles("company_admin","admin"),asyncHandler(getSubscriptionQuote));
 router.get('/operations-status', allowRoles('saas_super_admin'), asyncHandler(getOperationsStatus));
