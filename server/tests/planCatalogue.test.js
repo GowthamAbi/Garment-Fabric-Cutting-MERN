@@ -1,0 +1,7 @@
+import '../src/config/mongoosePlugins.js';
+import test from 'node:test';import assert from 'node:assert/strict';
+import SaasPlan from '../src/models/SaasPlan.js';
+import {ensurePlanCatalogue} from '../src/services/planCatalogueService.js';
+test('platform plans are not company/factory scoped',()=>{assert.equal(SaasPlan.schema.options.platformRegistry,true);assert.equal(SaasPlan.schema.path('companyId'),undefined);});
+test('catalogue seed is repeatable and preserves custom prices',async()=>{const rows=new Map([['A',{code:'A',price:999}]]);const model={updateOne:async(query,update,options)=>{assert.deepEqual(options,{upsert:true});if(!rows.has(query.code))rows.set(query.code,update.$setOnInsert);}};await Promise.all([ensurePlanCatalogue(model,[{code:'A',price:0},{code:'B',price:0}]),ensurePlanCatalogue(model,[{code:'A',price:0},{code:'B',price:0}])]);assert.equal(rows.size,2);assert.equal(rows.get('A').price,999);});
+test('only confirmed concurrent duplicate seed errors are tolerated',async()=>{const error=Object.assign(Error('duplicate'),{code:11000});await ensurePlanCatalogue({updateOne:async()=>{throw error;},exists:async()=>true},[{code:'A'}]);await assert.rejects(()=>ensurePlanCatalogue({updateOne:async()=>{throw error;},exists:async()=>false},[{code:'A'}]));});

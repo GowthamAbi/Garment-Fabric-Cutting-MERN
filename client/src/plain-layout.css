@@ -1,0 +1,31 @@
+/* Shared operational layout. Screen only: approved print documents retain their styles. */
+@media screen {
+ :root{--rich-shadow:none;--rich-paper:#fff;--rich-line:#d7dfe4;--rich-gold:#64748b}
+ body{background:#f4f6f8;background-image:none}
+ .app-shell>aside,.owner-shell>aside{background:#172c3b;background-image:none;box-shadow:none;border-right:1px solid #314655}
+ .brand,.owner-brand,.brand-icon,.owner-brand>span{background:none;box-shadow:none}
+ .brand-icon,.owner-brand>span{color:#e7eff4}
+ .topbar,.owner-topbar{background:#fff;background-image:none;box-shadow:none;border-bottom:1px solid #d7dfe4;min-height:76px}
+ .page{max-width:1800px;margin:0 auto;width:100%;box-sizing:border-box}
+ .page :is(.card,.panel,.classic-card,.erp-card,.company-card,section[class$="-card"],article[class$="-card"]){border-radius:4px;background:#fff;background-image:none;box-shadow:none;border:1px solid #d7dfe4;padding:20px}
+ .page :is(h1,h2,h3){letter-spacing:normal}.page h3{margin-top:0}
+ .page :is(input:not([type=checkbox]):not([type=radio]),select,textarea){box-sizing:border-box;border:1px solid #9caebb;border-radius:4px;padding:9px 11px;background:#fff;color:#172c3b;min-height:42px;font:inherit;max-width:100%}
+ .page :is(button,.company-button){border-radius:4px;box-shadow:none;background-image:none;min-height:40px;font:inherit;cursor:pointer}
+ .page :is(.company-count-pill,.company-status-pill,.badge){border-radius:3px;box-shadow:none;background-image:none}
+ .page :is(table){border-collapse:collapse;width:100%;text-align:left}.page :is(th,td){padding:10px 12px;vertical-align:top;border-bottom:1px solid #d7dfe4}.page th{background:#edf2f5;font-weight:600;white-space:nowrap}.page .table-wrap{overflow-x:auto}
+ .page :is(.saas-form-grid,.company-form-grid){gap:16px}.page label span{display:block;margin-bottom:6px}
+ .page :is(.company-create-icon,.company-hero-icon,.owner-hero-icon){display:none}
+ .page :is(.company-created-message,.company-selected-departments){border-radius:4px;box-shadow:none;background-image:none}
+ html[data-theme=dark] body{background:#0b1c24}
+ html[data-theme=dark] :is(.topbar,.owner-topbar){background:#122a32;border-color:#41616a}
+ html[data-theme=dark] .page :is(.card,.panel,.classic-card,.erp-card,.company-card,section[class$="-card"],article[class$="-card"]){background:#122a32;color:#e4f0ed;border-color:#41616a}
+ html[data-theme=dark] .page :is(input:not([type=checkbox]):not([type=radio]),select,textarea){background:#18353e;color:#e4f0ed;border-color:#66828a}
+ html[data-theme=dark] .page th{background:#1b3c45;color:#e4f0ed}html[data-theme=dark] .page :is(th,td){border-color:#41616a}
+}
+@media screen and (max-width:760px){
+ .page{padding:12px!important}.page :is(.card,.panel,.classic-card,.erp-card,.company-card){padding:14px}
+ .page :is(.saas-form-grid,.company-form-grid){grid-template-columns:1fr!important}
+ .page :is(.company-table-heading,.table-toolbar,.company-row-actions){display:flex;flex-wrap:wrap;gap:10px}
+ .page :is(input,select,textarea){font-size:16px!important}.page button{min-height:44px}
+ .topbar,.owner-topbar{min-width:0}.topbar>div,.owner-topbar>div{min-width:0}
+}

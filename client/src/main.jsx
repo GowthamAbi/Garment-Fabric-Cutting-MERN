@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import "./styles.css";
 import "./rich-theme.css";
 import './accessibility-theme.css';
+import './plain-layout.css';
 import { installGlobalFetchLoader } from "./services/loadingService.js";
 
 installGlobalFetchLoader();

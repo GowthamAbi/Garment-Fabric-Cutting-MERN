@@ -27,7 +27,7 @@ const schema = new mongoose.Schema(
     featured: { type: Boolean, default: false },
     sortOrder: { type: Number, default: 0 },
   },
-  { timestamps: true },
+  { timestamps: true, platformRegistry: true },
 );
 
 const connection = controlDatabase();

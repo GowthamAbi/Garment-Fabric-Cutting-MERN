@@ -1,3 +1,4 @@
+import {ensurePlanCatalogue} from "../services/planCatalogueService.js";
 import {enabledDepartment} from "../erp/departmentPolicy.js";
 import {subscriptionQuote,assertQuoteFitsUsers,PRICING_MODELS} from "../utils/subscriptionQuote.js";
 import {DEPARTMENTS,planModules,departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
@@ -50,8 +51,7 @@ const defaultPlans = [
 );
 
 async function ensurePlans() {
-  if (await SaasPlan.countDocuments()) return;
-  await SaasPlan.insertMany(defaultPlans);
+  await ensurePlanCatalogue(SaasPlan,defaultPlans);
 }
 
 export async function getSubscription(request, response) {

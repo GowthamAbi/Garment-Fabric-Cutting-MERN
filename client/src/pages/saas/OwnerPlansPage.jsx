@@ -25,10 +25,10 @@ export default function OwnerPlansPage({ notify }) {
   const [plans, setPlans] = useState([]),
     [editing, setEditing] = useState(null),
     [form, setForm] = useState(blank);
-  const load = () =>
-    api("/saas/plans")
+  const [loading,setLoading]=useState(true),[loadError,setLoadError]=useState("");
+  const load = () => {setLoading(true);setLoadError("");return api("/saas/plans")
       .then(setPlans)
-      .catch((e) => notify?.(e.message));
+      .catch((e) => {setLoadError(e.message);notify?.(e.message);}).finally(()=>setLoading(false));};
   useEffect(() => {
     load();
   }, []);
@@ -55,9 +55,11 @@ export default function OwnerPlansPage({ notify }) {
   }
   return (
     <section className="classic-page">
+      {loading&&<p role="status">Loading plans…</p>}
+      {loadError&&<p role="alert">{loadError} <button onClick={load}>Retry</button></p>}
       <PageTitle
         title="Plans & Pricing"
-        subtitle="Set price, validity, user limits and modules. GST 0 creates a no-tax plan. All departments use the shared 14-department catalogue."
+        subtitle="Set price, validity, user limits and modules. GST 0 creates a no-tax plan. Capacity limits and licensed coverage are separate. Select the specific departments below; existing plans are not automatically expanded."
       />
       <form className="classic-card saas-plan-form" onSubmit={save}>
         <div className="table-toolbar">

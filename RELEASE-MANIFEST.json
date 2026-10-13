@@ -1,7 +1,7 @@
 {
-  "release": "ERP source with provider evidence acceptance checks",
+  "release": "Flat layout and subscription catalogue source fixes",
   "validation": {
-    "serverPassed": 151,
+    "serverPassed": 154,
     "serverFailed": 0,
     "serverSkipped": 7,
     "frontendBuild": "PASSED",
@@ -57,6 +57,10 @@
     {
       "path": "IMPLEMENTATION-SUMMARY.md",
       "sha256": "a2b283c7ae7cd5e8871264f9f45cbc7136a7f30b9c31ef2083bfc5f427e871df"
+    },
+    {
+      "path": "LAYOUT-SUBSCRIPTION-FIX-RELEASE.md",
+      "sha256": "546dc70c60c580b9aceec681905ac7a78fff63f85ca96c9e6af6f6333c330117"
     },
     {
       "path": "LIVE-ACCEPTANCE-SETUP.md",
@@ -464,11 +468,11 @@
     },
     {
       "path": "client/src/main.jsx",
-      "sha256": "2a966fd30c70623528a2ca6ccd1ab9c8cb0ed6bec24a3c84a10283e757bd0440"
+      "sha256": "6fb5149a739e4b38c6271da160189702904e60fae8dbd795a41ed0c2838d018b"
     },
     {
       "path": "client/src/pages/auth/CompanyManagementPage.jsx",
-      "sha256": "8879741f2727b41a512b92955c0e4e744a97c8e2d4bbe8f7dc9747d259525b1e"
+      "sha256": "ce9cd8e1b4399d039603c765b2c7b05e77998b201a594089634b3110110dac21"
     },
     {
       "path": "client/src/pages/auth/FactoryManagement.jsx",
@@ -792,7 +796,7 @@
     },
     {
       "path": "client/src/pages/saas/OwnerPlansPage.jsx",
-      "sha256": "c9dbfbf128aaa446af3945c8906d8e20b00aaecc9bd883a37a6c74c39c8e06bf"
+      "sha256": "1f53c85c715c968d4c0fbbc86dcd762f0a88bca10bf43fcb7376da0f64bfa0eb"
     },
     {
       "path": "client/src/pages/saas/OwnerSalesPage.jsx",
@@ -829,6 +833,10 @@
     {
       "path": "client/src/pages/stock/StockPage.jsx",
       "sha256": "6b4b78058a9a19abae19a4213f328f18e8db2662f281426b088d4a2aff57349a"
+    },
+    {
+      "path": "client/src/plain-layout.css",
+      "sha256": "319b0656576012f8c205e41a7a246323bcbb8430e791184efeaba73f0830f99f"
     },
     {
       "path": "client/src/rich-theme.css",
@@ -1160,7 +1168,7 @@
     },
     {
       "path": "server/src/controllers/saasController.js",
-      "sha256": "a31713c73f80d92085a4a2102d8bc0525afddc4b75b00bfb625d01aefc6662d0"
+      "sha256": "316ddd1638a3880fbcb77bd1445e6bea6d13e47c26469c6a5003265fdf2a09cb"
     },
     {
       "path": "server/src/controllers/sectionController.js",
@@ -1512,7 +1520,7 @@
     },
     {
       "path": "server/src/models/SaasPlan.js",
-      "sha256": "6f7834dc914bea9d1854f4528672eb8ca87e9ad43b3d4f993445334f86f243e4"
+      "sha256": "623cee9d4339d1d40017b63be9b04a000d66791825d740113a324cb143efaf0d"
     },
     {
       "path": "server/src/models/SalesLead.js",
@@ -1753,6 +1761,10 @@
     {
       "path": "server/src/services/outwardService.js",
       "sha256": "5c3fc3548d7cf0dcf9bbd620fa53727f1e5fa11663eaf1112a89541d2350654c"
+    },
+    {
+      "path": "server/src/services/planCatalogueService.js",
+      "sha256": "7b789e96c60ccc10d7569cd08e919feb18c0bb7c6a06541814839558cf24b2c6"
     },
     {
       "path": "server/src/services/publicOutwardService.js",
@@ -2025,6 +2037,10 @@
     {
       "path": "server/tests/plan3.test.js",
       "sha256": "908b66241d3a25acdff3692eaa6d58fec3e9c6c139dab4084a4da6ff3ce1e442"
+    },
+    {
+      "path": "server/tests/planCatalogue.test.js",
+      "sha256": "41fa392434c0bc1a45cf6cfc2a1e5ae93bf19b4b7632004645c47ffcdaab166c"
     },
     {
       "path": "server/tests/production.test.js",

@@ -23,18 +23,20 @@ export default function CompanyManagementPage({ notify }) {
   const { user } = useAuth();
   const [form, setForm] = useState({...blank,enabledDepartments:[]});
   const [rows, setRows] = useState([]);
+  const [loading,setLoading]=useState(true),[loadError,setLoadError]=useState("");
   const [plans,setPlans]=useState([]);
   const chosenPlan=plans.find(p=>p.name===form.subscriptionPlan);
   const planDepartments=(chosenPlan?.modules||[]).map(departmentCode).filter(d=>DEPARTMENTS.includes(d));
   const [created, setCreated] = useState(null);
   const [selected,setSelected]=useState(null);
   async function load() {
+    setLoading(true);setLoadError("");
     try {
       setRows(await api("/companies"));if(user?.role==="saas_super_admin")setPlans(await api("/saas/plans"));
     } catch (error) {
       notify?.(error.message);
-      setRows([]);
-    }
+      setLoadError(error.message);
+    } finally {setLoading(false);}
   }
   useEffect(() => {
     load();
@@ -213,12 +215,15 @@ export default function CompanyManagementPage({ notify }) {
 
       <Card title="Companies">
         <div className="company-table-heading">
-          <p>Review each workspace and manage access or subscription status.</p>
-          <span className="company-count-pill">{rows.length} {rows.length === 1 ? "company" : "companies"}</span>
+          <p>Workspace ACTIVE means the workspace is provisioned, not that payment is captured. Review subscription access in the company workspace.</p>
+          <span className="company-count-pill">{loading?"Loading companies…":loadError?"Unable to load":`${rows.length} ${rows.length===1?"company":"companies"}`}</span>
         </div>
+        {loadError&&<div role="alert">{loadError} <button onClick={load}>Retry</button></div>}
         <div className="company-table-container">
           <DataTable
-            rows={rows}
+            loading={loading}
+            rows={loadError?[]:rows}
+            empty={loadError?"Could not load companies. Retry above.":"No companies found"}
             columns={[
               { key: "companyName", label: "Company", render: (row) => <button type="button" className="company-name-link" onClick={() => setSelected(row)}>{row.companyName}</button> },
               { key: "adminUserId", label: "Admin User ID" },
@@ -227,7 +232,7 @@ export default function CompanyManagementPage({ notify }) {
               { key: "subscriptionPlan", label: "Plan" },
               { key: "companyKey", label: "Company ID" },
               { key: "loginPath", label: "Unique login URL" },
-              { key: "status", label: "Subscription", render: (row) => <span className={`company-status-pill ${String(row.status || "").toUpperCase() === "ACTIVE" ? "is-success" : "is-muted"}`}>{row.status || "Unknown"}</span> },
+              { key: "status", label: "Workspace status", render: (row) => <span className={`company-status-pill ${String(row.status || "").toUpperCase() === "ACTIVE" ? "is-success" : "is-muted"}`}>{row.status || "Unknown"}</span> },
               { key: "dataOwner", label: "Data owner" },
               {
                 key: "actions",
