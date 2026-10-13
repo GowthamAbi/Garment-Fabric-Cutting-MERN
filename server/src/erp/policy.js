@@ -19,6 +19,7 @@ export function scaled(value, scale, label, positive = false) {
     fail(`${label} must be non-negative with no more than ${Math.log10(scale)} decimals`);
   return result;
 }
+export const minimumQuantity = v => scaled(v === "" || v == null ? 0 : v, 1000, "Minimum quantity") / 1000;
 export const quantity = (v) => scaled(v, 1000, "Quantity", true);
 export const money = (v) => scaled(v, 100, "Amount");
 export function safeInteger(n) { if (!Number.isSafeInteger(n) || n < 0) fail("Numeric overflow or negative balance"); return n; }

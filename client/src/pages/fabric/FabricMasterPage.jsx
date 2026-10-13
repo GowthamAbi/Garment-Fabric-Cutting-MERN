@@ -12,10 +12,10 @@ const blankProcess = { processType: "COMPACTING", code: "", name: "" };
 
 export default function FabricMasterPage({ notify }) {
   const { user } = useAuth();
-  const canManage = ["saas_super_admin", "company_admin", "admin"].includes(
+  const canManage = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
     user?.role,
   );
-  const canDelete = ["saas_super_admin", "company_admin", "admin"].includes(
+  const canDelete = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
     user?.role,
   );
   const [rows, setRows] = useState([]);

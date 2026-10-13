@@ -142,7 +142,7 @@ router.post('/external-outward',asyncHandler(async(req,res)=>{
   return {bundleId:b?String(b._id):undefined,quantity:count,documentId,details:{reference:clean(req.body.reference).toUpperCase(),counterparty:clean(req.body.counterparty),sku,value}};
  }));
 }));
-router.get('/catalog' ,asyncHandler(async(req,res)=>res.json({departments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,false)&&enabledDepartment(req.departmentCompany,d)),writeDepartments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,true)&&enabledDepartment(req.departmentCompany,d))})));
+router.get('/catalog' ,asyncHandler(async(req,res)=>res.json({erpActive:Boolean(await ErpSettings.exists({...workspaceFilter(),key:'ERP',enabled:true})),departments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,false)&&enabledDepartment(req.departmentCompany,d)),writeDepartments:DEPARTMENTS.filter(d=>allowedDepartment(req.user,d,true)&&enabledDepartment(req.departmentCompany,d))})));
 router.post('/labour-cost',asyncHandler(async(req,res)=>{
  requireAccess(req,'STITCHING');if(!['company_owner','admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator cost approval required');
  res.json(await transaction(req,'LABOUR_COST',async(scope,session)=>{

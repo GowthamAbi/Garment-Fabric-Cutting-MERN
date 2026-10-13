@@ -13,7 +13,7 @@ export default function CuttingActualMatrix({
   const { user } = useAuth();
   const locked =
     Boolean(actual._id) &&
-    !["saas_super_admin", "company_admin", "admin"].includes(user?.role);
+    !["saas_super_admin", "company_owner", "company_admin", "admin"].includes(user?.role);
   const sizes = [...new Set(actual.lines.map((line) => line.size))];
   const colours = [...new Set(actual.lines.map((line) => line.colour))];
   const calculatedLines = actual.lines.map((line) => {

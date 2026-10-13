@@ -6,7 +6,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import { ErpParty, ErpSku, ErpBom, ErpDocument, ErpBalance, ErpEntry, ErpSettings } from "./models.js";
 import { postDocument, workspaceFilter } from "./service.js";
-import { ACCOUNTS, TYPES, LOCATIONS, quantity, money, authorizeErp, fail } from "./policy.js";
+import { ACCOUNTS, TYPES, LOCATIONS, quantity, minimumQuantity, money, authorizeErp, fail } from "./policy.js";
 import { financialReport } from "./reports.js";
 import { currentDatabase } from "../config/tenantDatabase.js";
 import departmentRoutes from "./departmentRoutes.js";
@@ -84,7 +84,7 @@ router.post("/masters/:kind", gate("masters"), asyncHandler(async (req, res) => 
     if (!LOCATIONS.includes(body.location) || !["RAW", "FINISHED", "CONSUMABLE"].includes(body.kind)) fail("Invalid item classification/location");
     if (!String(body.name || "").trim() || !/^[A-Za-z0-9]{1,12}$/.test(body.unit || "")) fail("Item name and unit required");
     data = { code: code(body.code), name: String(body.name).slice(0, 120), unit: body.unit.toUpperCase(), kind: body.kind,
-      location: body.location, batch: String(body.batch || "").slice(0, 60), colour: String(body.colour || "").slice(0, 60), size: String(body.size || "").slice(0, 30), minimumQty: quantity(body.minimumQty || 0.001) / 1000 };
+      location: body.location, batch: String(body.batch || "").slice(0, 60), colour: String(body.colour || "").slice(0, 60), size: String(body.size || "").slice(0, 30), minimumQty: minimumQuantity(body.minimumQty) };
   } else if (req.params.kind === "parties") {
     const terms=Number(body.paymentTermDays??30);
     if(!Number.isInteger(terms)||terms<0||terms>365) fail("Payment terms must be 0–365 whole days");

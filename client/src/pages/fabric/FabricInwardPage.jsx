@@ -42,7 +42,7 @@ const blank = () => ({
 
 export default function FabricInwardPage({ notify }) {
   const { user } = useAuth();
-  const canEnter =
+  const canEnter = user?.role === "company_owner" || (
     [
       "saas_super_admin",
       "admin",
@@ -50,7 +50,7 @@ export default function FabricInwardPage({ notify }) {
       "fabric_entry",
       "department_entry",
     ].includes(user?.role) &&
-    (!user?.department || user.department === "FABRIC");
+    (!user?.department || user.department === "FABRIC"));
   const [form, setForm] = useState(blank());
   const [rows, setRows] = useState([]);
   const [bundles, setBundles] = useState([]);

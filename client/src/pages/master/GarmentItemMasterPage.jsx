@@ -40,7 +40,7 @@ const blank = () => ({
 
 export default function GarmentItemMasterPage({ notify }) {
   const { user } = useAuth();
-  const admin = ["saas_super_admin", "company_admin", "admin"].includes(
+  const admin = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
     user?.role,
   );
   const canEdit = admin;
