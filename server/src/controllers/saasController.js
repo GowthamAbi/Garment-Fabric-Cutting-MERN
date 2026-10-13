@@ -36,6 +36,7 @@ const defaultPlans = [
   ["BUSINESS", "Business", 0, 30, 50, 10],
   ["ENTERPRISE", "Enterprise", 0, 365, 500, 20],
   ["SETUP", "Setup & Training", 0, 30, 5, 3],
+  ["OWN_PLAN", "Own Plan", 0, 30, 500, 14],
 ].map(
   ([code, name, price, validityDays, maxUsers, maxDepartments], sortOrder) => ({
     code,
@@ -46,7 +47,8 @@ const defaultPlans = [
     maxDepartments:Math.min(14,maxDepartments),
     sortOrder,
     description: `${name} garment production package`,
-    modules: [...DEPARTMENTS],
+    modules: [...DEPARTMENTS,"ERP_CORE"],
+    ...(code==="OWN_PLAN"&&{pricingModel:"PER_DEPARTMENT",perDepartmentPrice:0,description:"Choose any departments. Owner must configure a positive per-department price before checkout."}),
   }),
 );
 

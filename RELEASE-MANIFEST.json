@@ -1,7 +1,7 @@
 {
-  "release": "Flat layout and subscription catalogue source fixes",
+  "release": "Any department Own Plan and Sun Moon layout",
   "validation": {
-    "serverPassed": 154,
+    "serverPassed": 155,
     "serverFailed": 0,
     "serverSkipped": 7,
     "frontendBuild": "PASSED",
@@ -77,6 +77,10 @@
     {
       "path": "MILESTONE-4.md",
       "sha256": "a8b17438ae206e1a1bb09cc7b65b0a10581f4e5ec734db57b27ea7574a2157f9"
+    },
+    {
+      "path": "OWN-PLAN-RELEASE.md",
+      "sha256": "2a3413824790bcde05b49b901ba3d7b43d16f627bcc76662d004d39fc2197468"
     },
     {
       "path": "OWNER-PART-1-RELEASE.md",
@@ -348,7 +352,7 @@
     },
     {
       "path": "client/src/components/common/DisplayTools.jsx",
-      "sha256": "8fe766ffac557eef6bd42502c48ce1c06dcf9ef286876c482766ddb18a7c0ff4"
+      "sha256": "73454f343328c774b561e1ceff0526ab94c6e5d9d2f4b0a21fe69a57ea2f00a3"
     },
     {
       "path": "client/src/components/common/EmptyState.jsx",
@@ -380,7 +384,7 @@
     },
     {
       "path": "client/src/components/common/OptionGuide.jsx",
-      "sha256": "962488c742d49ef96c573c0c60d11614bcdc39b3098dd97d5b5e94007da429f5"
+      "sha256": "ff11d93d76532b9ddb3b5810bdcb968b79875114da349ac93c81745823d70b91"
     },
     {
       "path": "client/src/components/common/PageTitle.jsx",
@@ -468,11 +472,11 @@
     },
     {
       "path": "client/src/main.jsx",
-      "sha256": "6fb5149a739e4b38c6271da160189702904e60fae8dbd795a41ed0c2838d018b"
+      "sha256": "e8a5aa35c264a59f9d92bfcf775ec0cf66931f71f97a752a839942368e1e3b46"
     },
     {
       "path": "client/src/pages/auth/CompanyManagementPage.jsx",
-      "sha256": "ce9cd8e1b4399d039603c765b2c7b05e77998b201a594089634b3110110dac21"
+      "sha256": "62f4239b110dfc9ef993d0a669548f340b6bbc54ae64a12a28c3eb277a54903a"
     },
     {
       "path": "client/src/pages/auth/FactoryManagement.jsx",
@@ -796,7 +800,7 @@
     },
     {
       "path": "client/src/pages/saas/OwnerPlansPage.jsx",
-      "sha256": "1f53c85c715c968d4c0fbbc86dcd762f0a88bca10bf43fcb7376da0f64bfa0eb"
+      "sha256": "4c3cb92ef276f66cc10153ee7b6d2c0effec9c1d3c2c545cf55e27648381b652"
     },
     {
       "path": "client/src/pages/saas/OwnerSalesPage.jsx",
@@ -816,7 +820,7 @@
     },
     {
       "path": "client/src/pages/saas/SubscriptionCenterPage.jsx",
-      "sha256": "5cdd6ca8dce7b3fd0d3b23b73f656c662fb01e3be9d6fc9db2788f48c2a0956b"
+      "sha256": "3e8fabd6b9b182237407011c65f520d695c371eb60fb243bde64a216749896c3"
     },
     {
       "path": "client/src/pages/saas/SuperAdminDashboardPage.jsx",
@@ -836,7 +840,7 @@
     },
     {
       "path": "client/src/plain-layout.css",
-      "sha256": "319b0656576012f8c205e41a7a246323bcbb8430e791184efeaba73f0830f99f"
+      "sha256": "f8420f8e42dbe2c0dc97b09ab08f6a97bc1ddbb2840758acd4a1c181548aff52"
     },
     {
       "path": "client/src/rich-theme.css",
@@ -956,7 +960,7 @@
     },
     {
       "path": "scripts/layout-smoke.mjs",
-      "sha256": "f6f8fbe52bdc1b03c94e0098fbd042374680045eab2d0e895743439151c796bd"
+      "sha256": "cd37daf7bfc33ad47ef4a5f314f947c9aa4729db17ac68db86dbd069df13b093"
     },
     {
       "path": "scripts/package-release.py",
@@ -1168,7 +1172,7 @@
     },
     {
       "path": "server/src/controllers/saasController.js",
-      "sha256": "316ddd1638a3880fbcb77bd1445e6bea6d13e47c26469c6a5003265fdf2a09cb"
+      "sha256": "faf9e7e09278c5a81671bc55d27bacc2b05dae50b5324c9468909fb10a6280ef"
     },
     {
       "path": "server/src/controllers/sectionController.js",
@@ -2040,7 +2044,7 @@
     },
     {
       "path": "server/tests/planCatalogue.test.js",
-      "sha256": "41fa392434c0bc1a45cf6cfc2a1e5ae93bf19b4b7632004645c47ffcdaab166c"
+      "sha256": "720cdbd0271af641ec6073286f721152568123690811bd5e4794930150760b19"
     },
     {
       "path": "server/tests/production.test.js",

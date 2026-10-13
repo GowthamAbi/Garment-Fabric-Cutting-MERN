@@ -13,7 +13,7 @@ try{
  for(const name of ['MainLayout','SuperAdminLayout']){
   const {default:Layout}=await server.ssrLoadModule('/src/components/layout/'+name+'.jsx');
   const html=renderToString(React.createElement(AuthProvider,null,React.createElement(LanguageProvider,null,React.createElement(Layout,{page:'Company Dashboard',onPageChange:()=>{}},'Acceptance render'))));
-  for(const label of ['Light theme','Dark theme','System theme','Profile and help'])if(!html.includes(label))throw new Error(name+': missing '+label);
+  for(const label of ['Light theme','Dark theme','Profile and help'])if(!html.includes(label))throw new Error(name+': missing '+label);
   console.log(name+': render passed');
  }
 }finally{await server.close();}

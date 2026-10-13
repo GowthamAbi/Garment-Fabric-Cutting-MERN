@@ -64,6 +64,7 @@ export default function OwnerPlansPage({ notify }) {
       <form className="classic-card saas-plan-form" onSubmit={save}>
         <div className="table-toolbar">
           <h3>{editing ? "Edit Plan" : "Create Plan"}</h3>
+          <button type="button" onClick={()=>{const existing=plans.find(p=>p.code==="OWN_PLAN");setEditing(existing?._id||null);setForm({...blank,...existing,code:"OWN_PLAN",name:"Own Plan",pricingModel:"PER_DEPARTMENT",maxDepartments:14,modules:[...DEPARTMENTS,"ERP_CORE"]});}}>Configure Own Plan</button>
           {editing && (
             <button
               type="button"
@@ -113,7 +114,7 @@ export default function OwnerPlansPage({ notify }) {
               onChange={(e) => field("description", e.target.value)}
             />
           </label>
-          <fieldset className="wide"><legend>Licensed departments and ERP features</legend>{[...DEPARTMENT_CATALOGUE,...ERP_MODULES.map(code=>({code,label:code}))].map(({code,label})=><label className="check" key={code}><input type="checkbox" checked={(form.modules||[]).includes(code)} onChange={e=>field('modules',e.target.checked?[...form.modules,code]:form.modules.filter(m=>m!==code))}/>{label}</label>)}</fieldset>
+          <fieldset className="wide"><legend>Licensed departments and ERP features</legend>{[...DEPARTMENT_CATALOGUE,...ERP_MODULES.map(code=>({code,label:code}))].map(({code,label})=><label className="check" key={code}><input type="checkbox" checked={(form.modules||[]).includes(code)} onChange={e=>{const modules=e.target.checked?[...form.modules,code]:form.modules.filter(m=>m!==code);setForm({...form,modules,maxDepartments:Math.max(1,modules.filter(m=>DEPARTMENTS.includes(m)).length)});}}/>{label}</label>)}</fieldset>
           <label className="check">
             <input
               type="checkbox"

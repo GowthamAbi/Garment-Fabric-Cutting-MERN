@@ -8,7 +8,7 @@ import './plain-layout.css';
 import { installGlobalFetchLoader } from "./services/loadingService.js";
 
 installGlobalFetchLoader();
-try{const theme=localStorage.getItem('ug-display-theme')||'system';document.documentElement.dataset.theme=theme==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):theme;}catch{}
+try{const theme=localStorage.getItem('ug-display-theme');document.documentElement.dataset.theme=theme==='dark'?'dark':'light';}catch{}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

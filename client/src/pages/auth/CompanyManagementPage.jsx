@@ -155,20 +155,15 @@ export default function CompanyManagementPage({ notify }) {
 
             <fieldset className="company-departments-fieldset">
               <legend>Enabled departments</legend>
-              <p className="company-field-hint">Choose the departments this workspace can access. Unlicensed choices and additions beyond the selected plan limit are disabled.</p>
+              <p className="company-field-hint">Choose any of the 14 departments. If your selection exceeds the preset package, Own Plan is selected automatically. Paid access still requires an approved payment.</p>
               <div className="company-department-options">
                 {departmentChoices.map((department) => (
                   <label className={`company-department-option ${form.enabledDepartments.includes(department) ? "is-selected" : ""}`} key={department}>
                     <input
                       type="checkbox"
                       checked={form.enabledDepartments.includes(department)}
-                      disabled={Boolean(chosenPlan&&(!planDepartments.includes(department)||(!form.enabledDepartments.includes(department)&&form.enabledDepartments.length>=chosenPlan.maxDepartments)))}
-                      onChange={(e) => setForm({
-                        ...form,
-                        enabledDepartments: e.target.checked
-                          ? [...form.enabledDepartments, department]
-                          : form.enabledDepartments.filter((value) => value !== department),
-                      })}
+                      disabled={loading||!plans.length}
+                      onChange={(e) => {const selected=e.target.checked?[...form.enabledDepartments,department]:form.enabledDepartments.filter(d=>d!==department);const fits=chosenPlan&&selected.length<=chosenPlan.maxDepartments&&selected.every(d=>planDepartments.includes(d));const own=plans.find(p=>p.code==='OWN_PLAN'&&p.active);if(!fits&&!own){notify?.('Configure an active Own Plan in Plans & Pricing to select these departments.');return;}setForm({...form,enabledDepartments:selected,subscriptionPlan:fits?form.subscriptionPlan:own.name});}}
                     />
                     <span>{department}</span>
                   </label>

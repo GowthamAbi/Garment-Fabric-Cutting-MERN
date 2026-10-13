@@ -215,11 +215,12 @@ export default function SubscriptionCenterPage({ mode }) {
               >
                 {(data.plans || []).filter(p=>p.code!=="TRIAL").map((x) => (
                   <option key={x._id} value={x.name}>
-                    {x.name} · ₹{x.price}
+                    {x.name} · {x.pricingModel==="PER_DEPARTMENT"?`₹${x.perDepartmentPrice||0}/department`:x.pricingModel==="PER_USER"?`₹${x.perUserPrice||0}/user`:`₹${x.price}`}
                   </option>
                 ))}
               </select>
             </label>
+            {data.plans.find(p=>p.name===form.plan)?.code==="OWN_PLAN"&&<p>Own Plan: choose your departments below. The owner-configured rates determine the quote; payment confirmation is required for access.</p>}
             <label><span>Purchased user seats (includes company owner)</span><input type="number" min="1" max={data.plans.find(p=>p.name===form.plan)?.maxUsers||1} value={form.seats} onChange={e=>setForm({...form,seats:Number(e.target.value)})}/></label>
             <fieldset><legend>Purchased departments</legend>{licensedDepartments(data.plans.find(p=>p.name===form.plan)?.modules).map(d=><label key={d}><input type="checkbox" checked={form.departments.includes(d)} disabled={!form.departments.includes(d)&&form.departments.length>=(data.plans.find(p=>p.name===form.plan)?.maxDepartments||1)} onChange={e=>setForm({...form,departments:e.target.checked?[...form.departments,d]:form.departments.filter(x=>x!==d)})}/>{d}</label>)}</fieldset>
             {quote&&<p role="status">Subtotal ₹{(quote.subtotalPaise/100).toFixed(2)} · Tax ₹{quote.taxAmount.toFixed(2)} · Total ₹{quote.total.toFixed(2)} · {quote.validityDays} days. Final amount is revalidated on the server when ordering.</p>}

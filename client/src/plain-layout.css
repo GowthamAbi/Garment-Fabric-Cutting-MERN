@@ -29,3 +29,5 @@
  .page :is(input,select,textarea){font-size:16px!important}.page button{min-height:44px}
  .topbar,.owner-topbar{min-width:0}.topbar>div,.owner-topbar>div{min-width:0}
 }
+@media screen{.display-tools{order:3;width:auto;flex-wrap:nowrap;gap:12px;margin-left:auto;align-self:center}.display-tools .theme-buttons{gap:4px;padding-right:12px;border-right:1px solid #9caebb}.display-tools .display-profile>button{white-space:nowrap;min-width:108px}.topbar,.owner-topbar{align-items:center}.company-department-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.page .company-department-option{display:flex;align-items:center;gap:8px}.page .company-department-option span{margin:0}.company-section-mark{display:none}}
+@media screen and (max-width:760px){.display-tools{width:100%;justify-content:flex-end;gap:10px}.topbar h1,.owner-topbar h1{margin:4px 0}.company-department-options{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}}
