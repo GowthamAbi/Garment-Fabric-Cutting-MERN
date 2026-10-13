@@ -1,5 +1,5 @@
 {
-  "release": "Owner Parts 1-9 staging acceptance source",
+  "release": "Owner Parts 1-10 acceptance automation source",
   "validation": {
     "serverPassed": 148,
     "serverFailed": 0,
@@ -13,7 +13,8 @@
     "productionAcceptance": "PENDING_LIVE_GATES",
     "publicApiHealth": "PASSED",
     "publicApiDatabaseReadiness": "PASSED",
-    "ownerQueueMonitoring": "NOT_RUN"
+    "ownerQueueMonitoring": "NOT_RUN",
+    "acceptanceRunner": "Local checks passed; strict missing-database gate returned exit 1 as expected"
   },
   "files": [
     {
@@ -71,6 +72,10 @@
     {
       "path": "OWNER-PART-1-RELEASE.md",
       "sha256": "5f01887428790d4296b27f8ef9f42418aac53770dd3c0de657dd38adec940322"
+    },
+    {
+      "path": "OWNER-PART-10-RELEASE.md",
+      "sha256": "2af5e5617012a9535972da6096211ffe1fbb54e5534c26b580cc212dd1fe0ff3"
     },
     {
       "path": "OWNER-PART-2-RELEASE.md",
@@ -931,6 +936,14 @@
     {
       "path": "package.json",
       "sha256": "36d98fb94a01ae7c0322d327e1584dc940b03300576cbd6934ece27d54bffd98"
+    },
+    {
+      "path": "scripts/acceptance.py",
+      "sha256": "5a1ff30f7d1dce349a5ed4a90495e472fd9550143cb11d3dd8cfcc090b7ce548"
+    },
+    {
+      "path": "scripts/layout-smoke.mjs",
+      "sha256": "f6f8fbe52bdc1b03c94e0098fbd042374680045eab2d0e895743439151c796bd"
     },
     {
       "path": "scripts/package-release.py",
