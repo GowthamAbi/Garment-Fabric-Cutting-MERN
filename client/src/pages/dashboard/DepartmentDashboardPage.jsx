@@ -1,5 +1,6 @@
 import { useAuth } from "../../context/AuthContext.jsx";
 import { Activity, Boxes, CheckSquare, Clock3, FileText } from "lucide-react";
+import {DEPARTMENTS} from "../../../../shared/departmentCatalogue.js";
 
 export default function DepartmentDashboardPage({ onPageChange }) {
   const { user } = useAuth();
@@ -51,6 +52,7 @@ function departmentFromRole(role = "") {
   return role.split("_")[0]?.toUpperCase();
 }
 function entryPage(department) {
+  if(DEPARTMENTS.includes(department))return "Department Workspace:"+department;
   return (
     {
       FABRIC: "Fabric Inward",

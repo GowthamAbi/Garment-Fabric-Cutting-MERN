@@ -1,7 +1,7 @@
 import {DepartmentBundle} from "../erp/departmentModels.js";
 import {ErpBalance,ErpSku} from "../erp/models.js";
 import {DEPARTMENTS} from "../../../shared/departmentCatalogue.js";
-import {enabledDepartment} from "../erp/departmentPolicy.js";
+import {enabledDepartment,allowedDepartment} from "../erp/departmentPolicy.js";
 import {getTenant,runWithTenant} from "../utils/tenantContext.js";
 import {hasPermission,strictAccess} from "../utils/accessPolicy.js";
 import Company from "../models/Company.js";
@@ -99,7 +99,9 @@ export async function getCompanyAdminOverview(request, response) {
     },
     departments: departments.filter(d=>enabledDepartment(company,d)).map((name) => ({
       name,
-      ...(summary[name]||{entries:0,status:"Ready"}),
+      entries:summary[name]?.entries ?? null,
+      status:allowedDepartment(request.user,name,false)?"Configured":"Permission required",
+      canOpen:allowedDepartment(request.user,name,false),
       users: users.filter((user) => user.department === name).length,
       activity: activityFor(name),
     })),

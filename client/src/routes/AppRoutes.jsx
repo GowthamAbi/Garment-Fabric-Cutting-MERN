@@ -54,11 +54,16 @@ import OwnerPlansPage from "../pages/saas/OwnerPlansPage.jsx";
 import OwnerSalesPage from "../pages/saas/OwnerSalesPage.jsx";
 import OwnerSubscriptionsPage from "../pages/saas/OwnerSubscriptionsPage.jsx";
 import OwnerUsersPage from "../pages/saas/OwnerUsersPage.jsx";
+import {DEPARTMENTS} from "../../../shared/departmentCatalogue.js";
 import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
 import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
+  if(page.startsWith("Department Workspace:")){
+    const department=page.slice("Department Workspace:".length);
+    return DEPARTMENTS.includes(department) ? <div className="erp-shell"><Departments key={department} initialDepartment={department} notify={notify}/></div> : <p role="alert">Unknown department.</p>;
+  }
   switch (page) {
     case "Production & Retail": return <div className="erp-shell"><Departments notify={notify}/></div>;
     case "Integrated ERP": return <ErpWorkspace notify={notify} />;

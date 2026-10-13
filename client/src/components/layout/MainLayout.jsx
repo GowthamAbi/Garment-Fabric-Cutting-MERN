@@ -552,7 +552,7 @@ const departmentOrder = [
 export default function MainLayout({ page, onPageChange, children }) {
   const { user, logout } = useAuth();
   const [access,setAccess]=useState(null);
-  useEffect(()=>{if(['saas_super_admin','support_viewer'].includes(user?.role))return;let alive=true;api('/saas/access-status').then(v=>{if(alive)setAccess(v);}).catch(()=>{});return()=>{alive=false;};},[user?._id,user?.role]);
+  useEffect(()=>{if(['saas_super_admin','support_viewer'].includes(user?.role))return;let alive=true;api('/saas/access-status').then(v=>{if(alive)setAccess(v);}).catch(()=>{});return()=>{alive=false;};},[user?._id,user?.role,page]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mastersOpen, setMastersOpen] = useState(
     ["Production Masters", "Machine Register", "Employee Register"].includes(
@@ -666,6 +666,11 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
+          {access?.accessAllowed && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&(
+            user.role==='company_owner'||(!user.accessPolicyVersion&&['company_admin','admin'].includes(user.role))||
+            (user.accessScope!=='SELF'&&(user.accessScope!=='DEPARTMENT'||user.department===d)&&user.permissions?.some(p=>['department.'+d.toLowerCase()+'.read','department.'+d.toLowerCase()+'.write'].includes(p)))
+          )).map(d=><button key={d} className={page==='Department Workspace:'+d?'active':''} onClick={()=>selectPage('Department Workspace:'+d)}>{d}</button>)}</section>}
+
           {Object.entries(departmentNavigation)
             .sort(
               ([a], [b]) =>

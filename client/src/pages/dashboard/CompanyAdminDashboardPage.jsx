@@ -70,7 +70,7 @@ export default function CompanyAdminDashboardPage({ notify, onPageChange }) {
             <span>
               <b>{row.name}</b>
               <small>
-                {row.users} users · {row.entries} entries
+                {row.users} users · {row.entries == null ? "View entries in workspace" : row.entries + " legacy entries"}
               </small>
             </span>
             <em>{row.status}</em>
@@ -84,6 +84,8 @@ export default function CompanyAdminDashboardPage({ notify, onPageChange }) {
             <span>{selected.activity} recent actions</span>
           </div>
           <div className="department-actions">
+            <button disabled={!selected.canOpen} onClick={()=>onPageChange("Department Workspace:"+selected.name)}>Open {selected.name} workspace</button>
+            <button onClick={()=>onPageChange("User Management")}><Users/>User assignment</button>
             <button onClick={() => onPageChange("Company Reports")}>
               <FileText /> Reports
             </button>

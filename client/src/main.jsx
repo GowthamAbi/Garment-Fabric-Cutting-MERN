@@ -7,6 +7,7 @@ import './accessibility-theme.css';
 import './plain-layout.css';
 import './styles/owner-console.css';
 import './styles/theme-toggle.css';
+import './styles/company-console.css';
 import { installGlobalFetchLoader } from "./services/loadingService.js";
 
 installGlobalFetchLoader();
