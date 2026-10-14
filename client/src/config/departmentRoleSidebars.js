@@ -1,7 +1,7 @@
 // Phase 1: reusable navigation configuration. This module does not grant API access.
 // Existing Fabric, Cutting, Accessories, Elastic and Delivery navigation stays unchanged
 // until each screen has been checked against its backend permissions.
-import { DEPARTMENTS, departmentCode } from "../../../../shared/departmentCatalogue.js";
+import { DEPARTMENTS, departmentCode } from "../../../shared/departmentCatalogue.js";
 
 export const PROPOSED_DEPARTMENTS = Object.freeze([...DEPARTMENTS, "HR", "ACCOUNTS"]);
 export const NOT_YET_LICENSED = Object.freeze(["HR", "ACCOUNTS"]);
