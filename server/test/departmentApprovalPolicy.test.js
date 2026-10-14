@@ -29,3 +29,10 @@ test("deny invalid status and unconfigured amounts",()=>{
  assert.equal(evaluateApproval({request:{...request,amount:NaN},actor,limits}).allowed,false);
  assert.equal(evaluateApproval({request,actor,limits:{}}).allowed,false);
 });
+
+test("rejection does not incorrectly escalate when above level threshold",()=>{
+ const p=evaluateApproval({request:{...request,amount:600},actor,limits});
+ assert.equal(p.action,"ESCALATE");
+ assert.equal(determineDecision(p,"REJECT").status,"REJECTED");
+ assert.equal(determineDecision(p,"APPROVE").status,"PENDING_FM");
+});
