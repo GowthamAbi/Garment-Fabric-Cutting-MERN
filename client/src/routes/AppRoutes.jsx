@@ -2,6 +2,7 @@ import FactoryManagement from "../pages/auth/FactoryManagement.jsx";
 import DepartmentRolePreview from "../pages/dashboard/DepartmentRolePreview.jsx";
 import DepartmentApprovalQueue from "../pages/dashboard/DepartmentApprovalQueue.jsx";
 import ManagementApprovalInbox from "../pages/dashboard/ManagementApprovalInbox.jsx";
+import ApprovalGrantsPage from "../pages/dashboard/ApprovalGrantsPage.jsx";
 import CompanyApprovalSettingsPage from "../pages/dashboard/CompanyApprovalSettingsPage.jsx";
 import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
@@ -70,6 +71,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
   }
   switch (page) {
     case "Company Approval Settings": return <CompanyApprovalSettingsPage />;
+    case "Approval Authority": return <ApprovalGrantsPage />;
     case "Management Approval Inbox": return <ManagementApprovalInbox />;
     case "Department Approval Requests": return <DepartmentApprovalQueue />;
     case "Department Sidebar Planning": return <DepartmentRolePreview />;
