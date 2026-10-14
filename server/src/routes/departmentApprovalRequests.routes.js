@@ -9,6 +9,23 @@ import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/depa
 const router=Router();
 const permitted=(user,d,action)=>Array.isArray(user?.permissions)&&user.permissions.includes(`department.${d.toLowerCase()}.${action}`);
 const hasFactory=user=>mongoose.isValidObjectId(user?.companyId)&&mongoose.isValidObjectId(user?.factoryId);
+// Consolidated queue: privileges are checked on the server, not from UI filters.
+router.get("/inbox",asyncHandler(async(req,res)=>{
+ const user=req.user;
+ if(!hasFactory(user))return res.status(403).json({message:"Company/factory required"});
+ const level=user.role==="department_incharge"?"HEAD":user.role==="management"?"FM":user.role==="company_owner"?"OWNER":null;
+ if(!level)return res.status(403).json({message:"Approval reviewer role required"});
+ const status={HEAD:"PENDING_HEAD",FM:"PENDING_FM",OWNER:"PENDING_OWNER"}[level];
+ const allowed=DEPARTMENTS.filter(d=>{
+  if(level==="HEAD"&&departmentCode(user.department)!==d)return false;
+  return user.permissions?.includes(`approval.${level.toLowerCase()}.${d.toLowerCase()}`);
+ });
+ if(!allowed.length)return res.json({level,items:[]});
+ const records=await DepartmentApprovalRequest.find({
+  companyId:user.companyId,factoryId:user.factoryId,status,department:{$in:allowed}
+ }).sort({createdAt:1}).limit(100).lean();
+ res.json({level,items:records});
+}));
 router.get("/settings",asyncHandler(async(req,res)=>{
  if(!hasFactory(req.user)||!["company_owner","company_admin"].includes(req.user.role))return res.status(403).json({message:"Company management only"});
  const record=await CompanyApprovalSettings.findOne({companyId:req.user.companyId}).lean();
