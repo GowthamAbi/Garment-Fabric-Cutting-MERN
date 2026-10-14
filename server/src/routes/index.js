@@ -1,6 +1,7 @@
 import { Router } from "express";
 import authRoutes from "./auth.routes.js";
 import departmentApprovalRequests from "./departmentApprovalRequests.routes.js";
+import approvalGrants from "./approvalGrants.routes.js";
 import dashboardRoutes from "./dashboard.routes.js";
 import itemRoutes from "./items.routes.js";
 import purchaseOrderRoutes from "./po.routes.js";
@@ -44,6 +45,7 @@ router.use("/automation", automationRoutes);
 router.use(enterOperationalDatabase, legacyWriteGate);
 router.use("/public", publicOutwardRoutes);
 router.use(requireActiveSubscription);
+router.use("/approval-grants", approvalGrants);
 router.use("/department-approval-requests", departmentApprovalRequests);
 router.use("/erp", erpRoutes);
 router.use("/dashboard", requireAuth, dashboardRoutes);
