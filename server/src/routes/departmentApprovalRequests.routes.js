@@ -4,12 +4,23 @@ import {asyncHandler} from "../utils/asyncHandler.js";
 import DepartmentApprovalRequest from "../models/DepartmentApprovalRequest.js";
 import CompanyApprovalSettings,{validateLimits} from "../models/CompanyApprovalSettings.js";
 import DepartmentApprovalOutbox from "../models/DepartmentApprovalOutbox.js";
+import {synchronizeApprovalAudit} from "../services/synchronizeApprovalAudit.js";
+import Company from "../models/Company.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/departmentApprovalPolicy.js";
 
 const router=Router();
 const permitted=(user,d,action)=>Array.isArray(user?.permissions)&&user.permissions.includes(`department.${d.toLowerCase()}.${action}`);
 const hasFactory=user=>mongoose.isValidObjectId(user?.companyId)&&mongoose.isValidObjectId(user?.factoryId);
+// Explicit owner-only maintenance action: not an automatic background worker.
+router.post("/audit/synchronize",asyncHandler(async(req,res)=>{
+ const user=req.user;
+ if(user?.role!=="company_owner"||!hasFactory(user))return res.status(403).json({message:"Company owner required"});
+ const company=await Company.findById(user.companyId).select("ownerUserId").lean();
+ if(String(company?.ownerUserId)!==String(user.id))return res.status(403).json({message:"Owner identity mismatch"});
+ const result=await synchronizeApprovalAudit({companyId:user.companyId,factoryId:user.factoryId,limit:50});
+ res.json(result);
+}));
 // Consolidated queue: privileges are checked on the server, not from UI filters.
 router.get("/inbox",asyncHandler(async(req,res)=>{
  const user=req.user;
