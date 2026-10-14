@@ -21,7 +21,7 @@ export default function ManagementApprovalInbox(){
   }catch(e){setError(e.message||"Unable to record decision");}finally{setBusy(false)}
  }
  return <section style={{maxWidth:1200,margin:"auto",padding:"1rem"}}>
-  <h2>{data.level||"Management"} Approval Inbox</h2>
+  <h2>{data.level||"Management"} Approval Inbox</h2><p role="status"><strong>{data.pendingCount ?? data.items.length}</strong> pending requests requiring your review (up to 100 shown).</p>
   <p>Pending requests within your assigned factory and approval authority. Decisions do not directly post operational transactions.</p>
   {error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
   <button type="button" disabled={busy} onClick={load}>Refresh</button>
