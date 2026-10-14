@@ -1,3 +1,4 @@
+import {includesApprovalGrant,retainExistingApprovalGrants} from "../utils/approvalGrantPolicy.js";
 import {subscriptionAccess} from "../utils/subscriptionAccess.js";
 import {hasPermission,strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
@@ -166,6 +167,9 @@ export async function createUser(request, response) {
       ? request.body.factoryId || request.user.factoryId
       : request.user.factoryId;
   const userId = await generateUserId({ name, department, role });
+  // Approval authority cannot be granted by general account creation.
+  if(!Array.isArray(request.body.permissions||[])||includesApprovalGrant(request.body.permissions||[]))
+    throw new ApiError(403,"Approval authority must be assigned by the company owner");
   const userData = {
     userId,
     name,
@@ -358,7 +362,7 @@ export async function updateUserPermissions(request, response) {
     validateAccessAssignment(request.user,user,{permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:user.department},company);
   }
   if(user.role==='company_owner')throw new ApiError(403,'Owner permissions cannot be changed here');
-  user.permissions = [...new Set(permissions)]; user.sessionVersion = Number(user.sessionVersion || 0) + 1;
+  user.permissions = retainExistingApprovalGrants(permissions,user.permissions||[]); user.sessionVersion = Number(user.sessionVersion || 0) + 1;
   await user.save(); response.json({ message: "ERP permissions updated; user must sign in again" });
 }
 
