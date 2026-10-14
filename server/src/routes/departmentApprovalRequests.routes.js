@@ -18,7 +18,7 @@ router.get("/inbox",asyncHandler(async(req,res)=>{
  const status={HEAD:"PENDING_HEAD",FM:"PENDING_FM",OWNER:"PENDING_OWNER"}[level];
  const allowed=DEPARTMENTS.filter(d=>{
   if(level==="HEAD"&&departmentCode(user.department)!==d)return false;
-  return user.permissions?.includes(`approval.${level.toLowerCase()}.${d.toLowerCase()}`);
+  return level==="OWNER" || user.permissions?.includes(`approval.${level.toLowerCase()}.${d.toLowerCase()}`);
  });
  if(!allowed.length)return res.json({level,items:[]});
  const records=await DepartmentApprovalRequest.find({
@@ -88,7 +88,7 @@ router.post("/:id/decision",asyncHandler(async(req,res)=>{
  if(!settings||!validateLimits(settings.limits))return res.status(503).json({message:"Company approval limits not configured"});
  const limits=settings.limits;
  const actor={companyId:user.companyId,factoryId:user.factoryId,userId:user.id,department:user.department,
-   approvalLevel:level,grants:user.permissions||[]};
+   approvalLevel:level,grants:level==="OWNER" && user.role==="company_owner" ? [...(user.permissions||[]),`approval.owner.${row.department.toLowerCase()}`] : (user.permissions||[])};
  const policy=evaluateApproval({request:row,actor,limits});
  const outcome=determineDecision(policy,decision);
  if(!outcome.allowed)return res.status(403).json({message:outcome.reason});
