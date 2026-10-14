@@ -1,4 +1,5 @@
 import ApiError from '../utils/ApiError.js';
+import {approvalRouteAllowed} from '../utils/approvalRoutePolicy.js';
 import {hasPermission,strictAccess,companyOwner} from '../utils/accessPolicy.js';
 import {enabledDepartment} from '../erp/departmentPolicy.js';
 export function legacyDepartment(path){
@@ -21,6 +22,12 @@ export function enforceAccessBoundary(req){
  if(path.startsWith('/auth/factories')){if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');if(req.method==='GET'||hasPermission(user,'company.settings'))return;throw new ApiError(403,'Company settings permission required');}
  if(path.startsWith('/auth/access')){if(path==='/auth/access/factory'||hasPermission(user,'users.roles.assign')||hasPermission(user,'roles.manage'))return;throw new ApiError(403,'Role administration permission required');}
  if(path.startsWith('/auth/users')){if(hasPermission(user,'users.manage'))return;throw new ApiError(403,'User management permission required');}
+ // New workflow APIs require explicit strict-access authorization before the
+ // legacy unmapped-path gate, including users with DEPARTMENT scope.
+ if(path==='/approval-grants'||path.startsWith('/approval-grants/')||path==='/department-approval-requests'||path.startsWith('/department-approval-requests/')){
+  if(approvalRouteAllowed(user,path,req.method))return;
+  throw new ApiError(403,'Approval workflow access denied');
+ }
  if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');
  if(path.startsWith('/saas/')){if(path.startsWith('/saas/support')&&req.method!=='GET')throw new ApiError(403,'Only the company owner can issue or revoke owner support access');const permission=path.startsWith('/saas/customer-database')?'company.settings':path.includes('/support')?'support.manage':path.includes('/audit')?'audit.read':'billing.manage';if(hasPermission(user,permission))return;throw new ApiError(403,'Company account permission required');}
  if(path==='/dashboard/company-overview'&&hasPermission(user,'erp.read')&&user.accessScope!=='DEPARTMENT'&&!user.assignedShopKeys?.length&&!user.assignedWarehouseKeys?.length)return;
