@@ -40,6 +40,7 @@ export function evaluateApproval({request,actor,limits}={}){
 }
 export function determineDecision(policy,decision){
  if(!policy?.allowed)return {allowed:false,reason:policy?.reason||"Denied"};
+ if(decision==="REJECT")return {allowed:true,status:REQUEST_STATUS.REJECTED,decision};
  if(policy.action==="ESCALATE")return {allowed:true,status:policy.nextStatus,decision:"ESCALATE"};
  if(!["APPROVE","REJECT"].includes(decision))return {allowed:false,reason:"Invalid decision"};
  return {allowed:true,status:decision==="APPROVE"?REQUEST_STATUS.APPROVED:REQUEST_STATUS.REJECTED,decision};
