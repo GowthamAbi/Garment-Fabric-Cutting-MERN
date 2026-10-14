@@ -37,6 +37,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
+  ["Management Approval Inbox", ListChecks, ["department_incharge", "management", "company_owner"]],
   ["Department Approval Requests", ListChecks, ["department_incharge", "department_entry"]],
   ["Integrated ERP", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
   ["Production & Retail", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
