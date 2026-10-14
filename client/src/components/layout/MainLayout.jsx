@@ -477,6 +477,7 @@ const departmentNavigation = {
     },
     { label: "Company Reports", icon: BarChart3, page: "Company Reports" },
     { label: "Company Approval Settings", icon: ListChecks, page: "Company Approval Settings" },
+    { label: "Approval Authority", icon: ShieldCheck, page: "Approval Authority" },
     { label: "Department Sidebar Planning", icon: ListChecks, page: "Department Sidebar Planning" },
     { label: "Company Timeline", icon: Clock3, page: "Company Timeline" },
     { label: "Company Stock", icon: Boxes, page: "Company Stock" },
