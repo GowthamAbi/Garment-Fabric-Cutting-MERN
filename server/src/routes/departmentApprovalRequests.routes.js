@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import {asyncHandler} from "../utils/asyncHandler.js";
 import DepartmentApprovalRequest from "../models/DepartmentApprovalRequest.js";
 import CompanyApprovalSettings,{validateLimits} from "../models/CompanyApprovalSettings.js";
+import AuditLog from "../models/AuditLog.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/departmentApprovalPolicy.js";
 
@@ -24,7 +25,7 @@ router.get("/inbox",asyncHandler(async(req,res)=>{
  const records=await DepartmentApprovalRequest.find({
   companyId:user.companyId,factoryId:user.factoryId,status,department:{$in:allowed}
  }).sort({createdAt:1}).limit(100).lean();
- res.json({level,items:records});
+ res.json({level,items:records,pendingCount:records.length,notificationMessage:records.length?`${records.length} pending approval requests`:"No pending approvals"});
 }));
 router.get("/settings",asyncHandler(async(req,res)=>{
  if(!hasFactory(req.user)||!["company_owner","company_admin"].includes(req.user.role))return res.status(403).json({message:"Company management only"});
@@ -66,6 +67,7 @@ router.post("/",asyncHandler(async(req,res)=>{
  if(!REQUEST_TYPES.includes(type)||typeof title!=="string"||!title.trim()||title.length>160||typeof reason!=="string"||!reason.trim()||reason.length>2000||typeof amount!=="number"||!Number.isFinite(amount)||amount<0||typeof reference!=="undefined"&&(typeof reference!=="string"||reference.length>100))
    return res.status(400).json({message:"Invalid approval request"});
  const row=await DepartmentApprovalRequest.create({companyId:user.companyId,factoryId:user.factoryId,department:d,type,title:title.trim(),reason:reason.trim(),reference:reference?.trim()||"",amount,requestedBy:user.id});
+ await AuditLog.create({actorId:user.id,actorUserId:user.userId,actorRole:user.role,method:"POST",path:req.originalUrl.split("?")[0],action:"APPROVAL_REQUEST_CREATED",entity:"DepartmentApprovalRequest",entityId:String(row.id),ip:req.ip,userAgent:req.get("user-agent"),changes:{companyId:String(user.companyId),factoryId:String(user.factoryId),department:d,type,amount}});
  res.status(201).json({item:row});
 }));
 // Decision endpoint is fail-closed until approved limits are explicitly configured.
@@ -97,6 +99,7 @@ router.post("/:id/decision",asyncHandler(async(req,res)=>{
    {$set:{status:outcome.status},$push:{decisions:{actorId:user.id,decision:outcome.decision,reason:reason.trim(),at:new Date()}},$inc:{__v:1}},
    {new:true,runValidators:true});
  if(!updated)return res.status(409).json({message:"Request was already processed; refresh"});
+ await AuditLog.create({actorId:user.id,actorUserId:user.userId,actorRole:user.role,method:"POST",path:req.originalUrl.split("?")[0],action:"APPROVAL_DECISION_RECORDED",entity:"DepartmentApprovalRequest",entityId:String(updated.id),ip:req.ip,userAgent:req.get("user-agent"),changes:{companyId:String(user.companyId),factoryId:String(user.factoryId),department:row.department,fromStatus:row.status,toStatus:outcome.status,decision:outcome.decision,reason:reason.trim()}});
  res.json({item:updated,message:outcome.decision==="ESCALATE"?"Escalated for review":"Decision recorded; no operational posting performed"});
 }));
 export default router;
