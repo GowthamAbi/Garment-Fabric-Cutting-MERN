@@ -12,6 +12,7 @@ const auditLogSchema = new mongoose.Schema(
     action: String,
     entity: String,
     entityId: String,
+    sourceEventId: {type:String},
     statusCode: Number,
     ip: String,
     userAgent: String,
@@ -22,4 +23,5 @@ const auditLogSchema = new mongoose.Schema(
 
 auditLogSchema.index({ companyId: 1, createdAt: -1 });
 auditLogSchema.index({ companyId: 1, entity: 1, entityId: 1 });
+auditLogSchema.index({sourceEventId:1},{unique:true,partialFilterExpression:{sourceEventId:{$type:"string"}}});
 export default createTenantModel("AuditLog", auditLogSchema);
