@@ -2,12 +2,33 @@ import {Router} from "express";
 import mongoose from "mongoose";
 import {asyncHandler} from "../utils/asyncHandler.js";
 import DepartmentApprovalRequest from "../models/DepartmentApprovalRequest.js";
+import CompanyApprovalSettings,{validateLimits} from "../models/CompanyApprovalSettings.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/departmentApprovalPolicy.js";
 
 const router=Router();
 const permitted=(user,d,action)=>Array.isArray(user?.permissions)&&user.permissions.includes(`department.${d.toLowerCase()}.${action}`);
 const hasFactory=user=>mongoose.isValidObjectId(user?.companyId)&&mongoose.isValidObjectId(user?.factoryId);
+router.get("/settings",asyncHandler(async(req,res)=>{
+ if(!hasFactory(req.user)||!["company_owner","company_admin"].includes(req.user.role))return res.status(403).json({message:"Company management only"});
+ const record=await CompanyApprovalSettings.findOne({companyId:req.user.companyId}).lean();
+ res.json({configured:!!record,limits:record?.limits||null,revision:record?.revision||0});
+}));
+router.put("/settings",asyncHandler(async(req,res)=>{
+ if(!hasFactory(req.user)||req.user.role!=="company_owner")return res.status(403).json({message:"Verified company owner required"});
+ if(!validateLimits(req.body?.limits))return res.status(400).json({message:"Invalid per-type limits; all levels and types required, HEAD <= FM <= OWNER"});
+ const current=await CompanyApprovalSettings.findOne({companyId:req.user.companyId}).lean();
+ if(current){
+  const updated=await CompanyApprovalSettings.findOneAndUpdate({_id:current._id,companyId:req.user.companyId,revision:current.revision},
+   {$set:{limits:req.body.limits,modifiedBy:req.user.id},$inc:{revision:1}},{new:true,runValidators:true});
+  if(!updated)return res.status(409).json({message:"Settings changed; refresh and retry"});
+  return res.json({revision:updated.revision,limits:updated.limits});
+ }
+ try {
+  const created=await CompanyApprovalSettings.create({companyId:req.user.companyId,limits:req.body.limits,modifiedBy:req.user.id});
+  return res.status(201).json({revision:created.revision,limits:created.limits});
+ }catch(error){if(error.code===11000)return res.status(409).json({message:"Settings created concurrently; refresh"});throw error;}
+}));
 router.get("/",asyncHandler(async(req,res)=>{
  const user=req.user;
  if(!hasFactory(user))return res.status(403).json({message:"Company/factory required"});
@@ -45,11 +66,10 @@ router.post("/:id/decision",asyncHandler(async(req,res)=>{
  if(!level)return res.status(409).json({message:"Request already finalized"});
  const roleAllowed=level==="HEAD"?user.role==="department_incharge":level==="FM"?user.role==="management":user.role==="company_owner";
  if(!roleAllowed)return res.status(403).json({message:"Approval role required"});
- // No implicit approval grants, no default spending authority.
- let limits;
- try {limits=JSON.parse(process.env.DEPARTMENT_APPROVAL_LIMITS_JSON||"null");}
- catch {return res.status(503).json({message:"Approval limits not configured"});}
- if(!limits)return res.status(503).json({message:"Approval limits not configured"});
+ // Settings are explicitly approved per company; never fall back to platform defaults.
+ const settings=await CompanyApprovalSettings.findOne({companyId:user.companyId}).lean();
+ if(!settings||!validateLimits(settings.limits))return res.status(503).json({message:"Company approval limits not configured"});
+ const limits=settings.limits;
  const actor={companyId:user.companyId,factoryId:user.factoryId,userId:user.id,department:user.department,
    approvalLevel:level,grants:user.permissions||[]};
  const policy=evaluateApproval({request:row,actor,limits});
