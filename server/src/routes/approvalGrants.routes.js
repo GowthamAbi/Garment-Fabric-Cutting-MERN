@@ -2,6 +2,7 @@ import {Router} from "express";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Company from "../models/Company.js";
+import AuditLog from "../models/AuditLog.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {asyncHandler} from "../utils/asyncHandler.js";
 const router=Router();
@@ -34,6 +35,7 @@ router.put("/:id",asyncHandler(async(req,res)=>{
  const updated=await User.findOneAndUpdate({_id:user.id,companyId:owner.companyId,factoryId:owner.factoryId,sessionVersion:user.sessionVersion||0},
   {$set:{permissions:[...permissions]},$inc:{sessionVersion:1}},{new:true,runValidators:true});
  if(!updated)return res.status(409).json({message:"User permissions changed concurrently; refresh"});
+ await AuditLog.create({actorId:owner.id,actorUserId:owner.userId,actorRole:owner.role,method:"PUT",path:req.originalUrl.split("?")[0],action:"APPROVAL_GRANT_CHANGED",entity:"User",entityId:String(user.id),ip:req.ip,userAgent:req.get("user-agent"),changes:{companyId:String(owner.companyId),factoryId:String(owner.factoryId),grant,enabled:req.body.enabled,previouslyEnabled:(user.permissions||[]).includes(grant)}});
  res.json({message:"Approval authority updated; user must sign in again",grant,enabled:req.body.enabled});
 }));
 export default router;
