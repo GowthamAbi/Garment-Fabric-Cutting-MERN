@@ -1,4 +1,5 @@
 import FactoryManagement from "../pages/auth/FactoryManagement.jsx";
+import DepartmentRolePreview from "../pages/dashboard/DepartmentRolePreview.jsx";
 import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
@@ -65,6 +66,7 @@ export default function AppRoutes({ page, notify, onPageChange }) {
     return DEPARTMENTS.includes(department) ? <div className="erp-shell"><Departments key={department} initialDepartment={department} notify={notify}/></div> : <p role="alert">Unknown department.</p>;
   }
   switch (page) {
+    case "Department Sidebar Planning": return <DepartmentRolePreview />;
     case "Production & Retail": return <div className="erp-shell"><Departments notify={notify}/></div>;
     case "Integrated ERP": return <ErpWorkspace notify={notify} />;
     case "Subscription Automation": return <AutomationPage notify={notify} />;
