@@ -760,6 +760,7 @@ export default function MainLayout({ page, onPageChange, children }) {
                   ["company_owner","company_admin"].includes(user?.role) &&
                   ![
                     "Company Dashboard",
+                    "Management Approval Inbox",
                     "Integrated ERP",
                     "Subscription Automation",
                     "Item Master",
