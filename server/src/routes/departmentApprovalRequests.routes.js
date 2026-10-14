@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import {asyncHandler} from "../utils/asyncHandler.js";
 import DepartmentApprovalRequest from "../models/DepartmentApprovalRequest.js";
 import CompanyApprovalSettings,{validateLimits} from "../models/CompanyApprovalSettings.js";
-import AuditLog from "../models/AuditLog.js";
+import DepartmentApprovalOutbox from "../models/DepartmentApprovalOutbox.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/departmentApprovalPolicy.js";
 
@@ -67,8 +67,14 @@ router.post("/",asyncHandler(async(req,res)=>{
  const {type,title,reason,reference,amount}=req.body||{};
  if(!REQUEST_TYPES.includes(type)||typeof title!=="string"||!title.trim()||title.length>160||typeof reason!=="string"||!reason.trim()||reason.length>2000||typeof amount!=="number"||!Number.isFinite(amount)||amount<0||typeof reference!=="undefined"&&(typeof reference!=="string"||reference.length>100))
    return res.status(400).json({message:"Invalid approval request"});
- const row=await DepartmentApprovalRequest.create({companyId:user.companyId,factoryId:user.factoryId,department:d,type,title:title.trim(),reason:reason.trim(),reference:reference?.trim()||"",amount,requestedBy:user.id});
- await AuditLog.create({actorId:user.id,actorUserId:user.userId,actorRole:user.role,method:"POST",path:req.originalUrl.split("?")[0],action:"APPROVAL_REQUEST_CREATED",entity:"DepartmentApprovalRequest",entityId:String(row.id),ip:req.ip,userAgent:req.get("user-agent"),changes:{companyId:String(user.companyId),factoryId:String(user.factoryId),department:d,type,amount}});
+ let row;
+ const session=await DepartmentApprovalRequest.db.startSession();
+ try{
+  await session.withTransaction(async()=>{
+   [row]=await DepartmentApprovalRequest.create([{companyId:user.companyId,factoryId:user.factoryId,department:d,type,title:title.trim(),reason:reason.trim(),reference:reference?.trim()||"",amount,requestedBy:user.id}],{session});
+   await DepartmentApprovalOutbox.create([{companyId:user.companyId,factoryId:user.factoryId,requestId:row._id,eventType:"REQUEST_CREATED",actorId:user.id,payload:{department:d,type,amount}}],{session});
+  });
+ }finally{await session.endSession();}
  res.status(201).json({item:row});
 }));
 // Decision endpoint is fail-closed until approved limits are explicitly configured.
@@ -95,12 +101,18 @@ router.post("/:id/decision",asyncHandler(async(req,res)=>{
  const policy=evaluateApproval({request:row,actor,limits});
  const outcome=determineDecision(policy,decision);
  if(!outcome.allowed)return res.status(403).json({message:outcome.reason});
- const updated=await DepartmentApprovalRequest.findOneAndUpdate(
-   {_id:row._id,companyId:user.companyId,factoryId:user.factoryId,status:row.status,__v:row.__v},
-   {$set:{status:outcome.status},$push:{decisions:{actorId:user.id,decision:outcome.decision,reason:reason.trim(),at:new Date()}},$inc:{__v:1}},
-   {new:true,runValidators:true});
- if(!updated)return res.status(409).json({message:"Request was already processed; refresh"});
- await AuditLog.create({actorId:user.id,actorUserId:user.userId,actorRole:user.role,method:"POST",path:req.originalUrl.split("?")[0],action:"APPROVAL_DECISION_RECORDED",entity:"DepartmentApprovalRequest",entityId:String(updated.id),ip:req.ip,userAgent:req.get("user-agent"),changes:{companyId:String(user.companyId),factoryId:String(user.factoryId),department:row.department,fromStatus:row.status,toStatus:outcome.status,decision:outcome.decision,reason:reason.trim()}});
+ let updated;
+ const session=await DepartmentApprovalRequest.db.startSession();
+ try{
+  await session.withTransaction(async()=>{
+   updated=await DepartmentApprovalRequest.findOneAndUpdate(
+    {_id:row._id,companyId:user.companyId,factoryId:user.factoryId,status:row.status,__v:row.__v},
+    {$set:{status:outcome.status},$push:{decisions:{actorId:user.id,decision:outcome.decision,reason:reason.trim(),at:new Date()}},$inc:{__v:1}},
+    {new:true,runValidators:true,session});
+   if(!updated){const conflict=new Error("Request already processed");conflict.statusCode=409;throw conflict;}
+   await DepartmentApprovalOutbox.create([{companyId:user.companyId,factoryId:user.factoryId,requestId:updated._id,eventType:"DECISION_RECORDED",actorId:user.id,payload:{department:row.department,fromStatus:row.status,toStatus:outcome.status,decision:outcome.decision,reason:reason.trim()}}],{session});
+  });
+ }finally{await session.endSession();}
  res.json({item:updated,message:outcome.decision==="ESCALATE"?"Escalated for review":"Decision recorded; no operational posting performed"});
 }));
 export default router;
