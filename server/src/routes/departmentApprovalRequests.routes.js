@@ -25,7 +25,8 @@ router.get("/inbox",asyncHandler(async(req,res)=>{
  const records=await DepartmentApprovalRequest.find({
   companyId:user.companyId,factoryId:user.factoryId,status,department:{$in:allowed}
  }).sort({createdAt:1}).limit(100).lean();
- res.json({level,items:records,pendingCount:records.length,notificationMessage:records.length?`${records.length} pending approval requests`:"No pending approvals"});
+ const pendingCount=await DepartmentApprovalRequest.countDocuments({companyId:user.companyId,factoryId:user.factoryId,status,department:{$in:allowed}});
+ res.json({level,items:records,pendingCount,notificationMessage:pendingCount?`${pendingCount} pending approval requests`:"No pending approvals"});
 }));
 router.get("/settings",asyncHandler(async(req,res)=>{
  if(!hasFactory(req.user)||!["company_owner","company_admin"].includes(req.user.role))return res.status(403).json({message:"Company management only"});
