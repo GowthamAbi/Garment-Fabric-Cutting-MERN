@@ -8,6 +8,7 @@ import {synchronizeApprovalAudit} from "../services/synchronizeApprovalAudit.js"
 import Company from "../models/Company.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/departmentApprovalPolicy.js";
+import {approvalFactoryAllowed,licensedApprovalDepartments,verifiedCompanyOwner,reviewableApprovalDepartments,canSubmitApproval} from "../services/approvalScopePolicy.js";
 
 const router=Router();
 const permitted=(user,d,action)=>Array.isArray(user?.permissions)&&user.permissions.includes(`department.${d.toLowerCase()}.${action}`);
@@ -16,8 +17,8 @@ const hasFactory=user=>mongoose.isValidObjectId(user?.companyId)&&mongoose.isVal
 router.post("/audit/synchronize",asyncHandler(async(req,res)=>{
  const user=req.user;
  if(user?.role!=="company_owner"||!hasFactory(user))return res.status(403).json({message:"Company owner required"});
- const company=await Company.findById(user.companyId).select("ownerUserId").lean();
- if(String(company?.ownerUserId)!==String(user.id))return res.status(403).json({message:"Owner identity mismatch"});
+ const company=await Company.findById(user.companyId).select("ownerUserId factories").lean();
+ if(!verifiedCompanyOwner(user,company))return res.status(403).json({message:"Owner identity or factory mismatch"});
  const result=await synchronizeApprovalAudit({companyId:user.companyId,factoryId:user.factoryId,limit:50});
  res.json(result);
 }));
@@ -28,10 +29,9 @@ router.get("/inbox",asyncHandler(async(req,res)=>{
  const level=user.role==="department_incharge"?"HEAD":user.role==="management"?"FM":user.role==="company_owner"?"OWNER":null;
  if(!level)return res.status(403).json({message:"Approval reviewer role required"});
  const status={HEAD:"PENDING_HEAD",FM:"PENDING_FM",OWNER:"PENDING_OWNER"}[level];
- const allowed=DEPARTMENTS.filter(d=>{
-  if(level==="HEAD"&&departmentCode(user.department)!==d)return false;
-  return level==="OWNER" || user.permissions?.includes(`approval.${level.toLowerCase()}.${d.toLowerCase()}`);
- });
+ const company=await Company.findById(user.companyId).select("ownerUserId enabledDepartments factories").lean();
+ if(!approvalFactoryAllowed(user,company))return res.status(403).json({message:"Company/factory access denied"});
+ const allowed=reviewableApprovalDepartments(user,company);
  if(!allowed.length)return res.json({level,items:[]});
  const records=await DepartmentApprovalRequest.find({
   companyId:user.companyId,factoryId:user.factoryId,status,department:{$in:allowed}
@@ -41,11 +41,15 @@ router.get("/inbox",asyncHandler(async(req,res)=>{
 }));
 router.get("/settings",asyncHandler(async(req,res)=>{
  if(!hasFactory(req.user)||!["company_owner","company_admin"].includes(req.user.role))return res.status(403).json({message:"Company management only"});
+ const company=await Company.findById(req.user.companyId).select("ownerUserId factories").lean();
+ if(!approvalFactoryAllowed(req.user,company)||(req.user.role==="company_owner"&&!verifiedCompanyOwner(req.user,company)))return res.status(403).json({message:"Company owner/factory verification failed"});
  const record=await CompanyApprovalSettings.findOne({companyId:req.user.companyId}).lean();
  res.json({configured:!!record,limits:record?.limits||null,revision:record?.revision||0});
 }));
 router.put("/settings",asyncHandler(async(req,res)=>{
  if(!hasFactory(req.user)||req.user.role!=="company_owner")return res.status(403).json({message:"Verified company owner required"});
+ const company=await Company.findById(req.user.companyId).select("ownerUserId factories").lean();
+ if(!verifiedCompanyOwner(req.user,company))return res.status(403).json({message:"Owner identity mismatch"});
  if(!validateLimits(req.body?.limits))return res.status(400).json({message:"Invalid per-type limits; all levels and types required, HEAD <= FM <= OWNER"});
  const current=await CompanyApprovalSettings.findOne({companyId:req.user.companyId}).lean();
  if(current){
@@ -64,17 +68,21 @@ router.get("/",asyncHandler(async(req,res)=>{
  if(!hasFactory(user))return res.status(403).json({message:"Company/factory required"});
  const d=departmentCode(req.query.department||user.department);
  if(!DEPARTMENTS.includes(d))return res.status(400).json({message:"Select a valid department"});
+ const company=await Company.findById(user.companyId).select("ownerUserId enabledDepartments factories").lean();
+ if(!approvalFactoryAllowed(user,company)||!licensedApprovalDepartments(company).includes(d))return res.status(403).json({message:"Department is not licensed for this factory"});
  const owner=user.role==="company_owner";
  const admin=["company_admin","admin"].includes(user.role);
- if(!owner&&!admin&&(!permitted(user,d,"read")||user.department!==d))return res.status(403).json({message:"Access denied"});
+ if(owner&&!verifiedCompanyOwner(user,company))return res.status(403).json({message:"Owner verification required"});
+ if(!owner&&!admin&&(!permitted(user,d,"read")||departmentCode(user.department)!==d))return res.status(403).json({message:"Access denied"});
  const rows=await DepartmentApprovalRequest.find({companyId:user.companyId,factoryId:user.factoryId,department:d}).sort({createdAt:-1}).limit(100).lean();
  res.json({items:rows});
 }));
 router.post("/",asyncHandler(async(req,res)=>{
  const user=req.user;
  const d=departmentCode(user?.department);
- if(!hasFactory(user)||!DEPARTMENTS.includes(d)||!permitted(user,d,"write")||user.accessScope==="SELF")
-   return res.status(403).json({message:"Department submission permission required"});
+ const company=await Company.findById(user.companyId).select("enabledDepartments factories").lean();
+ if(!hasFactory(user)||!canSubmitApproval(user,company))
+   return res.status(403).json({message:"Licensed department staff submission permission required"});
  const {type,title,reason,reference,amount}=req.body||{};
  if(!REQUEST_TYPES.includes(type)||typeof title!=="string"||!title.trim()||title.length>160||typeof reason!=="string"||!reason.trim()||reason.length>2000||typeof amount!=="number"||!Number.isFinite(amount)||amount<0||typeof reference!=="undefined"&&(typeof reference!=="string"||reference.length>100))
    return res.status(400).json({message:"Invalid approval request"});
@@ -99,6 +107,9 @@ router.post("/:id/decision",asyncHandler(async(req,res)=>{
    return res.status(400).json({message:"Valid decision and reason required"});
  const row=await DepartmentApprovalRequest.findOne({_id:req.params.id,companyId:user.companyId,factoryId:user.factoryId});
  if(!row)return res.status(404).json({message:"Request not found"});
+ const company=await Company.findById(user.companyId).select("ownerUserId enabledDepartments factories").lean();
+ if(!approvalFactoryAllowed(user,company)||!licensedApprovalDepartments(company).includes(row.department))return res.status(403).json({message:"Company/factory/department entitlement denied"});
+ if(user.role==="company_owner"&&!verifiedCompanyOwner(user,company))return res.status(403).json({message:"Verified company ownership required"});
  const level=row.status==="PENDING_HEAD"?"HEAD":row.status==="PENDING_FM"?"FM":row.status==="PENDING_OWNER"?"OWNER":null;
  if(!level)return res.status(409).json({message:"Request already finalized"});
  const roleAllowed=level==="HEAD"?user.role==="department_incharge":level==="FM"?user.role==="management":user.role==="company_owner";
