@@ -80,8 +80,9 @@ router.get("/",asyncHandler(async(req,res)=>{
 router.post("/",asyncHandler(async(req,res)=>{
  const user=req.user;
  const d=departmentCode(user?.department);
+ if(!hasFactory(user))return res.status(403).json({message:"Company/factory required"});
  const company=await Company.findById(user.companyId).select("enabledDepartments factories").lean();
- if(!hasFactory(user)||!canSubmitApproval(user,company))
+ if(!canSubmitApproval(user,company))
    return res.status(403).json({message:"Licensed department staff submission permission required"});
  const {type,title,reason,reference,amount}=req.body||{};
  if(!REQUEST_TYPES.includes(type)||typeof title!=="string"||!title.trim()||title.length>160||typeof reason!=="string"||!reason.trim()||reason.length>2000||typeof amount!=="number"||!Number.isFinite(amount)||amount<0||typeof reference!=="undefined"&&(typeof reference!=="string"||reference.length>100))
