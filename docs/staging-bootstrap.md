@@ -52,3 +52,12 @@ Create only fake companies, factories and role accounts (Owner, Company Admin, F
 
 ## Why preview isolation is required
 Before this update, a frontend without `VITE_API_URL` defaulted to `https://api.ugsaas.com/api` outside localhost. A staging or deploy-preview site could accidentally mutate live data. The new checks intentionally fail the build or browser initialization instead of silently selecting the live API. This might block old preview deployments until their staging backend is ready; that is expected and safer.
+
+## Current resources provisioned on 15 October 2026
+- **Isolated Atlas project:** `UG SaaS Staging`; cluster `UGS-Staging`, AWS Mumbai, Free tier. The live `Jarvis` cluster was not modified.
+- **Staging API service:** [ugsaas-staging-api](https://dashboard.render.com/web/srv-db86sju89jmc73cev0tg), URL `https://ugsaas-staging-api.onrender.com`; deploy is not healthy until `MONGODB_URI` and network allowlisting are configured.
+- **Staging frontend:** [ugsaas-staging-ui](https://dashboard.render.com/static/srv-db86ucmq1p3s739qkfk0), URL `https://ugsaas-staging-ui.onrender.com`, deployed successfully; its `VITE_API_URL` targets only the staging API.
+- Staging backend has fresh `JWT_SECRET` and `TENANT_CREDENTIAL_KEY`; securely back up the tenant encryption key before using customer credential storage.
+- **Owner action:** In Atlas staging project reset `ugs_staging_app` password if not recorded; obtain Render staging service **Connect → Outbound** IP ranges and add them to staging Atlas network access. Configure the resulting *staging-only* MongoDB URI directly in Render Environment. Never paste passwords into ChatGPT/GitHub.
+- After credentials and network are configured, verify Render `/ready`, run the MongoDB replica-set integration suite with disposable testing databases and complete the [approval acceptance matrix](./approval-staging-acceptance.md).
+- Render static sites with React Router may need **Redirects/Rewrites** rule `/*` → `/index.html` (Rewrite); configure through staging static site's dashboard if nested paths return 404.
