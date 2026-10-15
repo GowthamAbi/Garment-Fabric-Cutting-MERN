@@ -36,3 +36,12 @@ test("rejection does not incorrectly escalate when above level threshold",()=>{
  assert.equal(determineDecision(p,"REJECT").status,"REJECTED");
  assert.equal(determineDecision(p,"APPROVE").status,"PENDING_FM");
 });
+
+test("owner can reject amount beyond maximum, but can never approve it",()=>{
+ const ownerActor={...actor,approvalLevel:"OWNER",userId:"owner1",grants:["approval.owner.cutting"]};
+ const overLimitRequest={...request,status:REQUEST_STATUS.PENDING_OWNER,amount:6000};
+ const policy=evaluateApproval({request:overLimitRequest,actor:ownerActor,limits});
+ assert.equal(policy.allowed,true);
+ assert.equal(determineDecision(policy,"REJECT").status,REQUEST_STATUS.REJECTED);
+ assert.equal(determineDecision(policy,"APPROVE").allowed,false);
+});
