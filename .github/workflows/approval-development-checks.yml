@@ -28,5 +28,7 @@ jobs:
           node --check server/src/services/synchronizeApprovalAudit.js
       - name: Install client dependencies
         run: npm install --prefix client --no-audit --no-fund
+      - name: Run client isolation and department menu tests
+        run: node --test client/tests/*.test.mjs
       - name: Build client
         run: npm run build --prefix client
