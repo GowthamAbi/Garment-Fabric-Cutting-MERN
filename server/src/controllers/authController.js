@@ -1,4 +1,5 @@
 import {includesApprovalGrant,retainExistingApprovalGrants} from "../utils/approvalGrantPolicy.js";
+import {userDirectoryFilter} from "../utils/userDirectoryPolicy.js";
 import {subscriptionAccess} from "../utils/subscriptionAccess.js";
 import {hasPermission,strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
@@ -103,9 +104,9 @@ export async function register(_request, _response) {
   throw new ApiError(403, "Public owner registration is disabled. Run the private owner bootstrap command.");
 }
 
-export async function getUsers(_request, response) {
+export async function getUsers(request, response) {
   response.json(
-    await User.find()
+    await User.find(userDirectoryFilter(request.user))
       .select(
         "userId name email emailVerified role department permissions active accountStatus companyId factoryId createdAt lastLoginAt",
       )
