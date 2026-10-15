@@ -33,7 +33,7 @@ export function evaluateApproval({request,actor,limits}={}){
  if(typeof max!=="number"||!Number.isFinite(max)||max<0||typeof amount!=="number"||!Number.isFinite(amount)||amount<0)
   return {allowed:false,reason:"Invalid approval amount/limit"};
  if(amount>max){
-  if(level==="OWNER")return {allowed:false,reason:"Above owner approval limit"};
+  if(level==="OWNER")return {allowed:true,action:"OVER_OWNER_LIMIT",reason:"Above owner approval limit"};
   return {allowed:true,action:"ESCALATE",nextStatus:nextStatus[level]};
  }
  return {allowed:true,action:"DECIDE",nextStatus:REQUEST_STATUS.APPROVED};
@@ -41,6 +41,7 @@ export function evaluateApproval({request,actor,limits}={}){
 export function determineDecision(policy,decision){
  if(!policy?.allowed)return {allowed:false,reason:policy?.reason||"Denied"};
  if(decision==="REJECT")return {allowed:true,status:REQUEST_STATUS.REJECTED,decision};
+ if(policy.action==="OVER_OWNER_LIMIT")return {allowed:false,reason:"Above owner approval limit"};
  if(policy.action==="ESCALATE")return {allowed:true,status:policy.nextStatus,decision:"ESCALATE"};
  if(!["APPROVE","REJECT"].includes(decision))return {allowed:false,reason:"Invalid decision"};
  return {allowed:true,status:decision==="APPROVE"?REQUEST_STATUS.APPROVED:REQUEST_STATUS.REJECTED,decision};
