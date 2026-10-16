@@ -228,3 +228,32 @@
  .app-shell .department-task-cards {grid-template-columns:repeat(1,minmax(0,1fr))}
  .app-shell .department-task-form-grid {grid-template-columns:minmax(0,1fr)}
 }
+
+/* Fabric monitoring: read-only, narrow-screen safe table and filter alignment. */
+@media screen {
+ .app-shell .fabric-plan-monitor {display:grid;gap:16px;min-width:0}
+ .app-shell .fabric-plan-monitor-heading {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+ .app-shell .fabric-plan-monitor-heading h2 {margin:4px 0 8px}
+ .app-shell .fabric-plan-monitor-heading p {margin:0;color:var(--ugs-muted)}
+ .app-shell .fabric-plan-monitor-heading button,
+ .app-shell .fabric-plan-monitor-filters button {min-height:44px;display:inline-flex;align-items:center;gap:8px}
+ .app-shell .fabric-plan-monitor-filters {padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));align-items:end;gap:12px}
+ .app-shell .fabric-plan-monitor-filters label {display:flex;flex-direction:column;gap:5px;min-width:0}
+ .app-shell .fabric-plan-monitor-filters input,.app-shell .fabric-plan-monitor-filters select {width:100%;min-width:0}
+ .app-shell .fabric-plan-monitor-kpis {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ .app-shell .fabric-plan-monitor-kpis>article {display:flex;flex-direction:column;padding:14px;gap:8px}
+ .app-shell .fabric-plan-monitor-kpis>article>span {color:var(--ugs-muted);font-size:13px}
+ .app-shell .fabric-plan-monitor-kpis>article>strong {font-size:clamp(20px,2.4vw,28px);font-variant-numeric:tabular-nums}
+ .app-shell .fabric-plan-monitor-table {overflow-x:auto}
+ .app-shell .fabric-plan-monitor-table table {min-width:950px}
+ .app-shell .fabric-plan-monitor-table td>small {display:block;color:var(--ugs-muted)}
+ .app-shell .fabric-plan-issue-details {min-width:175px;max-width:290px;white-space:normal}
+ .app-shell .fabric-plan-issue-details p {border-bottom:1px solid var(--ugs-border);padding:6px 0;margin:0}
+}
+@media screen and (max-width:760px) {
+ .app-shell .fabric-plan-monitor-kpis {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .app-shell .fabric-plan-monitor-filters {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media screen and (max-width:430px) {
+ .app-shell .fabric-plan-monitor-filters {grid-template-columns:minmax(0,1fr)}
+}
