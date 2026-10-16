@@ -1,3 +1,6 @@
+import {getDepartmentSidebar} from "./departmentRoleSidebars.js";
+import {EXCEL_PAGE_PREFIX} from "./excelOptionNavigation.mjs";
+
 // Access-aware navigation for single-department user accounts.
 // The backend remains authoritative; these entries never grant permission.
 const DEPARTMENT_ROLES=new Set(["department_incharge","department_entry"]);
@@ -27,6 +30,13 @@ export function roleDepartmentPages(user,subscription){
    pages.push({label:"Submit Approval Requests",page:"Department Approval Requests",action:"request"});
  if(user.role==="department_incharge"&&permissions.includes("approval.head."+dept.toLowerCase()))
    pages.push({label:"My Approval Inbox",page:"Management Approval Inbox",action:"approve"});
+ const kind=user.role==="department_incharge"?"HEAD":"STAFF";
+ const canWrite=permissions.includes(writeGrant(dept));
+ for(const option of getDepartmentSidebar(dept,kind,{enabledDepartments:subscription?.enabledDepartments})){
+   if(option.action==="approve"&&!permissions.includes("approval.head."+dept.toLowerCase()))continue;
+   if(kind==="STAFF"&&option.action==="write"&&!canWrite)continue;
+   pages.push({label:option.label,page:EXCEL_PAGE_PREFIX+option.id,action:option.action,excelCell:option.id});
+ }
  pages.push({label:"Profile Settings",page:"Profile Settings",action:"profile"});
  return pages;
 }
