@@ -1,4 +1,5 @@
 import {api} from "./api.js";
+import {isSingleDepartmentUser} from "./config/roleDepartmentNavigation.mjs";
 import { useEffect, useState } from "react";
 import MainLayout from "./components/layout/MainLayout.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -41,7 +42,7 @@ function Application() {
 
   useEffect(() => {
     if (!token || !user) return;
-    const nextPage = user.subscriptionAccess?.accessAllowed===false&&["company_owner","company_admin","admin"].includes(user.role)?"Subscription Purchase":user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
+    const nextPage = isSingleDepartmentUser(user)?"Department Dashboard":user.subscriptionAccess?.accessAllowed===false&&["company_owner","company_admin","admin"].includes(user.role)?"Subscription Purchase":user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
       window.location.pathname === "/production"
         ? "Production Control"
         : user.role === "saas_super_admin"
