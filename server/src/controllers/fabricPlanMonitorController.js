@@ -52,7 +52,7 @@ export async function monitorFabricPlans(req,res){
   throw new ApiError(409,"Legacy fabric plans are not factory-tagged. Monitoring is unavailable until factory-scoped plan migration is completed.");
  const filter=fabricPlanMonitorQuery(req.query);
  const rows=await FabricCutPlan.find(filter)
-  .select("planNo dcNo orderNo itemCode itemName fabricGroup totalPlannedPcs totalWantedWeightKg issuedWeightKg status allocations createdAt foldingSavedAt foldingWeightKg foldingQuality")
+  .select("planNo dcNo orderNo itemCode itemName fabricGroup totalPlannedPcs totalWantedWeightKg issuedWeightKg status allocations createdAt foldingSavedAt foldingWeightKg foldingQuality colours dcType style bomNo fabricCode numberOfColours notes")
   .sort({createdAt:-1}).limit(250).lean();
  res.json({items:rows,limit:250,readOnly:true,legacySingleFactoryScope:true});
 }
