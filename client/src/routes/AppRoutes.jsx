@@ -1,5 +1,6 @@
 import FactoryManagement from "../pages/auth/FactoryManagement.jsx";
 import {rolePageAllowed} from "../config/roleDepartmentNavigation.mjs";
+import {EXCEL_PAGE_PREFIX,excelOptionForUser,excelOptionTarget} from "../config/excelOptionNavigation.mjs";
 import DepartmentRolePreview from "../pages/dashboard/DepartmentRolePreview.jsx";
 import DepartmentApprovalQueue from "../pages/dashboard/DepartmentApprovalQueue.jsx";
 import ManagementApprovalInbox from "../pages/dashboard/ManagementApprovalInbox.jsx";
@@ -64,11 +65,29 @@ import {DEPARTMENTS} from "../../../shared/departmentCatalogue.js";
 import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
 import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
-export default function AppRoutes({ page, notify, onPageChange }) {
+export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption=null }) {
   const { user } = useAuth();
-  // Navigation is not an authorization boundary; this prevents unsupported
-  // screens from being rendered via an internal page-name change.
-  if(!rolePageAllowed(user,page))return <p role="alert">This screen is outside your assigned department and role.</p>;
+  // Only a validated Excel option may forward to an already existing screen.
+  // Backend permissions and subscription checks still enforce every API call.
+  if(!_fromExcelOption&&!rolePageAllowed(user,page))return <p role="alert">This screen is outside your assigned department and role.</p>;
+  if(page.startsWith(EXCEL_PAGE_PREFIX)){
+    const excelId=page.slice(EXCEL_PAGE_PREFIX.length);
+    const item=excelOptionForUser(user,excelId);
+    if(!item||!rolePageAllowed(user,page))return <p role="alert">This Excel option is outside your assigned department or role.</p>;
+    const existingPage=excelOptionTarget(item);
+    return <section className="excel-option-workspace" aria-label={item.label}>
+      <header className="excel-option-header">
+        <div><small>{item.departmentCode} · {item.role} · Excel {item.id}</small><h2>{item.label}</h2></div>
+        <span className="excel-option-status">{existingPage?"Existing workflow · QA pending":"Specific workflow pending development"}</span>
+      </header>
+      {existingPage
+        ? <AppRoutes page={existingPage} notify={notify} onPageChange={onPageChange} _fromExcelOption={item.id}/>
+        : <div className="erp-card">
+            <p>This exact Excel requirement is tracked, but its dedicated screen and API have not yet been implemented. No fake save action or placeholder data is shown.</p>
+            <p>Workbook reference: {item.id}. The department administrator can continue using existing approved workflows until this option passes staging acceptance.</p>
+          </div>}
+    </section>;
+  }
   if(page.startsWith("Department Workspace:")){
     const department=page.slice("Department Workspace:".length);
     return DEPARTMENTS.includes(department) ? <div className="erp-shell"><Departments key={department} initialDepartment={department} notify={notify}/></div> : <p role="alert">Unknown department.</p>;
