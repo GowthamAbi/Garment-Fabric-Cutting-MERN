@@ -7,13 +7,21 @@ const staff={role:"department_entry",department:dept,accessPolicyVersion:1,acces
 const head={role:"department_incharge",department:dept,accessPolicyVersion:1,accessScope:"DEPARTMENT",permissions:["department.fabric.read","approval.head.fabric"]};
 test("department staff gets own work and submit queue but no head approvals or other departments",()=>{
  assert.equal(isSingleDepartmentUser(staff),true);
- assert.deepEqual(roleDepartmentPages(staff,subscription).map(x=>x.page),["Department Dashboard","Department Workspace:FABRIC","Department Approval Requests","Profile Settings"]);
+ const pages=roleDepartmentPages(staff,subscription);
+ assert.deepEqual(pages.slice(0,3).map(x=>x.page),["Department Dashboard","Department Workspace:FABRIC","Department Approval Requests"]);
+ assert.equal(pages.at(-1).page,"Profile Settings");
+ assert.equal(pages.filter(x=>x.page.startsWith("Excel Option:")).length,11);
+ assert.ok(pages.some(x=>x.label==="Fabric Inward Entry"));
  assert.equal(rolePageAllowed(staff,"Department Workspace:CUTTING",subscription),false);
  assert.equal(rolePageAllowed(staff,"Management Approval Inbox",subscription),false);
  assert.equal(rolePageAllowed(staff,"User Management",subscription),false);
 });
 test("head gets own read-only workspace and approval inbox, not staff submission",()=>{
- assert.deepEqual(roleDepartmentPages(head,subscription).map(x=>x.page),["Department Dashboard","Department Workspace:FABRIC","Management Approval Inbox","Profile Settings"]);
+ const pages=roleDepartmentPages(head,subscription);
+ assert.deepEqual(pages.slice(0,3).map(x=>x.page),["Department Dashboard","Department Workspace:FABRIC","Management Approval Inbox"]);
+ assert.equal(pages.at(-1).page,"Profile Settings");
+ assert.equal(pages.filter(x=>x.page.startsWith("Excel Option:")).length,10);
+ assert.ok(pages.some(x=>x.label==="Fabric Stock & Shortage"));
  assert.equal(rolePageAllowed(head,"Department Approval Requests",subscription),false);
 });
 test("subscription, missing access, and unlicensed department fail closed",()=>{
