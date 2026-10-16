@@ -42,6 +42,7 @@ export function enforceAccessBoundary(req){
  }
  const department=legacyDepartment(path);
  if(department){
+  if(req.method!=='GET'&&user.accessScope==='DEPARTMENT'&&user.role==='department_incharge')throw new ApiError(403,'Department Head has review access, not operational entry permission');
   if(user.accessScope==='DEPARTMENT'&&user.department!==department)throw new ApiError(403,'Department outside assigned scope');
   const permission=`department.${department.toLowerCase()}.${req.method==='GET'?'read':'write'}`;
   if(!hasPermission(user,permission)&&!(req.method==='GET'&&hasPermission(user,permission.replace('.read','.write'))))throw new ApiError(403,'Legacy department permission required');
