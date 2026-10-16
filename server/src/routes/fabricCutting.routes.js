@@ -3,7 +3,7 @@ import { allowDepartment, allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as c from "../controllers/fabricCuttingController.js";
 import * as m from "../controllers/fabricMasterController.js";
-import {monitorFabricPlans,requireLegacyFabricFactory} from "../controllers/fabricPlanMonitorController.js";
+import {monitorFabricPlans,requireLegacyFabricFactory,legacyFabricRecordNeedsFactoryGuard} from "../controllers/fabricPlanMonitorController.js";
 import {saveFabricIssue,listFabricIssues} from "../controllers/fabricIssueController.js";
 const r = Router(),
   fabricRead = allowDepartment(
@@ -81,6 +81,11 @@ const r = Router(),
     "elastic_admin",
     "elastic_entry",
   );
+// Legacy Fabric master/inward/stock records do not store factoryId.
+// Disallow cross-factory reads/writes until a scoped migration is approved.
+r.use((req,res,next)=>legacyFabricRecordNeedsFactoryGuard(req.path)
+ ? asyncHandler(requireLegacyFabricFactory)(req,res,next)
+ : next());
 r.get("/masters", fabricRead, asyncHandler(m.listFabricMasters));
 r.get("/masters/:code", fabricRead, asyncHandler(m.getFabricMaster));
 r.post("/masters", fabricEntry, asyncHandler(m.saveFabricMaster));
