@@ -680,7 +680,7 @@ export default function MainLayout({ page, onPageChange, children }) {
                   {item.label}
                 </button>
               ))}
-              {!access?.accessAllowed&&<button type="button" className={page==="Profile Settings"?"active":""} onClick={()=>selectPage("Profile Settings")}>Profile Settings</button>}
+              {access?.accessAllowed===false&&<button type="button" className={page==="Profile Settings"?"active":""} onClick={()=>selectPage("Profile Settings")}>Profile Settings</button>}
             </section>
           ) : (<>
           {access?.accessAllowed && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&(
