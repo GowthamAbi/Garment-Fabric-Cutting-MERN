@@ -41,6 +41,10 @@ export function isSingleFactoryScope(company,factoryId){
  const factories=(company?.factories||[]).filter(factory=>factory.active!==false);
  return Boolean(company?.active&&factories.length===1&&String(factories[0]._id)===String(factoryId));
 }
+export function legacyFabricRecordNeedsFactoryGuard(path){
+ return /^\/(masters|process-masters|item-masters|inwards|stock)(?:\/|$)/.test(path)
+  ||/^\/plans\/[^/]+\/folding$/.test(path);
+}
 export async function requireLegacyFabricFactory(req,_res,next){
  const company=await Company.findById(req.user.companyId).select("factories active").lean();
  if(!isSingleFactoryScope(company,req.user.factoryId))throw new ApiError(409,"Legacy fabric documents have no factory ID. This workflow is restricted to an active single-factory company until migration.");
