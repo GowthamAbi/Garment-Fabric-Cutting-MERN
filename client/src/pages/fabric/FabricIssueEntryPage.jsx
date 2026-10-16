@@ -3,7 +3,7 @@ import {useAuth} from "../../context/AuthContext.jsx";
 import {fabricCuttingApi as api} from "../../api/fabricCuttingApi.js";
 import {RefreshCcw,Save,Printer,Search,ArrowRightLeft} from "lucide-react";
 
-const blank=()=>({planNo:"",inwardNo:"",colour:"",weightKg:"",notes:""});
+const blank=()=>({planNo:"",inwardNo:"",colour:"",dia:"",weightKg:"",notes:""});
 const format=n=>Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 const date=v=>v?new Date(v).toLocaleString("en-IN"):"—";
 export default function FabricIssueEntryPage({notify}){
@@ -13,6 +13,7 @@ export default function FabricIssueEntryPage({notify}){
  const [plans,setPlans]=useState([]),[inwards,setInwards]=useState([]),[history,setHistory]=useState([]);
  const [form,setForm]=useState(blank()),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const [confirmation,setConfirmation]=useState(null);
+ const [rolls,setRolls]=useState([]);
  const keyRef=useRef("");
  async function reload(){
   setBusy(true);setError("");
@@ -30,6 +31,16 @@ export default function FabricIssueEntryPage({notify}){
  const remaining=Math.max(0,Number(selectedColour?.wantedWeightKg||0)-alreadyIssued);
  const inwardColour=inward?.colours?.find(x=>x.colour===form.colour);
  const balance=Number(inwardColour?.balanceWeightKg||0);
+ const dias=[...new Set((selectedColour?.sizes||[]).map(s=>String(s.dia||"").toUpperCase()).filter(Boolean))]
+  .filter(d=>(inwardColour?.details||[]).some(r=>String(r.dia||"").toUpperCase()===d));
+ const diaBalance=rolls.filter(r=>String(r.colour).toUpperCase()===form.colour&&String(r.dia).toUpperCase()===form.dia&&r.status!=="HOLD")
+  .reduce((n,r)=>n+Number(r.balanceWeightKg||0),0);
+ const diaWanted=(selectedColour?.sizes||[]).filter(x=>String(x.dia||"").toUpperCase()===form.dia).reduce((n,x)=>n+Number(x.wantedWeightKg||0),0);
+ const diaIssued=(plan?.allocations||[]).filter(x=>x.colour===form.colour&&String(x.dia||"").toUpperCase()===form.dia).reduce((n,x)=>n+Number(x.weightKg||0),0);
+ const diaPending=Math.max(0,diaWanted-diaIssued);
+ useEffect(()=>{if(!form.inwardNo){setRolls([]);return}
+  api.bundles(form.inwardNo).then(setRolls).catch(()=>setRolls([]));
+ },[form.inwardNo]);
  function change(values){setConfirmation(null);keyRef.current="";setForm(old=>({...old,...values}));}
  async function submit(event){
   event.preventDefault();
@@ -53,20 +64,24 @@ export default function FabricIssueEntryPage({notify}){
   {error&&<p className="erp-error" role="alert">{error}</p>}
   {confirmation&&<p role="status" className="erp-success">Issue {confirmation.movement?.planNo} · {format(confirmation.movement?.weightKg)} KG {confirmation.replayed?"(existing request)":"saved successfully"}</p>}
   {maySave?<form className="erp-card fabric-plan-monitor-filters" onSubmit={submit}>
-   <label>Production Plan<select required value={form.planNo} onChange={e=>change({planNo:e.target.value,colour:""})}>
+   <label>Production Plan<select required value={form.planNo} onChange={e=>change({planNo:e.target.value,colour:"",dia:""})}>
     <option value="">Select plan…</option>{plans.filter(p=>["PLANNED","PART_ISSUED"].includes(p.status)).map(p=><option value={p.planNo} key={p._id}>{p.planNo} · {p.orderNo} · {p.itemCode}</option>)}
    </select></label>
-   <label>Inward No<select required value={form.inwardNo} onChange={e=>change({inwardNo:e.target.value})}>
+   <label>Inward No<select required value={form.inwardNo} onChange={e=>change({inwardNo:e.target.value,dia:""})}>
     <option value="">Select inward…</option>{inwards.filter(x=>x.status!=="HOLD"&&x.status!=="CLOSED"&&(!plan||x.fabricGroup===plan.fabricGroup)).map(x=><option key={x._id} value={x.inwardNo}>{x.inwardNo} · {x.fabricGroup}</option>)}
    </select></label>
-   <label>Colour<select required value={form.colour} onChange={e=>change({colour:e.target.value})}>
+   <label>Colour<select required value={form.colour} onChange={e=>change({colour:e.target.value,dia:""})}>
     <option value="">Select colour…</option>{(plan?.colours||[]).map(c=><option value={c.colour} key={c.colour}>{c.colour}</option>)}
    </select></label>
-   <label>Issue Weight (KG)<input required min="0.001" step="0.001" max={Math.min(remaining,balance)||undefined} type="number" value={form.weightKg} onChange={e=>change({weightKg:e.target.value})}/></label>
+   <label>Dia<select required value={form.dia} onChange={e=>change({dia:e.target.value})}>
+    <option value="">Select matching dia…</option>{dias.map(d=><option value={d} key={d}>{d}</option>)}
+   </select></label>
+   <label>Issue Weight (KG)<input required min="0.001" step="0.001" max={Math.min(remaining,balance,diaBalance,diaPending)||undefined} type="number" value={form.weightKg} onChange={e=>change({weightKg:e.target.value})}/></label>
    <label>Remarks<input maxLength={300} value={form.notes} onChange={e=>change({notes:e.target.value})}/></label>
    <div><small>Plan pending: <strong>{format(remaining)} KG</strong></small>
-    <small style={{display:"block"}}>Inward colour balance: <strong>{format(balance)} KG</strong></small></div>
-   <button type="submit" disabled={busy||!plan||!inward||!selectedColour||Number(form.weightKg)<=0||Number(form.weightKg)>Math.min(remaining,balance)}>
+    <small style={{display:"block"}}>Inward colour balance: <strong>{format(balance)} KG</strong></small>
+    <small style={{display:"block"}}>Dia {form.dia||"—"}: Plan {format(diaPending)} KG · Roll {format(diaBalance)} KG</small></div>
+   <button type="submit" disabled={busy||!plan||!inward||!selectedColour||!form.dia||Number(form.weightKg)<=0||Number(form.weightKg)>Math.min(remaining,balance,diaBalance,diaPending)}>
     <Save size={16}/> {busy?"Saving…":"Issue to Cutting"}
    </button>
   </form>:<p className="erp-card">This is a read-only Fabric user account. Issue posting requires assigned Staff permission.</p>}
@@ -74,8 +89,8 @@ export default function FabricIssueEntryPage({notify}){
    <div className="fabric-plan-monitor-heading"><h3>Fabric Issue History</h3>
     <button type="button" onClick={()=>window.print()}><Printer size={16}/> Print</button></div>
    <div className="erp-table fabric-plan-monitor-table">
-    <table><thead><tr><th>Date</th><th>Plan</th><th>Inward</th><th>Colour</th><th>KG</th><th>Roll allocations</th><th>Issued by</th></tr></thead><tbody>
-    {history.map(h=><tr key={h._id}><td>{date(h.createdAt)}</td><td>{h.planNo}</td><td>{h.inwardNo}</td><td>{h.colour}</td><td>{format(h.weightKg)}</td><td>{(h.allocations||[]).map((r,i)=><small key={i} style={{display:"block"}}>{r.bundleNo} / {r.batchNo}: {format(r.weightKg)} KG</small>)}</td><td>{h.actorId}</td></tr>)}
+    <table><thead><tr><th>Date</th><th>Plan</th><th>Inward</th><th>Colour</th><th>Dia</th><th>KG</th><th>Roll allocations</th><th>Issued by</th></tr></thead><tbody>
+    {history.map(h=><tr key={h._id}><td>{date(h.createdAt)}</td><td>{h.planNo}</td><td>{h.inwardNo}</td><td>{h.colour}</td><td>{h.dia}</td><td>{format(h.weightKg)}</td><td>{(h.allocations||[]).map((r,i)=><small key={i} style={{display:"block"}}>{r.bundleNo} / {r.batchNo}: {format(r.weightKg)} KG</small>)}</td><td>{h.actorId}</td></tr>)}
     </tbody></table>
    </div>
    {history.length===0&&!busy&&<p>No transactional fabric issues saved yet.</p>}
