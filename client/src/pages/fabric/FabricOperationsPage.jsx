@@ -20,7 +20,7 @@ function Table({heads,rows,empty="No records found"}){
  {rows.map((r,i)=><tr key={r.key||i}>{r.values.map((value,j)=><td key={j}>{value??"—"}</td>)}</tr>)}
  </tbody></table>{!rows.length&&<p>{empty}</p>}</div>;
 }
-export default function FabricOperationsPage({mode="availability"}){
+export default function FabricOperationsPage({mode="availability",onPageChange}){
  const {user}=useAuth();
  const [inwards,setInwards]=useState([]),[stock,setStock]=useState([]),[plans,setPlans]=useState([]),[issues,setIssues]=useState([]);
  const [rolls,setRolls]=useState([]),[selectedInward,setSelectedInward]=useState(""),[search,setSearch]=useState("");
@@ -49,7 +49,13 @@ export default function FabricOperationsPage({mode="availability"}){
   try{setRolls(await api.bundles(number));setSelectedInward(number)}catch(e){setWarnings(v=>[...v,"Roll history: "+e.message])}
  }
  const stockRows=balances.map(r=>({key:r.inwardNo+"-"+r.colour+"-"+r.dia+"-"+r.batchNo,values:[r.inwardNo,r.fabricGroup,r.fabricName,r.colour,r.dia,r.batchNo,r.setNo,format(r.inwardWeightKg),format(r.balanceWeightKg)]}));
- const planRows=planning.map(r=>({key:r._id,values:[day(r.createdAt),r.planNo,r.dcNo,r.orderNo,r.itemCode,format(r.totalPlannedPcs),format(r.totalWantedWeightKg),format(r.issuedWeightKg),format(Math.max(0,Number(r.totalWantedWeightKg||0)-Number(r.issuedWeightKg||0))),r.status]}));
+ const staffCanEdit=mode==="history"&&user?.role==="department_entry"&&user?.department==="FABRIC"&&(user?.permissions||[]).includes("department.fabric.write");
+ const planRows=planning.map(r=>({key:r._id,values:[day(r.createdAt),r.planNo,r.dcNo,r.orderNo,r.itemCode,format(r.totalPlannedPcs),format(r.totalWantedWeightKg),format(r.issuedWeightKg),format(Math.max(0,Number(r.totalWantedWeightKg||0)-Number(r.issuedWeightKg||0))),r.status,
+  staffCanEdit&&Number(r.issuedWeightKg||0)===0?<button type="button" onClick={()=>{
+   sessionStorage.setItem("fabric_production_plan_edit",JSON.stringify(r));
+   onPageChange?.("Excel Option:F19");
+  }}>Edit Plan</button>:"—"
+ ]}));
  const issueRows=movement.map(r=>({key:r._id,values:[day(r.createdAt),r.planNo,r.inwardNo,r.colour,format(r.weightKg),r.actorId]}));
  const inwardRows=inbound.map(r=>({key:r._id,values:[day(r.inwardDate),r.inwardNo,r.supplier||"—",r.dcNo||r.lotDcNo,r.fabricGroup,r.fabricName,format(r.totalRolls),format(r.totalWeightKg),r.status,
   isInward?<button type="button" onClick={()=>openRolls(r.inwardNo)}>{selectedInward===r.inwardNo?"Hide rolls":"View rolls"}</button>:"—"]}));
@@ -82,7 +88,7 @@ export default function FabricOperationsPage({mode="availability"}){
     <Table heads={balanceHeads} rows={stockRows}/></section>}
    {["folding"].includes(mode)&&<section className="erp-card"><h3>Folding Entry Completion</h3>
     <Table heads={["Plan","DC","Order","Item","PCS","Folding Date","Actual Folding KG","Quality"]} rows={foldingRows}/></section>}
-   {["history","reports"].includes(mode)&&<section className="erp-card"><h3>Production Plans</h3><Table heads={planHeads} rows={planRows}/></section>}
+   {["history","reports"].includes(mode)&&<section className="erp-card"><h3>Production Plans</h3><Table heads={staffCanEdit?[...planHeads,"Edit"]:planHeads} rows={staffCanEdit?planRows:planRows.map(r=>({...r,values:r.values.slice(0,-1)}))}/></section>}
    {["history","reports"].includes(mode)&&<section className="erp-card"><h3>Fabric Issue Movements</h3>
     <Table heads={["Date","Plan","Inward","Colour","KG","Issued by"]} rows={issueRows}/></section>}
   </div>
