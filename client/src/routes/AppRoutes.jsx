@@ -1,4 +1,5 @@
 import FactoryManagement from "../pages/auth/FactoryManagement.jsx";
+import {rolePageAllowed} from "../config/roleDepartmentNavigation.mjs";
 import DepartmentRolePreview from "../pages/dashboard/DepartmentRolePreview.jsx";
 import DepartmentApprovalQueue from "../pages/dashboard/DepartmentApprovalQueue.jsx";
 import ManagementApprovalInbox from "../pages/dashboard/ManagementApprovalInbox.jsx";
@@ -65,6 +66,9 @@ import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
+  // Navigation is not an authorization boundary; this prevents unsupported
+  // screens from being rendered via an internal page-name change.
+  if(!rolePageAllowed(user,page))return <p role="alert">This screen is outside your assigned department and role.</p>;
   if(page.startsWith("Department Workspace:")){
     const department=page.slice("Department Workspace:".length);
     return DEPARTMENTS.includes(department) ? <div className="erp-shell"><Departments key={department} initialDepartment={department} notify={notify}/></div> : <p role="alert">Unknown department.</p>;
