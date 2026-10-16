@@ -673,14 +673,20 @@ export default function MainLayout({ page, onPageChange, children }) {
 
         <nav>
           {isSingleDepartmentUser(user) ? (
-            <section className="department-nav" aria-label="Authorized department navigation">
+            <section className="department-nav role-workspace-nav" aria-label="Authorized department navigation">
               <div className="department-nav-title">{user?.department} · {user?.role==="department_incharge"?"Department Head":"Department Staff"}</div>
-              {roleDepartmentPages(user,access).map(item=>(
-                <button type="button" key={item.page} className={page===item.page?"active":""} onClick={()=>selectPage(item.page)}>
-                  {item.label}
-                </button>
-              ))}
-              {access?.accessAllowed===false&&<button type="button" className={page==="Profile Settings"?"active":""} onClick={()=>selectPage("Profile Settings")}>Profile Settings</button>}
+              {roleDepartmentPages(user,access).map(item=>{
+                const ItemIcon=item.page==="Department Dashboard"?LayoutDashboard:
+                  item.page.startsWith("Department Workspace:")?Factory:
+                  item.page==="Management Approval Inbox"?ShieldCheck:
+                  item.page==="Department Approval Requests"?ClipboardList:Settings2;
+                return <button type="button" key={item.page} className={page===item.page?"active":""}
+                  aria-current={page===item.page?"page":undefined} onClick={()=>selectPage(item.page)}>
+                  <ItemIcon aria-hidden="true"/><span className="role-menu-label">{item.label}</span>
+                </button>;
+              })}
+              {access?.accessAllowed===false&&<button type="button" className={page==="Profile Settings"?"active":""} aria-current={page==="Profile Settings"?"page":undefined}
+                onClick={()=>selectPage("Profile Settings")}><Settings2 aria-hidden="true"/><span className="role-menu-label">Profile Settings</span></button>}
             </section>
           ) : (<>
           {access?.accessAllowed && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&(
