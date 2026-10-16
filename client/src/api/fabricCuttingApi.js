@@ -59,6 +59,13 @@ export const fabricCuttingApi = {
       body: JSON.stringify(data),
     }),
   fabricPlanMonitor: (params) => api("/fabric-cutting/fabric-plan-monitor" + query(params)),
+  fabricPlans: (params) => api("/fabric-cutting/fabric-plans" + query(params)),
+  fabricPlan: (number) => api("/fabric-cutting/fabric-plans/" + encodeURIComponent(number)),
+  fabricPlanSetup: (itemCode,excludePlanId="") => api("/fabric-cutting/fabric-plans/setup/"+encodeURIComponent(itemCode)+(excludePlanId?"?excludePlanId="+encodeURIComponent(excludePlanId):"")),
+  saveFabricPlan: (data) => api("/fabric-cutting/fabric-plans",{method:"POST",body:JSON.stringify(data)}),
+  updateFabricPlan: (id,data) => api("/fabric-cutting/fabric-plans/"+encodeURIComponent(id),{method:"PUT",body:JSON.stringify(data)}),
+  fabricIssues: (params) => api("/fabric-cutting/fabric-issues"+query(params)),
+  saveFabricIssue: (data) => api("/fabric-cutting/fabric-issues",{method:"POST",body:JSON.stringify(data)}),
   plans: (params) => api("/fabric-cutting/plans" + query(params)),
   planSetup: (itemCode, excludePlanId = "") =>
     api(
