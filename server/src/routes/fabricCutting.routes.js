@@ -3,6 +3,7 @@ import { allowDepartment, allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as c from "../controllers/fabricCuttingController.js";
 import * as m from "../controllers/fabricMasterController.js";
+import {monitorFabricPlans} from "../controllers/fabricPlanMonitorController.js";
 const r = Router(),
   fabricRead = allowDepartment(
     "FABRIC",
@@ -106,6 +107,7 @@ r.put("/inwards/:id", fabricEntry, asyncHandler(c.saveInward));
 r.get("/stock", fabricRead, asyncHandler(c.listFabricStock));
 r.get("/stock/inward", fabricRead, asyncHandler(c.listOriginalInwardStock));
 r.get("/stock/balance", fabricRead, asyncHandler(c.listFabricBalance));
+r.get("/fabric-plan-monitor", fabricRead, asyncHandler(monitorFabricPlans));
 r.get("/plans", cuttingRead, asyncHandler(c.listPlans));
 r.get("/plans/setup/:itemCode", cuttingRead, asyncHandler(c.getPlanSetup));
 r.get("/plans/:no/folding", fabricRead, asyncHandler(c.getFoldingSetup));
