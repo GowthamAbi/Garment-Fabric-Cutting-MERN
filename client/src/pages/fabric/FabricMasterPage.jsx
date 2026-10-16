@@ -12,12 +12,9 @@ const blankProcess = { processType: "COMPACTING", code: "", name: "" };
 
 export default function FabricMasterPage({ notify }) {
   const { user } = useAuth();
-  const canManage = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
-    user?.role,
-  );
-  const canDelete = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
-    user?.role,
-  );
+  const canManage = ["saas_super_admin", "company_owner", "company_admin", "admin", "fabric_admin", "fabric_entry"].includes(user?.role) || (user?.role==="department_entry" && user?.department==="FABRIC" && (user?.permissions||[]).includes("department.fabric.write"));
+  const canManageProcess = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(user?.role);
+  const canDelete = false; // Permanent deletion is globally disabled by retention middleware.
   const [rows, setRows] = useState([]);
   const [processes, setProcesses] = useState([]);
   const [search, setSearch] = useState("");
