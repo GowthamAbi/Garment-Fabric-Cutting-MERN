@@ -39,6 +39,7 @@ import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
   ["Management Approval Inbox", ListChecks, ["department_incharge", "management", "company_owner"]],
+  ["Department Tasks", ClipboardList, ["management", "company_owner", "company_admin", "admin"]],
   ["Department Approval Requests", ListChecks, ["department_incharge", "department_entry"]],
   ["Integrated ERP", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
   ["Production & Retail", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
@@ -679,7 +680,7 @@ export default function MainLayout({ page, onPageChange, children }) {
                 const ItemIcon=item.page==="Department Dashboard"?LayoutDashboard:
                   item.page.startsWith("Department Workspace:")?Factory:
                   item.page==="Management Approval Inbox"?ShieldCheck:
-                  item.page==="Department Approval Requests"?ClipboardList:Settings2;
+                  item.page==="Department Approval Requests"||item.page==="Department Tasks"?ClipboardList:Settings2;
                 return <button type="button" key={item.page} className={page===item.page?"active":""}
                   aria-current={page===item.page?"page":undefined} onClick={()=>selectPage(item.page)}>
                   <ItemIcon aria-hidden="true"/><span className="role-menu-label">{item.label}</span>
@@ -780,6 +781,7 @@ export default function MainLayout({ page, onPageChange, children }) {
                   ![
                     "Company Dashboard",
                     "Management Approval Inbox",
+                    "Department Tasks",
                     "Integrated ERP",
                     "Subscription Automation",
                     "Item Master",
