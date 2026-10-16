@@ -5,7 +5,7 @@ import FabricInwardLot from "../models/FabricInwardLot.js";
 import FabricBundleStock from "../models/FabricBundleStock.js";
 import FabricIssueMovement from "../models/FabricIssueMovement.js";
 import ApiError from "../utils/ApiError.js";
-import {assertFabricIssueRequest,remainingColourWeight,sumRollBalance} from "../erp/fabricIssuePolicy.js";
+import {assertFabricIssueRequest,remainingColourWeight,remainingDiaWeight,sumRollBalance} from "../erp/fabricIssuePolicy.js";
 const round=n=>Math.round((n+Number.EPSILON)*1000)/1000;
 export async function saveFabricIssue(req,res){
  const input=assertFabricIssueRequest(req.body);
@@ -17,7 +17,7 @@ export async function saveFabricIssue(req,res){
   await session.withTransaction(async()=>{
    const old=await FabricIssueMovement.findOne({...scope,key:input.key}).session(session).lean();
    if(old){
-    if(old.planNo!==input.planNo||old.inwardNo!==input.inwardNo||old.colour!==input.colour||old.weightKg!==input.weightKg)
+    if(old.planNo!==input.planNo||old.inwardNo!==input.inwardNo||old.colour!==input.colour||old.dia!==input.dia||old.weightKg!==input.weightKg)
       throw new ApiError(409,"Issue key already used for different details");
     response={movement:old,replayed:true};
     return;
@@ -32,11 +32,14 @@ export async function saveFabricIssue(req,res){
    const colourRemaining=remainingColourWeight(plan,input.colour);
    if(colourRemaining===null||input.weightKg>colourRemaining+0.00001)
     throw new ApiError(409,"Issue exceeds remaining plan colour requirement");
+   const diaRemaining=remainingDiaWeight(plan,input.colour,input.dia);
+   if(diaRemaining===null||input.weightKg>diaRemaining+0.00001)
+    throw new ApiError(409,"Dia does not match the plan or exceeds its remaining requirement. Mixed-Dia legacy issues require reconciliation.");
    const row=(inward.colours||[]).find(c=>String(c.colour).toUpperCase()===input.colour);
    if(!row||Number(row.balanceWeightKg||0)+0.00001<input.weightKg)
     throw new ApiError(409,"Not enough usable inward colour balance");
    const bundles=await FabricBundleStock.find({
-    inwardNo:input.inwardNo,colour:input.colour,status:{$nin:["HOLD","CONSUMED"]},balanceWeightKg:{$gt:0}
+    inwardNo:input.inwardNo,colour:input.colour,dia:input.dia,status:{$nin:["HOLD","CONSUMED"]},balanceWeightKg:{$gt:0}
    }).sort({createdAt:1,_id:1}).session(session);
    if(sumRollBalance(bundles)+0.00001<input.weightKg)
     throw new ApiError(409,"Insufficient available roll balance");
@@ -55,7 +58,7 @@ export async function saveFabricIssue(req,res){
    row.balanceWeightKg=round(row.balanceWeightKg-input.weightKg);
    inward.status=inward.colours.every(c=>Number(c.balanceWeightKg||0)<=0)?"CLOSED":"PARTIAL";
    await inward.save({session});
-   plan.allocations.push({inwardNo:input.inwardNo,colour:input.colour,weightKg:input.weightKg,issuedBy:req.user.name||req.user.userId});
+   plan.allocations.push({inwardNo:input.inwardNo,colour:input.colour,dia:input.dia,weightKg:input.weightKg,issuedBy:req.user.name||req.user.userId});
    plan.issuedWeightKg=round(Number(plan.issuedWeightKg||0)+input.weightKg);
    plan.status=plan.issuedWeightKg>=Number(plan.totalWantedWeightKg||0)-0.00001?"READY":"PART_ISSUED";
    await plan.save({session});
