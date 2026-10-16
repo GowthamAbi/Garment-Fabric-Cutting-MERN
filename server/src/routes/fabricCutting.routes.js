@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import * as c from "../controllers/fabricCuttingController.js";
 import * as m from "../controllers/fabricMasterController.js";
 import {monitorFabricPlans,requireLegacyFabricFactory} from "../controllers/fabricPlanMonitorController.js";
+import {saveFabricIssue,listFabricIssues} from "../controllers/fabricIssueController.js";
 const r = Router(),
   fabricRead = allowDepartment(
     "FABRIC",
@@ -107,6 +108,8 @@ r.put("/inwards/:id", fabricEntry, asyncHandler(c.saveInward));
 r.get("/stock", fabricRead, asyncHandler(c.listFabricStock));
 r.get("/stock/inward", fabricRead, asyncHandler(c.listOriginalInwardStock));
 r.get("/stock/balance", fabricRead, asyncHandler(c.listFabricBalance));
+r.get("/fabric-issues",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(listFabricIssues));
+r.post("/fabric-issues",fabricEntry,asyncHandler(requireLegacyFabricFactory),asyncHandler(saveFabricIssue));
 r.get("/fabric-plan-monitor", fabricRead, asyncHandler(monitorFabricPlans));
 r.get("/fabric-plans",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.listPlans));
 r.get("/fabric-plans/setup/:itemCode",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.getPlanSetup));
