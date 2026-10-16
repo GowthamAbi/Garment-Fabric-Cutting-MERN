@@ -116,7 +116,7 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
     case "Fabric Operations Batches":
       return <FabricOperationsPage mode="batches"/>;
     case "Fabric Operations History":
-      return <FabricOperationsPage mode="history"/>;
+      return <FabricOperationsPage mode="history" onPageChange={onPageChange}/>;
     case "Fabric Operations Reports":
       return <FabricOperationsPage mode="reports"/>;
     case "Fabric Issue Entry":
