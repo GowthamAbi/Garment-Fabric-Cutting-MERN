@@ -58,6 +58,7 @@ export const fabricCuttingApi = {
       method: id ? "PUT" : "POST",
       body: JSON.stringify(data),
     }),
+  fabricPlanMonitor: (params) => api("/fabric-cutting/fabric-plan-monitor" + query(params)),
   plans: (params) => api("/fabric-cutting/plans" + query(params)),
   planSetup: (itemCode, excludePlanId = "") =>
     api(
