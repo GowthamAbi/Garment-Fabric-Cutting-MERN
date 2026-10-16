@@ -7,6 +7,7 @@ const schema=new mongoose.Schema({
  planNo:{type:String,required:true,uppercase:true},
  inwardNo:{type:String,required:true,uppercase:true},
  colour:{type:String,required:true,uppercase:true},
+ dia:{type:String,required:true,uppercase:true},
  weightKg:{type:Number,required:true,min:0.001},
  allocations:[{bundleNo:String,batchNo:String,dia:String,weightKg:Number}],
  actorId:{type:String,required:true},
