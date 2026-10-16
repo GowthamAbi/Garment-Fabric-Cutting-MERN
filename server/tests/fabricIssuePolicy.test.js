@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {assertFabricIssueRequest,remainingColourWeight,sumRollBalance} from "../src/erp/fabricIssuePolicy.js";
 import {legacyDepartment,enforceAccessBoundary} from "../src/middleware/accessMiddleware.js";
 
-const scope={enabledDepartments:["FABRIC"],departmentCatalogueVersion:1};
+const scope={enabledDepartments:["FABRIC"],departmentCatalogueVersion:1,entitlements:{modules:["FABRIC"],maxDepartments:1}};
 const staff={role:"department_entry",department:"FABRIC",accessScope:"DEPARTMENT",accessPolicyVersion:1,permissions:["department.fabric.read","department.fabric.write"]};
 const head={...staff,role:"department_incharge",permissions:["department.fabric.read"]};
 const req=(user,method,path)=>({user,method,originalUrl:"/api/fabric-cutting/"+path,accessCompany:scope});
@@ -35,6 +35,6 @@ test("Fabric staff can create plan and issue while Head is strictly read-only",(
  assert.throws(()=>enforceAccessBoundary(req(staff,"POST","plans")),/outside assigned scope/i);
 });
 test("Fabric issue respects subscribed modules and immutable monitor",()=>{
- assert.throws(()=>enforceAccessBoundary({...req(staff,"POST","fabric-issues"),accessCompany:{enabledDepartments:["CUTTING"]}}),/not subscribed/i);
+ assert.throws(()=>enforceAccessBoundary({...req(staff,"POST","fabric-issues"),accessCompany:{...scope,enabledDepartments:["CUTTING"]}}),/not subscribed/i);
  assert.throws(()=>enforceAccessBoundary(req(staff,"POST","fabric-plan-monitor")),/no write permission/i);
 });
