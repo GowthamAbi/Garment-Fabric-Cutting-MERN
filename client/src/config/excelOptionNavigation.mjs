@@ -113,6 +113,7 @@ export function excelOptionForUser(user,id){
 export function excelOptionTarget(item){
  if(!item)return null;
  if(item.label==="Dashboard")return "Department Dashboard";
+ if(item.role==="Department Head"&&/^(Staff & Tasks|Team & Tasks|QC Team & Tasks)$/.test(item.label))return "Department Tasks";
  if(item.label==="Pending Approvals"&&item.role==="Department Head")return "Management Approval Inbox";
  return ROUTES[item.departmentCode]?.[item.label]||null;
 }
