@@ -3,7 +3,7 @@ import { allowDepartment, allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as c from "../controllers/fabricCuttingController.js";
 import * as m from "../controllers/fabricMasterController.js";
-import {monitorFabricPlans} from "../controllers/fabricPlanMonitorController.js";
+import {monitorFabricPlans,requireLegacyFabricFactory} from "../controllers/fabricPlanMonitorController.js";
 const r = Router(),
   fabricRead = allowDepartment(
     "FABRIC",
@@ -108,6 +108,11 @@ r.get("/stock", fabricRead, asyncHandler(c.listFabricStock));
 r.get("/stock/inward", fabricRead, asyncHandler(c.listOriginalInwardStock));
 r.get("/stock/balance", fabricRead, asyncHandler(c.listFabricBalance));
 r.get("/fabric-plan-monitor", fabricRead, asyncHandler(monitorFabricPlans));
+r.get("/fabric-plans",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.listPlans));
+r.get("/fabric-plans/setup/:itemCode",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.getPlanSetup));
+r.get("/fabric-plans/:no",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.getPlan));
+r.post("/fabric-plans",fabricEntry,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.createPlan));
+r.put("/fabric-plans/:id",fabricEntry,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.updatePlan));
 r.get("/plans", cuttingRead, asyncHandler(c.listPlans));
 r.get("/plans/setup/:itemCode", cuttingRead, asyncHandler(c.getPlanSetup));
 r.get("/plans/:no/folding", fabricRead, asyncHandler(c.getFoldingSetup));
