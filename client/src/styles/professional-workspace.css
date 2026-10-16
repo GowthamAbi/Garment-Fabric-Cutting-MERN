@@ -175,3 +175,27 @@
 @media (prefers-reduced-motion: reduce) {
   .app-shell aside .role-workspace-nav > button { transition: none !important; }
 }
+
+/* Exact Excel options: compact navigation, genuine API-based dashboard. */
+@media screen {
+ .app-shell .excel-option-workspace {min-width:0;max-width:100%}
+ .app-shell .excel-option-header {display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+ .app-shell .excel-option-header h2 {margin:4px 0 0;line-height:1.3;overflow-wrap:anywhere}
+ .app-shell .excel-option-header small {color:var(--ugs-muted)}
+ .app-shell .excel-option-status {font-size:12px;line-height:1.4;border:1px solid var(--ugs-border);border-radius:6px;padding:6px 10px;max-width:100%}
+ .app-shell .department-overview-live {min-width:0}
+ .app-shell .department-overview-live .department-actions {margin:16px 0}
+ .app-shell .department-overview-live .department-actions button {min-height:44px;display:flex;align-items:center;gap:8px}
+ .app-shell .department-overview-live .department-board {display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px}
+ .app-shell .department-overview-live .department-board>article {display:flex;flex-direction:column;gap:10px;text-align:start;min-height:130px}
+ .app-shell .department-overview-live .department-board>article>small {color:var(--ugs-muted)}
+ .app-shell .department-overview-live .department-board>article>strong {font-size:clamp(24px,3vw,32px)}
+ .app-shell .department-overview-live .department-note {font-size:13px;color:var(--ugs-muted)}
+ html[data-theme="dark"] .app-shell .excel-option-status {background:var(--ugs-surface-soft);color:var(--ugs-text)}
+ html[data-theme="dark"] .app-shell .department-overview-live .department-board>article>small {color:var(--ugs-muted)}
+}
+@media screen and (max-width:760px) {
+ .app-shell .department-overview-live .department-board {grid-template-columns:minmax(0,1fr)}
+ .app-shell .excel-option-header {align-items:stretch}
+ .app-shell .excel-option-status {width:fit-content}
+}
