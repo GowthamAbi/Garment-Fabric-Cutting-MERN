@@ -9,6 +9,7 @@ export function legacyDepartment(path){
  if(/^\/fabric-cutting\/(actuals|waste)(\/|$)/.test(path))return 'CUTTING';
  if(/^\/fabric-cutting\/stock(\/|$)/.test(path))return 'FABRIC';
  if(path==='/fabric-cutting/fabric-plan-monitor')return 'FABRIC';
+ if(/^\/fabric-cutting\/fabric-plans(?:\/|$)/.test(path))return 'FABRIC';
  if(/^\/fabric-cutting\/plans\/[^/]+\/folding$/.test(path))return 'FABRIC';
  if(/^\/fabric-cutting\/plans(\/|$)/.test(path))return 'CUTTING';
  if(/^\/fabric-cutting\/(masters|process-masters|item-masters|inwards|inward-stock|balance-stock|rolls)(\/|$)/.test(path))return 'FABRIC';
