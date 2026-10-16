@@ -30,6 +30,7 @@ export function roleDepartmentPages(user,subscription){
    pages.push({label:"Submit Approval Requests",page:"Department Approval Requests",action:"request"});
  if(user.role==="department_incharge"&&permissions.includes("approval.head."+dept.toLowerCase()))
    pages.push({label:"My Approval Inbox",page:"Management Approval Inbox",action:"approve"});
+ pages.push({label:"My Tasks & Follow-ups",page:"Department Tasks",action:user.role==="department_entry"?"status":"read"});
  const kind=user.role==="department_incharge"?"HEAD":"STAFF";
  const canWrite=permissions.includes(writeGrant(dept));
  for(const option of getDepartmentSidebar(dept,kind,{enabledDepartments:subscription?.enabledDepartments})){
