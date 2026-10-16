@@ -3,6 +3,7 @@ import {rolePageAllowed} from "../config/roleDepartmentNavigation.mjs";
 import {EXCEL_PAGE_PREFIX,excelOptionForUser,excelOptionTarget} from "../config/excelOptionNavigation.mjs";
 import DepartmentRolePreview from "../pages/dashboard/DepartmentRolePreview.jsx";
 import DepartmentApprovalQueue from "../pages/dashboard/DepartmentApprovalQueue.jsx";
+import DepartmentTasksPage from "../pages/dashboard/DepartmentTasksPage.jsx";
 import ManagementApprovalInbox from "../pages/dashboard/ManagementApprovalInbox.jsx";
 import ApprovalGrantsPage from "../pages/dashboard/ApprovalGrantsPage.jsx";
 import CompanyApprovalSettingsPage from "../pages/dashboard/CompanyApprovalSettingsPage.jsx";
@@ -96,6 +97,8 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
     case "Company Approval Settings": return <CompanyApprovalSettingsPage />;
     case "Approval Authority": return <ApprovalGrantsPage />;
     case "Management Approval Inbox": return <ManagementApprovalInbox />;
+    case "Department Tasks":
+      return <DepartmentTasksPage />;
     case "Department Approval Requests": return <DepartmentApprovalQueue />;
     case "Department Sidebar Planning": return <DepartmentRolePreview />;
     case "Production & Retail": return <div className="erp-shell"><Departments notify={notify}/></div>;
