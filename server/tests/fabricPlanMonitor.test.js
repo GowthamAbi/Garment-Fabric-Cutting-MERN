@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {fabricPlanMonitorQuery,isSingleFactoryScope} from "../src/controllers/fabricPlanMonitorController.js";
+import {fabricPlanMonitorQuery,isSingleFactoryScope,legacyFabricRecordNeedsFactoryGuard} from "../src/controllers/fabricPlanMonitorController.js";
 import {legacyDepartment,enforceAccessBoundary} from "../src/middleware/accessMiddleware.js";
 
 const company={active:true,factories:[{_id:"factory1",active:true}]};
@@ -40,4 +40,11 @@ test("monitor filters accept only valid exact plans, statuses and UTC date windo
  assert.throws(()=>fabricPlanMonitorQuery({status:"HACKED"}),/Invalid/);
  assert.throws(()=>fabricPlanMonitorQuery({from:"2026-02-30"}),/Invalid/);
  assert.throws(()=>fabricPlanMonitorQuery({from:"2026-10-17",to:"2026-10-16"}),/From date/);
+});
+
+test("unscoped legacy Fabric master/roll/stock reads are single-factory only",()=>{
+ for(const route of ["/masters","/masters/ABC","/inwards","/inwards/FIN-1/bundles","/stock/balance","/process-masters","/item-masters","/plans/PLAN-1/folding"])
+  assert.equal(legacyFabricRecordNeedsFactoryGuard(route),true,route);
+ for(const route of ["/plans","/plans/PLAN-1/issue","/actuals","/fabric-issues","/fabric-plan-monitor"])
+  assert.equal(legacyFabricRecordNeedsFactoryGuard(route),false,route);
 });
