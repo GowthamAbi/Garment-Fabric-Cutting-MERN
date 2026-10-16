@@ -1,4 +1,5 @@
 import DisplayTools from '../common/DisplayTools.jsx';
+import {isSingleDepartmentUser,roleDepartmentPages} from "../../config/roleDepartmentNavigation.mjs";
 import SubscriptionNotice from './SubscriptionNotice';
 import {
   AlertTriangle,
@@ -671,6 +672,17 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
+          {isSingleDepartmentUser(user) ? (
+            <section className="department-nav" aria-label="Authorized department navigation">
+              <div className="department-nav-title">{user?.department} · {user?.role==="department_incharge"?"Department Head":"Department Staff"}</div>
+              {roleDepartmentPages(user,access).map(item=>(
+                <button type="button" key={item.page} className={page===item.page?"active":""} onClick={()=>selectPage(item.page)}>
+                  {item.label}
+                </button>
+              ))}
+              {!access?.accessAllowed&&<button type="button" className={page==="Profile Settings"?"active":""} onClick={()=>selectPage("Profile Settings")}>Profile Settings</button>}
+            </section>
+          ) : (<>
           {access?.accessAllowed && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&(
             user.role==='company_owner'||(!user.accessPolicyVersion&&['company_admin','admin'].includes(user.role))||
             (user.accessScope!=='SELF'&&(user.accessScope!=='DEPARTMENT'||user.department===d)&&user.permissions?.some(p=>['department.'+d.toLowerCase()+'.read','department.'+d.toLowerCase()+'.write'].includes(p)))
@@ -967,6 +979,7 @@ export default function MainLayout({ page, onPageChange, children }) {
                 </button>
               ),
             )}
+          </>)}
         </nav>
 
         <div className="profile">
