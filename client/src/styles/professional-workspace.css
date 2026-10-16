@@ -199,3 +199,32 @@
  .app-shell .excel-option-header {align-items:stretch}
  .app-shell .excel-option-status {width:fit-content}
 }
+
+/* Department task register: screen only; built around real assigned tasks. */
+@media screen {
+ .app-shell .department-tasks-page {min-width:0;display:grid;gap:18px}
+ .app-shell .department-task-header {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+ .app-shell .department-task-header h2,.app-shell .department-task-header h3 {margin:4px 0}
+ .app-shell .department-task-header p {margin:6px 0 0;color:var(--ugs-muted)}
+ .app-shell .department-task-header button {min-height:44px;display:inline-flex;align-items:center;gap:8px}
+ .app-shell .department-task-filter {max-width:360px;min-width:180px}
+ .app-shell .department-task-cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+ .app-shell .department-task-cards>article {display:flex;align-items:center;gap:12px;padding:18px}
+ .app-shell .department-task-cards>article>strong {font-size:24px;margin-inline-start:auto}
+ .app-shell .department-task-form {padding:18px}
+ .app-shell .department-task-form>h3 {margin-top:0}
+ .app-shell .department-task-form-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ .app-shell .department-task-form-grid>label {display:flex;flex-direction:column;gap:7px;min-width:0;font-weight:500}
+ .app-shell .department-task-form-grid input,.app-shell .department-task-form-grid select,.app-shell .department-task-form-grid textarea {width:100%;min-width:0;max-width:100%}
+ .app-shell .department-task-form-grid .department-task-wide {grid-column:1/-1}
+ .app-shell .department-task-form>button {margin-top:14px;min-height:44px}
+ .app-shell .department-task-table {overflow-x:auto;max-width:100%}
+ .app-shell .department-task-table table {min-width:850px}
+ .app-shell .department-task-table button {min-height:40px}
+ .app-shell .department-task-table td>small {display:block;color:var(--ugs-muted);max-width:280px;white-space:normal}
+ .app-shell .department-tasks-page .erp-success {color:var(--ugs-focus)}
+}
+@media screen and (max-width:760px) {
+ .app-shell .department-task-cards {grid-template-columns:repeat(1,minmax(0,1fr))}
+ .app-shell .department-task-form-grid {grid-template-columns:minmax(0,1fr)}
+}
