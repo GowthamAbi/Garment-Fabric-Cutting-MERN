@@ -18,6 +18,7 @@ export function legacyDepartment(path){
 export function enforceAccessBoundary(req){
  const user=req.user;if(!strictAccess(user))return;
  const path=req.originalUrl.split('?')[0].replace(/^\/api/,'');
+ if(path==='/fabric-cutting/fabric-plan-monitor'&&req.method!=='GET')throw new ApiError(405,'Fabric plan monitoring has no write permission');
  if(companyOwner(user)){const department=legacyDepartment(path);if(department&&req.accessCompany&&!enabledDepartment(req.accessCompany,department))throw new ApiError(403,'Legacy department is not subscribed');return;}
  if(/^\/auth\/(session|logout|profile)$/.test(path)||path==='/saas/access-status')return;
  if(path.startsWith('/auth/factories')){if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');if(req.method==='GET'||hasPermission(user,'company.settings'))return;throw new ApiError(403,'Company settings permission required');}
