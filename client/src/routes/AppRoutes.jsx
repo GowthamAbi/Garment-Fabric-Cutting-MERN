@@ -57,6 +57,7 @@ import CuttingStockPage from "../pages/fabric/CuttingStockPage.jsx";
 import FabricQrPrintPage from "../pages/fabric/FabricQrPrintPage.jsx";
 import FabricPlanMonitorPage from "../pages/fabric/FabricPlanMonitorPage.jsx";
 import FabricIssueEntryPage from "../pages/fabric/FabricIssueEntryPage.jsx";
+import FabricOperationsPage from "../pages/fabric/FabricOperationsPage.jsx";
 import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
 import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
@@ -106,6 +107,18 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
     case "Production & Retail": return <div className="erp-shell"><Departments notify={notify}/></div>;
     case "Integrated ERP": return <ErpWorkspace notify={notify} />;
     case "Subscription Automation": return <AutomationPage notify={notify} />;
+    case "Fabric Operations Availability":
+      return <FabricOperationsPage mode="availability"/>;
+    case "Fabric Operations Inward":
+      return <FabricOperationsPage mode="inward"/>;
+    case "Fabric Operations Folding":
+      return <FabricOperationsPage mode="folding"/>;
+    case "Fabric Operations Batches":
+      return <FabricOperationsPage mode="batches"/>;
+    case "Fabric Operations History":
+      return <FabricOperationsPage mode="history"/>;
+    case "Fabric Operations Reports":
+      return <FabricOperationsPage mode="reports"/>;
     case "Fabric Issue Entry":
       return <FabricIssueEntryPage notify={notify}/>;
     case "Fabric Plan Monitoring":
