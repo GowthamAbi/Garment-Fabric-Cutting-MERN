@@ -26,6 +26,7 @@ const allocation = new mongoose.Schema(
   {
     inwardNo: String,
     colour: String,
+    dia: String,
     weightKg: Number,
     issuedAt: { type: Date, default: Date.now },
     issuedBy: String,
