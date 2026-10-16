@@ -82,8 +82,8 @@ const r = Router(),
   );
 r.get("/masters", fabricRead, asyncHandler(m.listFabricMasters));
 r.get("/masters/:code", fabricRead, asyncHandler(m.getFabricMaster));
-r.post("/masters", masterWrite, asyncHandler(m.saveFabricMaster));
-r.put("/masters/:id", masterWrite, asyncHandler(m.saveFabricMaster));
+r.post("/masters", fabricEntry, asyncHandler(m.saveFabricMaster));
+r.put("/masters/:id", fabricEntry, asyncHandler(m.saveFabricMaster));
 r.delete("/masters/:id", masterWrite, asyncHandler(m.deleteFabricMaster));
 r.get("/process-masters", fabricRead, asyncHandler(m.listProcesses));
 r.get("/process-masters/:type/:code", fabricRead, asyncHandler(m.getProcess));
