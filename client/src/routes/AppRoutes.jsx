@@ -55,6 +55,7 @@ import DepartmentPlanPrintPage from "../pages/fabric/DepartmentPlanPrintPage.jsx
 import FoldingEntryPage from "../pages/fabric/FoldingEntryPage.jsx";
 import CuttingStockPage from "../pages/fabric/CuttingStockPage.jsx";
 import FabricQrPrintPage from "../pages/fabric/FabricQrPrintPage.jsx";
+import FabricPlanMonitorPage from "../pages/fabric/FabricPlanMonitorPage.jsx";
 import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
 import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
@@ -104,6 +105,10 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
     case "Production & Retail": return <div className="erp-shell"><Departments notify={notify}/></div>;
     case "Integrated ERP": return <ErpWorkspace notify={notify} />;
     case "Subscription Automation": return <AutomationPage notify={notify} />;
+    case "Fabric Plan Monitoring":
+      return <FabricPlanMonitorPage mode="plans"/>;
+    case "Fabric Issue Monitoring":
+      return <FabricPlanMonitorPage mode="issues"/>;
     case "Fabric Dashboard":
       return (
         <DepartmentOverviewPage
