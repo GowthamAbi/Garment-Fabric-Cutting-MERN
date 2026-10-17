@@ -10,7 +10,7 @@ const routes=readFileSync(fileURLToPath(new URL("../src/routes/AppRoutes.jsx",im
 const pages=new Set([...routes.matchAll(/case\s+["']([^"']+)["']\s*:/g)].map(match=>match[1]));
 const items=EXCEL_REQUIREMENTS.filter(r=>r.area==="Department"&&r.department==="Cutting");
 const base={department:"CUTTING",accessScope:"DEPARTMENT",accessPolicyVersion:1};
-const head={...base,role:"department_incharge",permissions:["department.cutting.read"]};
+const head={...base,role:"department_incharge",permissions:["department.cutting.read","approval.head.cutting"]};
 const staff={...base,role:"department_entry",permissions:["department.cutting.read","department.cutting.write"]};
 const subscription={accessAllowed:true,enabledDepartments:["CUTTING"]};
 
