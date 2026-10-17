@@ -8,6 +8,7 @@ import ManagementApprovalInbox from "../pages/dashboard/ManagementApprovalInbox.
 import ApprovalGrantsPage from "../pages/dashboard/ApprovalGrantsPage.jsx";
 import CompanyApprovalSettingsPage from "../pages/dashboard/CompanyApprovalSettingsPage.jsx";
 import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
+import AccessoriesDepartmentPage from "../pages/erp/AccessoriesDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -178,6 +179,36 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <DeliveryDepartmentPage mode="section" notify={notify} />;
     case "Section History":
       return <DeliveryDepartmentPage mode="history" notify={notify} />;
+    case "Accessories Requirement":
+      return <AccessoriesDepartmentPage mode="requirement" notify={notify} />;
+    case "Accessories Purchase Status":
+      return <AccessoriesDepartmentPage mode="purchaseStatus" notify={notify} />;
+    case "Accessories Stock Availability":
+      return <AccessoriesDepartmentPage mode="availability" notify={notify} />;
+    case "Accessories Before Status":
+      return <AccessoriesDepartmentPage mode="beforeStatus" notify={notify} />;
+    case "Accessories After Status":
+      return <AccessoriesDepartmentPage mode="afterStatus" notify={notify} />;
+    case "Accessories Shortage":
+      return <AccessoriesDepartmentPage mode="shortage" notify={notify} />;
+    case "Accessories Reports":
+      return <AccessoriesDepartmentPage mode="reports" notify={notify} />;
+    case "Accessories Master Workspace":
+      return <AccessoriesDepartmentPage mode="master" notify={notify} />;
+    case "Accessories Purchase Entry":
+      return <AccessoriesDepartmentPage mode="purchase" notify={notify} />;
+    case "Accessories Stock Workspace":
+      return <AccessoriesDepartmentPage mode="stock" notify={notify} />;
+    case "Accessories Before Issue":
+      return <AccessoriesDepartmentPage mode="before" notify={notify} />;
+    case "Accessories After Issue":
+      return <AccessoriesDepartmentPage mode="after" notify={notify} />;
+    case "Accessories Return Transfer":
+      return <AccessoriesDepartmentPage mode="return" notify={notify} />;
+    case "Accessories Adjustment Request":
+      return <AccessoriesDepartmentPage mode="adjustment" notify={notify} />;
+    case "Accessories History":
+      return <AccessoriesDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
