@@ -7,6 +7,7 @@ import PublicOutwardPage from "./pages/outward/PublicOutwardPage.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import ProductionControlPage from "./pages/production/ProductionControlPage.jsx";
 import GlobalFeedback from "./components/common/GlobalFeedback.jsx";
+import {visiblePageForUser} from "./config/portalNavigationPolicy.mjs";
 import UGSaaSLoader from "./components/common/UGSaaSLoader.jsx";
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import PrivacyPage from "./pages/legal/PrivacyPage.jsx";
@@ -95,6 +96,8 @@ function Application() {
   }
 
   if (!token || !user) return <LoginPage />;
+  // A role change must never leave a previous portal page visible.
+  const visiblePage = visiblePageForUser(user,page);
   const erpBundle = window.location.pathname.match(/^\/c\/[a-z0-9-]{3,40}\/erp-bundle\/([a-f0-9]{24})$/i);
   if(erpBundle) return <div className="erp-shell"><BundleTrace bundleId={erpBundle[1]}/></div>;
   const erpRoll = window.location.pathname.match(/^\/c\/[a-z0-9-]{3,40}\/erp-roll\/([a-f0-9]{24})$/i);
@@ -134,8 +137,8 @@ function Application() {
 
   return (
     <>
-      <MainLayout page={page} onPageChange={setPage}>
-        <AppRoutes page={page} notify={notify} onPageChange={setPage} />
+      <MainLayout page={visiblePage} onPageChange={setPage}>
+        <AppRoutes page={visiblePage} notify={notify} onPageChange={setPage} />
       </MainLayout>
 
       {message && <div className="toast">{message}</div>}

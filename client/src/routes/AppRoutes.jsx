@@ -55,11 +55,15 @@ import OwnerSalesPage from "../pages/saas/OwnerSalesPage.jsx";
 import OwnerSubscriptionsPage from "../pages/saas/OwnerSubscriptionsPage.jsx";
 import OwnerUsersPage from "../pages/saas/OwnerUsersPage.jsx";
 import {DEPARTMENTS} from "../../../shared/departmentCatalogue.js";
+import {pageAllowedForPortal,portalLandingPage} from "../config/portalNavigationPolicy.mjs";
 import LeadCrmPage from "../pages/saas/LeadCrmPage.jsx";
 import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange }) {
   const { user } = useAuth();
+  if(!pageAllowedForPortal(user,page)){
+    return <p role="alert">This page is not available in your assigned portal. Return to {portalLandingPage(user)}.</p>;
+  }
   if(page.startsWith("Department Workspace:")){
     const department=page.slice("Department Workspace:".length);
     return DEPARTMENTS.includes(department) ? <div className="erp-shell"><Departments key={department} initialDepartment={department} notify={notify}/></div> : <p role="alert">Unknown department.</p>;
