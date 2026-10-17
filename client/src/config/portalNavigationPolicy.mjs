@@ -61,6 +61,9 @@ export function pageAllowedForPortal(user,page){
   if(section==="SAAS_OWNER")return OWNER_PAGES.has(page);
   if(["department_entry","department_incharge"].includes(user.role)){
     if(page==="Department Dashboard"||page==="Profile Settings"||page==="Account Details")return true;
+    // Shared task/approval screens remain visible only when existing
+    // roleDepartmentNavigation authorizes them with role/department grants.
+    if(["Department Tasks","Management Approval Inbox","Department Approval Requests"].includes(page))return true;
     // Department logins cannot switch to management or owner consoles by
     // clicking a stale link or by restoring a page from an older session.
     if((COMPANY_PAGES.has(page)||FACTORY_ADMIN_PAGES.has(page)||OWNER_PAGES.has(page)))return false;
