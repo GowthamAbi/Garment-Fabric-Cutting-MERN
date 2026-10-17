@@ -56,3 +56,11 @@
 **Verified development checks:** GitHub Actions Approval Development Checks [39000777638](https://github.com/GowthamAbi/Garment-Fabric-Cutting-MERN/actions/runs/39000777638) — 241 backend passed / 8 skipped / 0 failed; 41 frontend passed / 0 failed; client build passed. Fabric Database Workflow QA [39000777639](https://github.com/GowthamAbi/Garment-Fabric-Cutting-MERN/actions/runs/39000777639) passed.
 
 **Release gate:** **NOT 20/20 VERIFIED_COMPLETE.** Explicit user plan: complete all departmental development batches first, then integrated system E2E testing. Production site and customer data untouched.
+
+## Delivery follow-up — vendor stitched-piece return & permission guard batch
+- Added tenant-isolated, append-only `DeliveryVendorReceipt` ledger, vendor return reference, per DC/colour/size **good/rework/rejected PCS**, returned PCS and pending stitching PCS.
+- Receipt acceptance is restricted to an **ISSUED + physically handed-over DC**, enforces non-negative whole PCS, never over-returns, supports stable idempotent retries and serializes writes on a DC in MongoDB transactions.
+- Added `GET /delivery/vendor-return-monitoring`, paginated `GET /delivery/vendor-returns` and `POST /delivery/vendor-returns`; Staff entry + Head reporting available from **Vendor Pending Qty** view; CSV/print use monitoring table.
+- Enforced explicit generic department isolation and prohibited Head operational writes on **all Delivery routes** (previous generic allowDepartment middleware could otherwise fall through to legacy role allowlist).
+- Added pure policy unit tests for role separation, over-return/invalid returns and distinguishing stitching from handover pending.
+- **NOT stock inward**: return acknowledgement never credits ERP, Sewing or Warehouse stock. Downstream INWARD integration/reconciliation, reversals, multi-factory migration, authenticated staging end-to-end tests, large-data pagination and physical print/mobile tests remain pending.

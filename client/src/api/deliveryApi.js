@@ -22,4 +22,8 @@ export const deliveryApi = {
   handover: (id,data) => api("/delivery/challans/"+encodeURIComponent(id)+"/handover",
     {method:"POST",body:JSON.stringify(data)}),
   cuttingStock: () => api("/delivery/cutting-stock"),
+  vendorReturns: (p) => api("/delivery/vendor-returns"+qs(p)),
+  vendorReturnMonitoring: () => api("/delivery/vendor-return-monitoring"),
+  saveVendorReturn: (data,key) => api("/delivery/vendor-returns",{method:"POST",
+    headers:{"Idempotency-Key":key},body:JSON.stringify(data)}),
 };
