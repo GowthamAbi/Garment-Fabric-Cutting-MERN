@@ -81,6 +81,7 @@ const schema = new mongoose.Schema(
     totalPlannedPcs: Number,
     totalWantedWeightKg: Number,
     issuedWeightKg: { type: Number, default: 0 },
+    deliveryRevision: { type: Number, default: 0 },
     status: {
       type: String,
       enum: [
