@@ -19,6 +19,8 @@ import {fail,money,ratio,safeInteger} from './policy.js';
 import { forecastDemand, dailyNetSales, scenarioForecast } from './forecastPolicy.js';
 import { departmentSummary } from './departmentReports.js';
 import {stitchingOverview} from "./stitchingOverviewPolicy.js";
+import {inwardOverview,validateInwardDiscrepancy} from "./inwardOverviewPolicy.js";
+import InwardDiscrepancyRequest from "../models/InwardDiscrepancyRequest.js";
 import accessoriesRoutes from "./accessoriesRoutes.js";
 import elasticRoutes from "./elasticRoutes.js";
 import DeliveryChallan from '../models/DeliveryChallan.js';
@@ -219,6 +221,61 @@ router.post('/targets',asyncHandler(async(req,res)=>{
 }));
 // Existing ERP lot/bundle/event data — read-only Stitching reporting, no
 // fabricated piece counts or side-channel visibility into other departments.
+
+ // Inward is distinct from the legacy PO purchasing /transactions/inward API.
+ // Returns only tenant+factory-scoped ERP lot, bundle and movement data.
+ router.get('/inward-overview',asyncHandler(async(req,res)=>{
+  requireAccess(req,'INWARD',false);
+  const scope=workspaceFilter();
+  const [lots,bundles,events,requests]=await Promise.all([
+   Lot.find({...scope,operations:{$exists:true,$ne:[]},status:{$ne:'CANCELLED'}})
+     .sort({createdAt:-1}).limit(1001).lean(),
+   Bundle.find({...scope,qty:{$gt:0}}).limit(10001).lean(),
+   Event.find({...scope,department:'INWARD',kind:'ADVANCE',reversedBy:{$exists:false}})
+     .sort({createdAt:-1}).limit(10001).lean(),
+   InwardDiscrepancyRequest.find(scope).sort({createdAt:-1}).limit(2001).lean()
+  ]);
+  if(lots.length>1000||bundles.length>10000||events.length>10000||requests.length>2000)
+   throw new ApiError(409,'Inward report limit reached; filter/archive before reporting');
+  res.json(inwardOverview(lots,bundles,events,requests));
+ }));
+ router.post('/inward-discrepancies',asyncHandler(async(req,res)=>{
+  requireAccess(req,'INWARD');
+  const scope=workspaceFilter();
+  const key=String(req.body.key||"").trim();
+  if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Stable 16–100 character key required');
+  if(!mongoose.isValidObjectId(req.body.bundleId))throw new ApiError(400,'Valid bundle required');
+  const bundle=await Bundle.findOne({...scope,_id:req.body.bundleId,qty:{$gt:0}}).lean();
+  if(!bundle)throw new ApiError(404,'Active bundle not found');
+  const lot=await Lot.findOne({...scope,_id:bundle.lotId,
+    operations:{$exists:true,$ne:[]},status:{$ne:'CANCELLED'}}).lean();
+  if(!lot)throw new ApiError(404,'Stitching lot not found');
+  const values=validateInwardDiscrepancy(req.body,bundle);
+  if(lot.routeSnapshot&&!lot.routeSnapshot.stages?.includes('INWARD'))
+   throw new ApiError(409,'Approved route skips INWARD; review source route first');
+  const hash=requestHash({bundleId:String(bundle._id),...values});
+  await InwardDiscrepancyRequest.init();
+  let existing=await InwardDiscrepancyRequest.findOne({...scope,key}).lean();
+  if(existing){
+   if(existing.requestHash!==hash)throw new ApiError(409,'Idempotency key conflicts with another count');
+   if(existing.createdBy!==req.user.userId&&!['company_owner','admin','company_admin'].includes(req.user.role))
+    throw new ApiError(403,'Request key belongs to another user');
+   return res.json(existing);
+  }
+  try{
+   const row=await InwardDiscrepancyRequest.create({...scope,key,requestHash:hash,
+    lotId:String(lot._id),lotNo:lot.code,dcNo:lot.dcNo,
+    bundleId:String(bundle._id),bundleCode:bundle.code,bundleStage:bundle.stage,
+    ...values,createdBy:req.user.userId});
+   return res.status(201).json(row);
+  }catch(e){
+   if(e.code!==11000)throw e;
+   existing=await InwardDiscrepancyRequest.findOne({...scope,key}).lean();
+   if(existing?.requestHash===hash&&existing?.createdBy===req.user.userId)return res.json(existing);
+   throw new ApiError(409,'Duplicate idempotency key; refresh and review');
+  }
+ }));
+
 router.get('/stitching-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'STITCHING',false);
  const scope=workspaceFilter();
