@@ -41,3 +41,15 @@ test("Elastic sidebar not offered to unlicensed or other-department accounts",()
  assert.equal(roleDepartmentPages(other,{accessAllowed:true,enabledDepartments:["CUTTING"]})
    .some(p=>p.excelCell&&elastic.some(e=>e.id===p.excelCell)),false);
 });
+
+test("Original Elastic machine Gantt remains wired to progress, cutting and reports",()=>{
+ const elasticPage=readFileSync(fileURLToPath(new URL("../src/pages/erp/ElasticDepartmentPage.jsx",import.meta.url)),"utf8");
+ const timeline=readFileSync(fileURLToPath(new URL("../src/pages/production/MachineStatusPage.jsx",import.meta.url)),"utf8");
+ const machineControl=readFileSync(fileURLToPath(new URL("../src/pages/production/ProductionControlPage.jsx",import.meta.url)),"utf8");
+ assert.match(elasticPage,/\["progress","reports","target","cut"\]\.includes\(mode\)/);
+ assert.match(elasticPage,/<MachineStatusPage elasticOnly \/>/);
+ assert.match(timeline,/getElasticMachineSummary/);
+ assert.match(machineControl,/startProductionJob/);
+ assert.match(machineControl,/stopProductionJob/);
+ assert.match(machineControl,/resumeProductionJob/);
+});
