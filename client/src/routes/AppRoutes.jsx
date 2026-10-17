@@ -59,6 +59,8 @@ import FabricPlanMonitorPage from "../pages/fabric/FabricPlanMonitorPage.jsx";
 import FabricIssueEntryPage from "../pages/fabric/FabricIssueEntryPage.jsx";
 import FabricOperationsPage from "../pages/fabric/FabricOperationsPage.jsx";
 import CuttingMachinePlanPage from "../pages/production/CuttingMachinePlanPage.jsx";
+import CuttingMachineMasterPage from "../pages/production/CuttingMachineMasterPage.jsx";
+import CuttingTargetActualPage from "../pages/production/CuttingTargetActualPage.jsx";
 import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
 import OwnerPlansPage from "../pages/saas/OwnerPlansPage.jsx";
@@ -233,6 +235,10 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <FabricStockPage mode="balance" notify={notify} />;
     case "Fabric Stock Waste":
       return <FabricCuttingPage mode="waste" notify={notify} />;
+    case "Cutting Target vs Actual":
+      return <CuttingTargetActualPage notify={notify} />;
+    case "Cutting Machine Master":
+      return <CuttingMachineMasterPage notify={notify} />;
     case "Machine Detail Entry & QR Print":
       return <ProductionSetupPage mode="machine" notify={notify} />;
     case "Cutting Pending":
