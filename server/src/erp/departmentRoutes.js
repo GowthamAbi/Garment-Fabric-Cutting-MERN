@@ -51,6 +51,7 @@ import FabricCutActual from '../models/FabricCutActual.js';
 import { legacyHandoff } from './legacyHandoffPolicy.js';
 import { managementReport } from './managementReports.js';
 import { countDifference, approveException } from './warehousePolicy.js';
+import {crossDepartmentHandoff,warehouseDashboardStageVisible} from './stockTransferSafetyPolicy.js';
 import { allocateLotCost } from './lotCostPolicy.js';
 const router=Router();
 const clean=v=>String(v||'').trim().slice(0,120);
@@ -747,7 +748,7 @@ router.get('/:department/dashboard',asyncHandler(async(req,res)=>{
  const d=req.params.department;requireAccess(req,d,false);const scope=workspaceFilter();
  const [bundles,lots,masters,sales]=await Promise.all([Bundle.find({...scope,qty:{$gt:0}}).limit(10001).lean(),Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({_id:-1}).limit(2000).lean(),Master.find(scope).limit(2000).lean(),d==='MARKETING'||d==='SHOP'?Sale.find(scope).sort({_id:-1}).limit(2000).lean():[]]);
  if(bundles.length>10000)fail('Bundle report limit exceeded; archive/export history');
- const externalHistory=await Event.find({...scope,department:d,kind:{$in:['EXTERNAL_INWARD','EXTERNAL_OUTWARD','EXTERNAL_MATERIALS','INTEGRATED_CORE_TRANSFER']}}).sort({_id:-1}).limit(100).lean();const observations=d==='MARKETING'?await Event.find({...scope,kind:'EXTERNAL_MARKET_OBSERVATION'}).sort({_id:-1}).limit(100).lean():[];const coreBalances=DEPARTMENTS.slice(0,5).includes(d)?await ErpBalance.find({...scope,location:d}).limit(2000).lean():[];res.json({externalHistory,observations,coreBalances,bundles:bundles.filter(b=>(!['WAREHOUSE','TRANSIT_WAREHOUSE'].includes(b.stage)&&!b.stage.startsWith('WAREHOUSE:')||locationAllowed(req.user,'WAREHOUSE',b.destination))&&(d!=='SHOP'||allowedShop(req.user,b.destination))&&(deptFor(b.stage)===d||(d==='IRONING'&&b.stage==='GOOD')||(d==='CHECKING'&&b.stage==='REWORK'&&!enabledDepartment(req.departmentCompany,'STITCHING'))||(d==='PACKING'&&b.stage==='IRONED')||(d==='WAREHOUSE'&&b.stage==='TRANSIT_WAREHOUSE')||(d==='SHOP'&&b.stage.startsWith('TRANSIT_SHOP:'))||(d==='INWARD'&&['STITCHED','REWORK_DONE'].includes(b.stage)))),lots:['STITCHING','INWARD'].includes(d)?lots:[],masters:masters.filter(m=>d==='PACKING'?m.kind==='PACKING':d==='STITCHING'?m.kind==='STITCHING':d==='SHOP'?m.kind===d&&allowedShop(req.user,m.key):d==='WAREHOUSE'?m.kind===d&&locationAllowed(req.user,'WAREHOUSE',m.key):false),sales:d==='SHOP'?sales.filter(s=>allowedShop(req.user,s.shop)):[],department:d});
+ const externalHistory=await Event.find({...scope,department:d,kind:{$in:['EXTERNAL_INWARD','EXTERNAL_OUTWARD','EXTERNAL_MATERIALS','INTEGRATED_CORE_TRANSFER']}}).sort({_id:-1}).limit(100).lean();const observations=d==='MARKETING'?await Event.find({...scope,kind:'EXTERNAL_MARKET_OBSERVATION'}).sort({_id:-1}).limit(100).lean():[];const coreBalances=DEPARTMENTS.slice(0,5).includes(d)?await ErpBalance.find({...scope,location:d}).limit(2000).lean():[];res.json({externalHistory,observations,coreBalances,bundles:bundles.filter(b=>(d!=='WAREHOUSE'||warehouseDashboardStageVisible(b.stage))&&(!['WAREHOUSE','TRANSIT_WAREHOUSE'].includes(b.stage)&&!b.stage.startsWith('WAREHOUSE:')||locationAllowed(req.user,'WAREHOUSE',b.destination))&&(d!=='SHOP'||allowedShop(req.user,b.destination))&&(deptFor(b.stage)===d||(d==='IRONING'&&b.stage==='GOOD')||(d==='CHECKING'&&b.stage==='REWORK'&&!enabledDepartment(req.departmentCompany,'STITCHING'))||(d==='PACKING'&&b.stage==='IRONED')||(d==='WAREHOUSE'&&b.stage==='TRANSIT_WAREHOUSE')||(d==='SHOP'&&b.stage.startsWith('TRANSIT_SHOP:'))||(d==='INWARD'&&['STITCHED','REWORK_DONE'].includes(b.stage)))),lots:['STITCHING','INWARD'].includes(d)?lots:[],masters:masters.filter(m=>d==='PACKING'?m.kind==='PACKING':d==='STITCHING'?m.kind==='STITCHING':d==='SHOP'?m.kind===d&&allowedShop(req.user,m.key):d==='WAREHOUSE'?m.kind===d&&locationAllowed(req.user,'WAREHOUSE',m.key):false),sales:d==='SHOP'?sales.filter(s=>allowedShop(req.user,s.shop)):[],department:d});
 }));
 router.put('/locations/:id',asyncHandler(async(req,res)=>{
  if(!['company_owner','company_admin','admin'].includes(req.user.role)||strictAccess(req.user)&&!hasPermission(req.user,'erp.masters'))throw new ApiError(403,'Location master administration required');
@@ -819,12 +820,11 @@ router.post('/transfer',asyncHandler(async(req,res)=>res.json(await transaction(
  else if(b.stage==='TRANSIT_WAREHOUSE'){requireAccess(req,'WAREHOUSE');next=`WAREHOUSE:${destination}`;}
  else if(b.stage.startsWith('WAREHOUSE:')){if(!enabledDepartment(req.departmentCompany,'SHOP'))fail('Use external outward; shop is not subscribed');const shop=await Master.findOne({...scope,key:req.body.destination,kind:'SHOP',active:{$ne:false}}).session(session);if(!shop)fail('Shop master required');destination=shop.key;next=`TRANSIT_SHOP:${destination}`;}
  else if(b.stage.startsWith('TRANSIT_SHOP:')){requireAccess(req,'SHOP');shopAccess(req,destination);next=`SHOP:${destination}`;}
- else if(b.stage.startsWith('SHOP:')){shopAccess(req,b.destination);const target=await Master.findOne({...scope,key:req.body.destination,kind:{$in:['SHOP','WAREHOUSE']}}).session(session);if(!target)fail('Shop or warehouse destination required');destination=target.key;next=target.kind==='SHOP'?`TRANSIT_SHOP:${destination}`:'TRANSIT_WAREHOUSE';}
+ else if(b.stage.startsWith('SHOP:')){shopAccess(req,b.destination);const target=await Master.findOne({...scope,key:req.body.destination,kind:{$in:['SHOP','WAREHOUSE']},active:{$ne:false}}).session(session);if(!target)fail('Active shop or warehouse destination required');destination=target.key;next=target.kind==='SHOP'?`TRANSIT_SHOP:${destination}`:'TRANSIT_WAREHOUSE';}
  else fail('Unsupported transfer stage');
  // Initiating source access was checked by getBundle. The receiving team
  // owns the cross-department transit; sender needs no receiver assignment.
- const crossHandoff=(b.stage.startsWith('WAREHOUSE:')&&next.startsWith('TRANSIT_SHOP:'))||
-  (b.stage.startsWith('SHOP:')&&next==='TRANSIT_WAREHOUSE');
+ const crossHandoff=crossDepartmentHandoff(b.stage,next);
  if(!crossHandoff)bundleAccess(req,{stage:next,destination});
  const dispatch=b.stage==='PACKED'?validateDispatchTransport(req.body.dispatch||{}):null;
  const moved=await moveBundle(req,scope,session,b,count,next,destination);
