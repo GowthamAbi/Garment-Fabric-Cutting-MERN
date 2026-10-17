@@ -1,0 +1,73 @@
+name: UG SaaS Staging Read-Only Smoke
+
+on:
+  push:
+    branches:
+      - qa/staging-readonly-smoke-20261017
+
+permissions:
+  contents: read
+
+jobs:
+  staging-http:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: External staging health, readiness, CORS and UI smoke
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from "node:assert/strict";
+          const api="https://ugsaas-staging-api.onrender.com";
+          const frontend="https://ugsaas-staging-ui.onrender.com";
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          async function get(url,init={},tries=6){
+            let last;
+            for(let n=1;n<=tries;n++){
+              try {
+                const r=await fetch(url,{redirect:"follow",signal:AbortSignal.timeout(20000),...init});
+                const body=await r.text();
+                if(r.status>=500&&n<tries){console.log("Retry "+n+" for "+new URL(url).pathname+" status="+r.status);await sleep(5000);continue}
+                return {r,body};
+              } catch(e) {last=e;if(n===tries)throw e;await sleep(5000)}
+            }
+            throw last;
+          }
+          const health=await get(api+"/health");
+          console.log("API GET /health ->",health.r.status);
+          assert.equal(health.r.status,200);
+          assert.equal(JSON.parse(health.body).success,true);
+          const ready=await get(api+"/ready");
+          console.log("API GET /ready ->",ready.r.status,ready.body.slice(0,100));
+          assert.equal(ready.r.status,200);
+          assert.equal(JSON.parse(ready.body).ready,true);
+          const cors=await get(api+"/health",{method:"OPTIONS",headers:{
+            Origin:frontend,"Access-Control-Request-Method":"GET"
+          }});
+          console.log("CORS staging Origin ->",cors.r.status,cors.r.headers.get("access-control-allow-origin"));
+          assert.ok(cors.r.status>=200&&cors.r.status<300);
+          assert.equal(cors.r.headers.get("access-control-allow-origin"),frontend);
+          const denied=await get(api+"/health",{method:"OPTIONS",headers:{
+            Origin:"https://ugsaas.com","Access-Control-Request-Method":"GET"
+          }});
+          console.log("CORS live Origin ->",denied.r.status,"allow=",denied.r.headers.get("access-control-allow-origin"));
+          assert.notEqual(denied.r.headers.get("access-control-allow-origin"),"https://ugsaas.com");
+          const html=await get(frontend+"/");
+          console.log("Frontend GET / ->",html.r.status,"bytes="+html.body.length);
+          assert.equal(html.r.status,200);
+          assert.match(html.body,/<html|<!doctype html/i);
+          const links=[...html.body.matchAll(/src="(\/assets\/[^"]+\.js)"/g)].map(x=>x[1]);
+          assert.ok(links.length>0,"Frontend script assets missing");
+          let hasStagingEndpoint=false;
+          for(const path of links){
+            const script=await get(frontend+path);
+            assert.equal(script.r.status,200,"JS "+path);
+            if(script.body.includes("https://ugsaas-staging-api.onrender.com/api"))hasStagingEndpoint=true;
+          }
+          console.log("Frontend production bundle contains dedicated staging API URL ->",hasStagingEndpoint);
+          assert.equal(hasStagingEndpoint,true);
+          const login=await get(frontend+"/login");
+          console.log("Frontend deep link GET /login ->",login.r.status);
+          assert.equal(login.r.status,200,"SPA /login must rewrite to index.html");
+          console.log("PASS: read-only staging API, DB readiness, CORS isolation, frontend and deep-link smoke");
+          NODE
