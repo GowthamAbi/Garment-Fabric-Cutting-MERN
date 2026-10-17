@@ -13,8 +13,13 @@ export const deliveryApi = {
     }),
   plans: () => api("/delivery/plans"),
   plan: (no) => api("/delivery/plans/" + encodeURIComponent(no)),
-  saveChallan: (data) =>
-    api("/delivery/challans", { method: "POST", body: JSON.stringify(data) }),
+  saveChallan: (data,requestKey) =>
+    api("/delivery/challans", { method: "POST",
+      headers: requestKey?{"Idempotency-Key":requestKey}:{},
+      body: JSON.stringify(data) }),
   history: (p) => api("/delivery/history" + qs(p)),
+  monitoring: () => api("/delivery/monitoring"),
+  handover: (id,data) => api("/delivery/challans/"+encodeURIComponent(id)+"/handover",
+    {method:"POST",body:JSON.stringify(data)}),
   cuttingStock: () => api("/delivery/cutting-stock"),
 };
