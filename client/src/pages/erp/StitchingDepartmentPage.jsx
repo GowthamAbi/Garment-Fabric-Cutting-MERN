@@ -3,6 +3,7 @@ import {RefreshCw,Download,Printer} from "lucide-react";
 import {exportCsv} from "../../api.js";
 import {useAuth} from "../../context/AuthContext.jsx";
 import {getStitchingOverview} from "../../api/stitchingApi.js";
+import {stitchingExportRecords} from "../../config/stitchingExport.mjs";
 import Departments from "./Departments.jsx";
 
 const pageNames={
@@ -36,6 +37,7 @@ export default function StitchingDepartmentPage({mode="orders",notify}){
  const operationRows=data.operations.map(o=>[o.sku,o.masterKey,o.sequence,o.operation,fmt(o.completedEventPcs)]);
  const targetRows=data.targets.map(t=>[t.date,t.sku,t.operation,t.operator,t.shift,fmt(t.targetPcs)]);
  const defectRows=data.defects.map(d=>[d.date?new Date(d.date).toLocaleDateString():"",d.lotId,d.kind,d.department,fmt(d.quantity),d.reason]);
+ const exportRows=stitchingExportRecords(mode,data,plans);
  const summary=data.summary||{};
  const operational=["master","start","completion","handover","trace"].includes(mode);
  const listTargets=["targets","reports"].includes(mode);
@@ -47,8 +49,7 @@ export default function StitchingDepartmentPage({mode="orders",notify}){
    <p>Actual ERP lots, bundles, route operations and posted movement events. No duplicate stock counter.</p>
   </div><div className="page-actions">
    <button type="button" onClick={load} disabled={loading}><RefreshCw size={16}/> Refresh</button>
-   <button type="button" disabled={!planRows.length} onClick={()=>exportCsv("stitching-"+mode+".csv",
-    planRows.map(r=>Object.fromEntries(r.map((v,i)=>[String(i+1),v]))))}><Download size={16}/> Excel</button>
+   <button type="button" disabled={!exportRows.length} onClick={()=>exportCsv("stitching-"+mode+".xls",exportRows)}><Download size={16}/> Excel</button>
    <button type="button" onClick={()=>window.print()}><Printer size={16}/> Print</button>
   </div></header>
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:12}}>

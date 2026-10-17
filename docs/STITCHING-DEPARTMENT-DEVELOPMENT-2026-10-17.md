@@ -50,3 +50,8 @@
 
 ## Elastic preservation note (interruption)
 Original `ProductionControlPage`, `MachineStatusPage`, `ProductionJob` start/stop/resume and Gantt timeline were **never deleted**. New Elastic workbook navigation had hidden the original timeline. This development batch restores a **read-only** original MachineStatusPage Gantt with seven-day machine report to Elastic Head Progress/Target/Reports and Staff Cutting Entry screens via an isolated `/production/elastic-machine-summary` endpoint. That endpoint is strictly licensed to ELASTIC, guarded for single-factory legacy data and restricted to Elastic production machines/jobs. The original legacy operational start/stop UI remains in the source, but its old warehouse/stock pipeline is **not yet integrated** with the new ERP MTR ledger and should not be declared accepted until reconciliation is complete.
+
+## 17 October follow-up — Stitching Excel export correctness
+- Fixed the selected Stitching page Excel button to export **the actual selected dataset** (operation completions, targets, defect/rework records, or lot progress) rather than always exporting lot progress rows.
+- Full Stitching Reports now include a single export with named sections and consistent columns for Lots, Operations, Targets and Defect/Rework records. Report values are unformatted numeric PCS and labeled headers; existing role-scoped read API is reused.
+- Added focused frontend regression tests. This remains a code-development QA improvement, **not** 21/21 authenticated E2E acceptance. Pending defects workflow and Inward integration are unchanged.
