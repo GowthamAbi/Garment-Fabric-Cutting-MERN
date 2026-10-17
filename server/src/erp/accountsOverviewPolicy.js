@@ -28,7 +28,7 @@ export function accountsOverview(entries=[],balances=[],documents=[],parties=[],
  const bank=bankRows.map(r=>({id:String(r._id),date:r.date,reference:r.reference,
   amount:p(r.amount),documentId:r.documentId||"",matched:Boolean(r.documentId)}));
  const balance=code=>p(finance.accounts.find(a=>a.code===code)?.balance);
- const summary={receivables:balance("AR"),payables:-balance("AP"),
+ const summary={receivables:balance("AR"),payables:-balance("AP")||0,
   cash:balance("CASH"),bank:balance("BANK"),
   revenue:p(finance.profitAndLoss.revenue),expenses:p(finance.profitAndLoss.expenses),
   profit:p(finance.profitAndLoss.profit),trialDifference:p(finance.trialDifference),
