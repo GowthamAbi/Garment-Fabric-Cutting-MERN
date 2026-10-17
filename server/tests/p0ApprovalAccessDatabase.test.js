@@ -118,7 +118,7 @@ test("P0 approval: real replica-set owner grant and independent decision with sc
   assert.equal((await call("/department-approval-requests/"+id+"/decision",
    {role:"STAFF",method:"POST",body:decision})).status,403);
   assert.equal((await call("/department-approval-requests/"+id+"/decision",
-   {role:"HEAD",method:"POST",body:decision,other:true})).status,403);
+   {role:"HEAD",method:"POST",body:decision,other:true})).status,404); // Hide cross-factory request existence
   const approved=await call("/department-approval-requests/"+id+"/decision",
    {role:"HEAD",method:"POST",body:decision});
   assert.equal(approved.status,200,JSON.stringify(approved.data));
