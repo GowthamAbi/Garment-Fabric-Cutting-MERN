@@ -1,5 +1,6 @@
 // Single-portal navigation boundary. This is a UI guard, not a substitute
 // for API authorization, tenant isolation or subscription enforcement.
+import {DEPARTMENTS} from "../../../../shared/departmentCatalogue.js";
 const COMPANY_PAGES = new Set([
   "Company Dashboard","Factory Management","Company Reports","Company Timeline",
   "Company Stock","Company Approvals","Company Purchase Orders",
@@ -32,8 +33,8 @@ export function portalSectionForUser(user){
   if(role==="company_admin"||role==="company_owner")return "COMPANY_ADMIN";
   if(role==="admin")return "ADMIN";
   const department=String(user.department||"").toUpperCase();
-  if(department&&["department_entry","department_incharge"].includes(role))
-    return department;
+  if(department&&DEPARTMENTS.includes(department)&&
+     ["department_entry","department_incharge"].includes(role))return department;
   if(department&&Object.hasOwn(LEGACY_DEPARTMENT_ROLES,department))return department;
   for(const [code,roles] of Object.entries(LEGACY_DEPARTMENT_ROLES)){
     if(roles.includes(role))return code;
