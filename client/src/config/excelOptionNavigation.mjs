@@ -156,6 +156,24 @@ const ROUTES=Object.freeze({
   "Bundle QR":"Checking Scan Workspace",
   "Checking History":"Checking History Workspace"
  },
+ IRONING:{
+  "Ironing Work Queue":"Ironing Queue Workspace",
+  "Target vs Actual":"Ironing Targets Workspace",
+  "Pending & Completed":"Ironing Status Workspace",
+  "Re-Ironing / Damage":"Ironing Issues Workspace",
+  "Transfer to Packing Status":"Ironing Handover Workspace",
+  "Production Delays":"Ironing Delays Workspace",
+  "Ironing Reports":"Ironing Reports Workspace",
+  "Received for Ironing":"Ironing Received Workspace",
+  "Ironing Plan / Queue":"Ironing Queue Workspace",
+  "Ironing Entry":"Ironing Entry Workspace",
+  "Completed Qty":"Ironing Completed Workspace",
+  "Damage / Re-Ironing Request":"Ironing Damage Workspace",
+  "Handover to Packing":"Ironing Handover Workspace",
+  "QR / Bundle Status":"Ironing QR Workspace",
+  "Ironing History":"Ironing History Workspace",
+  "Print & Reports":"Ironing Print Workspace"
+ },
  WAREHOUSE:{
   "Warehouse Stock Overview":"Warehouse Management",
   "Warehouse Stock":"Warehouse Management",

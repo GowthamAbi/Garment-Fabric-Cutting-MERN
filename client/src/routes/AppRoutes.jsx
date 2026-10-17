@@ -13,6 +13,7 @@ import ElasticDepartmentPage from "../pages/erp/ElasticDepartmentPage.jsx";
 import StitchingDepartmentPage from "../pages/erp/StitchingDepartmentPage.jsx";
 import InwardDepartmentPage from "../pages/erp/InwardDepartmentPage.jsx";
 import CheckingDepartmentPage from "../pages/erp/CheckingDepartmentPage.jsx";
+import IroningDepartmentPage from "../pages/erp/IroningDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -352,6 +353,34 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <CheckingDepartmentPage mode="scan" notify={notify} />;
     case "Checking History Workspace":
       return <CheckingDepartmentPage mode="history" notify={notify} />;
+    case "Ironing Queue Workspace":
+      return <IroningDepartmentPage mode="queue" notify={notify} />;
+    case "Ironing Targets Workspace":
+      return <IroningDepartmentPage mode="targets" notify={notify} />;
+    case "Ironing Status Workspace":
+      return <IroningDepartmentPage mode="status" notify={notify} />;
+    case "Ironing Issues Workspace":
+      return <IroningDepartmentPage mode="issues" notify={notify} />;
+    case "Ironing Handover Workspace":
+      return <IroningDepartmentPage mode="handover" notify={notify} />;
+    case "Ironing Delays Workspace":
+      return <IroningDepartmentPage mode="delays" notify={notify} />;
+    case "Ironing Reports Workspace":
+      return <IroningDepartmentPage mode="reports" notify={notify} />;
+    case "Ironing Received Workspace":
+      return <IroningDepartmentPage mode="received" notify={notify} />;
+    case "Ironing Entry Workspace":
+      return <IroningDepartmentPage mode="entry" notify={notify} />;
+    case "Ironing Completed Workspace":
+      return <IroningDepartmentPage mode="completed" notify={notify} />;
+    case "Ironing Damage Workspace":
+      return <IroningDepartmentPage mode="damage" notify={notify} />;
+    case "Ironing QR Workspace":
+      return <IroningDepartmentPage mode="qr" notify={notify} />;
+    case "Ironing History Workspace":
+      return <IroningDepartmentPage mode="history" notify={notify} />;
+    case "Ironing Print Workspace":
+      return <IroningDepartmentPage mode="print" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
