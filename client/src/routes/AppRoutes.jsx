@@ -1,5 +1,6 @@
 import FactoryManagement from "../pages/auth/FactoryManagement.jsx";
 import {rolePageAllowed} from "../config/roleDepartmentNavigation.mjs";
+import {pageAllowedForPortal} from "../config/portalNavigationPolicy.mjs";
 import {EXCEL_PAGE_PREFIX,excelOptionForUser,excelOptionTarget} from "../config/excelOptionNavigation.mjs";
 import DepartmentRolePreview from "../pages/dashboard/DepartmentRolePreview.jsx";
 import DepartmentApprovalQueue from "../pages/dashboard/DepartmentApprovalQueue.jsx";
@@ -88,6 +89,7 @@ import SupportAccessPage from "../pages/saas/SupportAccessPage.jsx";
 
 export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption=null }) {
   const { user } = useAuth();
+  if(!pageAllowedForPortal(user,page))return <p role="alert">This screen belongs to another login portal.</p>;
   // Only a validated Excel option may forward to an already existing screen.
   // Backend permissions and subscription checks still enforce every API call.
   if(!_fromExcelOption&&!rolePageAllowed(user,page))return <p role="alert">This screen is outside your assigned department and role.</p>;
