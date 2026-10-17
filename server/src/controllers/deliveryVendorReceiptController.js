@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import DeliveryChallan from "../models/DeliveryChallan.js";
+import DeliveryVendor from "../models/DeliveryVendor.js";
 import DeliveryVendorReceipt from "../models/DeliveryVendorReceipt.js";
 import {currentDatabase} from "../config/tenantDatabase.js";
 import {validateVendorReturnLines,vendorReturnSummary} from "../erp/deliveryVendorReturnPolicy.js";
@@ -65,7 +66,7 @@ export async function vendorReturnMonitoring(req,res){
  const [challans,receipts,vendors]=await Promise.all([
   DeliveryChallan.find({}).sort({deliveryDate:-1}).limit(5001).lean(),
   DeliveryVendorReceipt.find({}).sort({createdAt:-1}).limit(5001).lean(),
-  (await import("../models/DeliveryVendor.js")).default.find({active:true}).limit(1001).lean()
+  DeliveryVendor.find({active:true}).limit(1001).lean()
  ]);
  const result=vendorReturnSummary(challans,receipts,vendors);
  const used=new Map();

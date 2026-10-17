@@ -29,6 +29,7 @@ const schema = new mongoose.Schema(
     requestHash: String,
     expectedHandoverAt: Date,
     handoverAt: Date,
+    receiptRevision: { type: Number, default: 0 },
     handoverReference: String,
     handoverRemarks: String,
     handoverBy: String,
