@@ -1,4 +1,7 @@
 import DeliveryVendor from "../models/DeliveryVendor.js";
+import crypto from "node:crypto";
+import {currentDatabase} from "../config/tenantDatabase.js";
+import {validateDeliveryLines,deliveryStageStatus,deliveryChallanSummary,validateHandover} from "../erp/deliveryPolicy.js";
 import DeliveryChallan from "../models/DeliveryChallan.js";
 import FabricCutPlan from "../models/FabricCutPlan.js";
 import FabricCutActual from "../models/FabricCutActual.js";
@@ -18,11 +21,11 @@ async function nextCode(key, prefix, width = 4) {
   );
   return `${prefix}-${String(row.value).padStart(width, "0")}`;
 }
-async function deliveryMap(planNos) {
+async function deliveryMap(planNos, session=null) {
   const rows = await DeliveryChallan.find({
     planNo: { $in: planNos },
     status: "ISSUED",
-  }).lean();
+  }).session(session).lean();
   const map = new Map();
   rows.forEach((doc) =>
     doc.lines.forEach((line) => {
@@ -32,22 +35,7 @@ async function deliveryMap(planNos) {
   );
   return map;
 }
-function stages(plan, actual) {
-  const cuttingComplete = Boolean(actual && actual.status === "COMPLETED");
-  const foldingComplete = Boolean(
-    plan.foldingSavedAt && plan.foldingLines?.length,
-  );
-  return {
-    cuttingStatus: cuttingComplete
-      ? "COMPLETED"
-      : actual
-        ? "PENDING"
-        : "NOT STARTED",
-    foldingStatus: foldingComplete ? "COMPLETED" : "PENDING",
-    elasticStatus: plan.elasticCompletedAt ? "COMPLETED" : "PENDING",
-    eligible: cuttingComplete && foldingComplete,
-  };
-}
+const stages=deliveryStageStatus;
 export async function listVendors(req, res) {
   const search = String(req.query.search || "");
   const query = search
@@ -150,65 +138,110 @@ export async function getPlanSetup(req, res) {
   res.json({ plan, actual, ...stages(plan, actual), lines });
 }
 export async function createChallan(req, res) {
-  const plan = await FabricCutPlan.findOne({
-    planNo: upper(req.body.planNo),
-  }).lean();
-  if (!plan) throw new ApiError(404, "Plan not found");
-  const actual = await FabricCutActual.findOne({ planNo: plan.planNo }).lean();
-  const status = stages(plan, actual);
-  if (!status.eligible)
-    throw new ApiError(
-      400,
-      "Cutting and Folding must be completed before delivery",
-    );
-  const vendor = await DeliveryVendor.findOne({
-    vendorCode: upper(req.body.vendorCode),
-    active: true,
-  }).lean();
-  if (!vendor) throw new ApiError(400, "Valid vendor code is required");
-  const requested = (req.body.lines || [])
-    .map((x) => ({
-      colour: upper(x.colour),
-      size: upper(x.size),
-      pcs: num(x.pcs),
-    }))
-    .filter((x) => x.pcs > 0);
-  if (!requested.length)
-    throw new ApiError(400, "Select at least one colour / size / PCS");
-  const used = await deliveryMap([plan.planNo]);
-  for (const line of requested) {
-    const source = actual.lines.find(
-      (x) => upper(x.colour) === line.colour && upper(x.size) === line.size,
-    );
-    const balance =
-      num(source?.actualPcs) -
-      (used.get(`${plan.planNo}|${line.colour}|${line.size}`) || 0);
-    if (!source || line.pcs > balance)
-      throw new ApiError(
-        400,
-        `${line.colour} / ${line.size}: only ${Math.max(0, balance)} PCS available`,
-      );
+  const planNo=upper(req.body.planNo),vendorCode=upper(req.body.vendorCode);
+  if(!/^[A-Z0-9_/-]{2,100}$/.test(planNo)||!/^[A-Z0-9_-]{2,75}$/.test(vendorCode))
+    throw new ApiError(400,"Valid Plan No and Vendor Code required");
+  const requestKey=String(req.get?.("Idempotency-Key")||"").trim()||crypto.randomUUID();
+  if(!/^[A-Za-z0-9_-]{16,100}$/.test(requestKey))
+    throw new ApiError(400,"Idempotency-Key must be 16-100 characters");
+  const expected=String(req.body.expectedHandoverAt||"").trim();
+  const expectedHandoverAt=expected?new Date(expected):null;
+  if(expected&&(!Number.isFinite(expectedHandoverAt.getTime())||expectedHandoverAt<new Date("2020-01-01")))
+    throw new ApiError(400,"Invalid expected handover date");
+  const remarks=String(req.body.remarks||"").trim();
+  if(remarks.length>300)throw new ApiError(400,"Remarks max 300 characters");
+  // Pre-create unique indexes before using a replica-set transaction.
+  await Promise.all([DeliveryChallan.init(),FabricCutPlan.init()]);
+  const session=await currentDatabase().startSession();
+  let result, replay=false;
+  try {
+    await session.withTransaction(async()=>{
+      // Atomic write conflict on the same Fabric Plan serializes simultaneous
+      // challans. Never trust the previously displayed balance from the browser.
+      const plan=await FabricCutPlan.findOneAndUpdate({planNo},
+        {$inc:{deliveryRevision:1}},{new:true,session});
+      if(!plan)throw new ApiError(404,"Cutting Plan not found");
+      const actual=await FabricCutActual.findOne({planNo}).session(session).lean();
+      if(!stages(plan,actual).eligible)
+        throw new ApiError(409,"Cutting and Folding must be completed before delivery");
+      const vendor=await DeliveryVendor.findOne({vendorCode,active:true}).session(session).lean();
+      if(!vendor)throw new ApiError(409,"Active Vendor required");
+      const used=await deliveryMap([planNo],session);
+      const lines=validateDeliveryLines(req.body.lines,actual.lines,used,planNo);
+      const hash=crypto.createHash("sha256").update(JSON.stringify({planNo,vendorCode,lines,
+        expectedHandoverAt:expectedHandoverAt?.toISOString()||"",remarks})).digest("hex");
+      const existing=await DeliveryChallan.findOne({requestKey}).session(session).lean();
+      if(existing){
+        if(existing.requestHash!==hash)
+          throw new ApiError(409,"Idempotency key reused with different challan data");
+        result=existing;replay=true;return;
+      }
+      const challanNo=await nextCode("DELIVERY_CHALLAN","DCH",5);
+      const [saved]=await DeliveryChallan.create([{
+        challanNo,deliveryDate:req.body.deliveryDate||new Date(),
+        planNo:plan.planNo,dcNo:plan.dcNo,orderNo:plan.orderNo,itemCode:plan.itemCode,
+        itemName:plan.itemName,style:plan.style,
+        vendorCode:vendor.vendorCode,vendorName:vendor.vendorName,
+        vendorAddress:vendor.address,qcName:vendor.qcName,
+        lines,totalPcs:lines.reduce((n,x)=>n+x.pcs,0),remarks,requestKey,
+        requestHash:hash,expectedHandoverAt,createdBy:req.user?.email||req.user?.userId
+      }],{session});
+      result=saved.toObject();
+    });
+  } finally { await session.endSession(); }
+  res.status(replay?200:201).json(result);
+}
+
+export async function handoverChallan(req,res){
+  const {reference,remarks}=validateHandover(req.body);
+  if(!/^[0-9a-f]{24}$/i.test(req.params.id))throw new ApiError(400,"Invalid DC ID");
+  const now=new Date();
+  const result=await DeliveryChallan.findOneAndUpdate({
+    _id:req.params.id,status:"ISSUED",handoverAt:{$exists:false}
+  },{$set:{handoverAt:now,handoverReference:reference,
+    handoverRemarks:remarks,handoverBy:req.user.userId||req.user.email}},{new:true,runValidators:true});
+  if(result)return res.json(result);
+  const prev=await DeliveryChallan.findById(req.params.id).lean();
+  if(!prev)throw new ApiError(404,"Delivery Challan not found");
+  if(prev.status!=="ISSUED")throw new ApiError(409,"Cancelled DC cannot be handed over");
+  if(prev.handoverReference===reference)return res.json(prev);
+  throw new ApiError(409,"Already handed over with a different reference");
+}
+
+export async function deliveryMonitoring(req,res){
+  const [vendors,challans,plans,actuals]=await Promise.all([
+    DeliveryVendor.find({active:true}).sort({vendorCode:1}).limit(1000).lean(),
+    DeliveryChallan.find({}).sort({deliveryDate:-1}).limit(5000).lean(),
+    FabricCutPlan.find({}).sort({createdAt:-1}).limit(1000).lean(),
+    FabricCutActual.find({status:"COMPLETED"}).limit(1500).lean(),
+  ]);
+  const {summary,vendors:vendorRows}=deliveryChallanSummary(challans,vendors);
+  const actualMap=new Map(actuals.map(x=>[x.planNo,x]));
+  const issued=new Map();
+  for(const dc of challans){
+    if(dc.status==="CANCELLED")continue;
+    issued.set(dc.planNo,(issued.get(dc.planNo)||0)+Number(dc.totalPcs||0));
   }
-  const challanNo = await nextCode("DELIVERY_CHALLAN", "DCH", 5);
-  const row = await DeliveryChallan.create({
-    challanNo,
-    deliveryDate: req.body.deliveryDate || new Date(),
-    planNo: plan.planNo,
-    dcNo: plan.dcNo,
-    orderNo: plan.orderNo,
-    itemCode: plan.itemCode,
-    itemName: plan.itemName,
-    style: plan.style,
-    vendorCode: vendor.vendorCode,
-    vendorName: vendor.vendorName,
-    vendorAddress: vendor.address,
-    qcName: vendor.qcName,
-    lines: requested,
-    totalPcs: requested.reduce((s, x) => s + x.pcs, 0),
-    remarks: String(req.body.remarks || ""),
-    createdBy: req.user?.email,
+  const planRows=plans.map(plan=>{
+    const actual=actualMap.get(plan.planNo);
+    const qty=Number(actual?.totalActualPcs||0),allocated=issued.get(plan.planNo)||0;
+    return {planNo:plan.planNo,dcNo:plan.dcNo,itemName:plan.itemName,
+      ...stages(plan,actual),actualPcs:qty,issuedPcs:allocated,
+      unallocatedPcs:Math.max(0,qty-allocated)};
   });
-  res.status(201).json(row);
+  res.json({summary:{...summary,plans:planRows.length,
+    unallocatedPcs:planRows.reduce((n,p)=>n+p.unallocatedPcs,0)},
+    vendors:vendorRows,plans:planRows,
+    overdue:challans.filter(c=>c.status==="ISSUED"&&!c.handoverAt&&c.expectedHandoverAt&&
+      new Date(c.expectedHandoverAt)<new Date()).map(c=>({
+        id:String(c._id),challanNo:c.challanNo,vendorCode:c.vendorCode,
+        planNo:c.planNo,totalPcs:c.totalPcs,expectedHandoverAt:c.expectedHandoverAt,
+      })),
+    awaitingHandover:challans.filter(c=>c.status==="ISSUED"&&!c.handoverAt).slice(0,500)
+      .map(c=>({id:String(c._id),challanNo:c.challanNo,planNo:c.planNo,
+        vendorCode:c.vendorCode,vendorName:c.vendorName,totalPcs:c.totalPcs,
+        deliveryDate:c.deliveryDate,expectedHandoverAt:c.expectedHandoverAt})),
+  });
 }
 export async function listHistory(req, res) {
   const q = {};
