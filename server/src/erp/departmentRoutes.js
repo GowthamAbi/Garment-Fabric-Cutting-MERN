@@ -19,6 +19,7 @@ import {fail,money,ratio,safeInteger} from './policy.js';
 import { forecastDemand, dailyNetSales, scenarioForecast } from './forecastPolicy.js';
 import { departmentSummary } from './departmentReports.js';
 import accessoriesRoutes from "./accessoriesRoutes.js";
+import elasticRoutes from "./elasticRoutes.js";
 import DeliveryChallan from '../models/DeliveryChallan.js';
 import FabricCutPlan from '../models/FabricCutPlan.js';
 import FabricCutActual from '../models/FabricCutActual.js';
@@ -72,6 +73,7 @@ async function approvedRoute(req,scope,session,sku){
 }
 // ACCESSORIES shares the transactional ERP stock ledger.
 router.use("/accessories", accessoriesRoutes);
+router.use("/elastic", elasticRoutes);
 router.get('/routing-masters',asyncHandler(async(req,res)=>{routeAdministrator(req);const scope=workspaceFilter();res.json({routes:await Master.find({...scope,kind:'ROUTE'}).sort({_id:-1}).limit(500).lean(),boms:await ErpBom.find(scope).sort({_id:-1}).limit(500).lean()});}));
 router.post('/routing-masters',asyncHandler(async(req,res)=>{routeAdministrator(req);const stages=validateRouting(req.body.stages,req.departmentCompany);requireAccess(req,stages[0]);res.json(await transaction(req,'ROUTE_DRAFT',async(scope,session)=>{
  const key=clean(req.body.masterKey),sku=clean(req.body.sku).toUpperCase();if(!/^[A-Za-z0-9_-]{2,60}$/.test(key)||await Master.exists({...scope,key}).session(session))fail('New unique version key required');if(!await ErpSku.exists({...scope,code:sku,kind:'FINISHED'}).session(session))fail('Finished SKU required');
