@@ -70,8 +70,8 @@ export default function AccessoriesDepartmentPage({mode="overview",notify}){
   const vendors=(data.suppliers||[]).map(v=>({value:v.code,label:`${v.code} – ${v.name}`}));
   const pos=filteredPurchase.map(p=>({value:p.id,label:`${p.number} – ${p.partyCode}`}));
   const purchaseForm=mode==="purchase";
-  const issueForm=["before","after","return"].includes(mode);
-  const transferForm=mode==="transfer";
+  const issueForm=["before","after"].includes(mode)||(mode==="return"&&subMode==="return");
+  const transferForm=mode==="transfer"||(mode==="return"&&subMode==="transfer");
   const adjustForm=mode==="adjustment";
   async function submit(e){
     e.preventDefault();if(readonly||busy)return;
@@ -115,6 +115,10 @@ export default function AccessoriesDepartmentPage({mode="overview",notify}){
     {isForm&&readonly&&<div className="classic-card">Department Head access is read-only. Staff submit operational entries.</div>}
     {isForm&&!readonly&&<form className="classic-card" onSubmit={submit}>
       <h3>{mode==="master"?"Register Accessories SKU":mode==="adjustment"?"Request Stock Correction":title}</h3>
+      {mode==="return"&&<label>Action
+        <select value={subMode} onChange={e=>{setSubMode(e.target.value);setForm(initial)}}>
+          <option value="return">Return from Work Order</option><option value="transfer">Transfer to Delivery</option>
+        </select></label>}
       {purchaseForm&&<label>Entry Type
         <select value={subMode} onChange={e=>{setSubMode(e.target.value);setForm(initial)}}>
           <option value="purchase">Purchase Order</option><option value="receipt">Goods Receipt against PO</option>
