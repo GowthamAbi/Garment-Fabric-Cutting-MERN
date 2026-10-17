@@ -21,6 +21,9 @@ import { departmentSummary } from './departmentReports.js';
 import {stitchingOverview} from "./stitchingOverviewPolicy.js";
 import {inwardOverview,validateInwardDiscrepancy} from "./inwardOverviewPolicy.js";
 import {checkingOverview,validateQualityHold} from "./checkingOverviewPolicy.js";
+import {ironingOverview,validateIroningTarget,validateIroningIssue} from "./ironingOverviewPolicy.js";
+import IroningTarget from "../models/IroningTarget.js";
+import IroningIssueRequest from "../models/IroningIssueRequest.js";
 import CheckingQualityHoldRequest from "../models/CheckingQualityHoldRequest.js";
 import InwardDiscrepancyRequest from "../models/InwardDiscrepancyRequest.js";
 import accessoriesRoutes from "./accessoriesRoutes.js";
@@ -228,6 +231,80 @@ router.post('/targets',asyncHandler(async(req,res)=>{
  // Returns only tenant+factory-scoped ERP lot, bundle and movement data.
  // Checking entry reuses POST /check and /advance to keep one ERP stock ledger.
 // This report and non-posting hold request are strictly tenant/factory scoped.
+// Ironing target and issue records are planning/review only. Production
+// receipt/completion MUST use the existing transactional /advance endpoint.
+router.get('/ironing-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'IRONING',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,events,targets,issues]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1501).lean(),
+  Bundle.find({...scope,qty:{$gt:0},stage:{$in:['GOOD','IRONING','IRONED']}}).limit(10001).lean(),
+  Event.find({...scope,kind:'ADVANCE',department:'IRONING',
+   reversedBy:{$exists:false}}).sort({createdAt:-1}).limit(10001).lean(),
+  IroningTarget.find(scope).sort({date:-1}).limit(2001).lean(),
+  IroningIssueRequest.find(scope).sort({createdAt:-1}).limit(2001).lean()
+ ]);
+ if(lots.length>1500||bundles.length>10000||events.length>10000||targets.length>2000||issues.length>2000)
+  throw new ApiError(409,'Ironing report limit reached; filter/archive before reporting');
+ res.json(ironingOverview(lots,bundles,events,targets,issues));
+}));
+router.post('/ironing-targets',asyncHandler(async(req,res)=>{
+ if(!['company_owner','company_admin','admin'].includes(req.user.role))
+  throw new ApiError(403,'Company management must set production targets');
+ requireAccess(req,'IRONING');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Valid 16–100 character target key required');
+ const values=validateIroningTarget(req.body);
+ if(!await ErpSku.exists({...scope,code:values.sku,kind:'FINISHED'}))
+  throw new ApiError(400,'Existing finished goods SKU required');
+ await IroningTarget.init();
+ const saved=await IroningTarget.findOne({...scope,key}).lean();
+ if(saved){
+  if(Object.entries(values).some(([k,v])=>saved[k]!==v))
+   throw new ApiError(409,'Target key reused for different values');
+  return res.json(saved);
+ }
+ try{
+  const row=await IroningTarget.create({...scope,key,...values,createdBy:req.user.userId});
+  return res.status(201).json(row);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  throw new ApiError(409,'Target exists for this date/SKU/operator/shift. Review it instead.');
+ }
+}));
+router.post('/ironing-issue-requests',asyncHandler(async(req,res)=>{
+ requireAccess(req,'IRONING');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Valid 16–100 character issue key required');
+ if(!mongoose.isValidObjectId(req.body.bundleId))throw new ApiError(400,'Valid bundle required');
+ const bundle=await Bundle.findOne({...scope,_id:req.body.bundleId,
+   qty:{$gt:0},stage:{$in:['IRONING','IRONED']}}).lean();
+ if(!bundle)throw new ApiError(404,'Active ironing bundle not found');
+ const lot=await Lot.findOne({...scope,_id:bundle.lotId,status:{$ne:'CANCELLED'}}).lean();
+ if(!lot)throw new ApiError(404,'Ironing lot not found');
+ const values=validateIroningIssue(req.body,bundle);
+ const hash=requestHash({bundleId:String(bundle._id),...values});
+ await IroningIssueRequest.init();
+ let saved=await IroningIssueRequest.findOne({...scope,key}).lean();
+ if(saved){
+  if(saved.requestHash!==hash)throw new ApiError(409,'Idempotency key reused with different report');
+  if(saved.requestedBy!==req.user.userId&&!['company_owner','company_admin','admin'].includes(req.user.role))
+   throw new ApiError(403,'Another user created this request');
+  return res.json(saved);
+ }
+ try{
+  const row=await IroningIssueRequest.create({...scope,key,requestHash:hash,
+   lotId:String(lot._id),lotNo:lot.code,dcNo:lot.dcNo,bundleId:String(bundle._id),bundleNo:bundle.code,
+   ...values,requestedBy:req.user.userId});
+  return res.status(201).json(row);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  saved=await IroningIssueRequest.findOne({...scope,key}).lean();
+  if(saved?.requestHash===hash&&saved?.requestedBy===req.user.userId)return res.json(saved);
+  throw new ApiError(409,'Duplicate issue request key; reload to reconcile');
+ }
+}));
+
 router.get('/checking-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'CHECKING',false);
  const scope=workspaceFilter();
