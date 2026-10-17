@@ -26,7 +26,7 @@ const ROUTES=Object.freeze({
   "Fabric Purchase & Availability":"Fabric Operations Availability",
  },
  CUTTING:{
-  "Machine Master":"Machine Detail Entry & QR Print",
+  "Machine Master":"Cutting Machine Master",
   "Cutting Planning":"Machine Plan Entry",
   "Spreader Assignment":"Machine Plan Entry",
   "Cutter Assignment":"Machine Plan Entry",
@@ -38,6 +38,7 @@ const ROUTES=Object.freeze({
   "Waste / Recut Entry":"Cutting Waste",
   "QR & Bundle Print":"Machine Detail Entry & QR Print",
   "History & Machine Reports":"Machine Reports",
+  "Target vs Actual":"Cutting Target vs Actual",
   "Cutting Plan Overview":"Cutting Plan History",
   "Spreader & Cutter Status":"Cutter Status",
   "Cutting Pending & Stock":"Cutting Stock",
