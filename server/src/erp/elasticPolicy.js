@@ -57,13 +57,19 @@ export function elasticStockRows(skus=[],balances=[]){
      shortage:Number(Math.max(0,minimum-available).toFixed(3)),lowStock:available<minimum};
  });
 }
-export function elasticCutNote(kind,planNo,reference){
- return `ELASTIC|${kind}|${elasticCode(planNo,"Plan No")}|${elasticCode(reference,"Reference")}`;
+export function elasticCutNote(kind,planNo,reference,colour="",size=""){
+ const base=`ELASTIC|${kind}|${elasticCode(planNo,"Plan No")}|${elasticCode(reference,"Reference")}`;
+ return colour&&size?base+`|${elasticLineCode(colour)}|${elasticLineCode(size)}`:base;
+}
+export function elasticLineCode(value){
+ const val=upper(value);
+ if(!/^[A-Z0-9 _/-]{1,40}$/.test(val))throw new ApiError(400,"Invalid Elastic colour / size");
+ return val;
 }
 export function elasticMovementTag(notes){
  const p=String(notes||"").split("|");
  return p.length>=4&&p[0]==="ELASTIC"&&["CUT","RETURN"].includes(p[1])
-  ?{kind:p[1],planNo:p[2],reference:p[3]}:null;
+  ?{kind:p[1],planNo:p[2],reference:p[3],...(p.length>=6?{colour:p[4],size:p[5]}:{})}:null;
 }
 export function elasticPlanProgress(plans=[],documents=[]){
  return plans.map(plan=>{
@@ -74,5 +80,16 @@ export function elasticPlanProgress(plans=[],documents=[]){
    const pendingMtr=Number(Math.max(0,plan.targetMtr-cutMtr).toFixed(3));
    return {...plan,cutMtr,pendingMtr,completionPercent:plan.targetMtr
     ?Number(Math.min(100,Math.max(0,cutMtr/plan.targetMtr*100)).toFixed(1)):0};
+ });
+}
+
+export function elasticSizeProgress(plan,documents=[]){
+ return (plan.lines||[]).map(line=>{
+  const cutMtr=Number(documents.filter(d=>{
+    const tag=elasticMovementTag(d.notes);
+    return !d.reversedBy&&tag?.planNo===plan.planNo&&tag.colour===line.colour&&tag.size===line.size;
+  }).reduce((sum,d)=>sum+(elasticMovementTag(d.notes)?.kind==="CUT"?1:-1)*
+    (d.lines||[]).filter(x=>x.sku===plan.sku).reduce((n,x)=>n+Number(x.qty||0)/1000,0),0).toFixed(3));
+  return {...line,cutMtr,pendingMtr:Number(Math.max(0,line.wantedMtr-cutMtr).toFixed(3))};
  });
 }
