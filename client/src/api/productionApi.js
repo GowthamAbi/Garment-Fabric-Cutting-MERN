@@ -104,3 +104,11 @@ export const deliverWarehouseStock = (id, data) =>
     method: "POST",
     body: JSON.stringify(data),
   });
+
+export const getCuttingMachines = () => request("/production/cutting-machines");
+export const saveCuttingMachine = (data,id) => request(`/production/cutting-machines${id?"/"+encodeURIComponent(id):""}`, {
+  method: id ? "PUT" : "POST", body: JSON.stringify(data)
+});
+export const getCuttingTargetActual = (planNo = "") => request(
+  "/production/cutting-overview" + (planNo ? "?"+new URLSearchParams({planNo}) : "")
+);
