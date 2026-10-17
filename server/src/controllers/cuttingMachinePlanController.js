@@ -121,7 +121,7 @@ export async function assignmentAction(req, res) {
   if (!row) throw new ApiError(404, "Machine plan not found");
   const action = upper(req.body.action);
   const reason = String(req.body.reason || "").trim();
-  if (["CHANGE", "BREAKDOWN", "BREAK"].includes(action) && !reason)
+  if (["CHANGE", "BREAKDOWN", "BREAK", "PAUSE"].includes(action) && !reason)
     throw new ApiError(
       400,
       `${action} reason is required. Cancel does not save the action.`,
@@ -169,7 +169,7 @@ export async function assignmentAction(req, res) {
   } else if (action === "BREAKDOWN") {
     row.status = "BREAKDOWN";
     machine.status = "Breakdown";
-  } else if (["CHANGE", "BREAK"].includes(action)) {
+  } else if (["CHANGE", "BREAK", "PAUSE"].includes(action)) {
     row.status = action === "CHANGE" ? "CHANGE" : "PAUSED";
     machine.status = "Available";
   } else if (["COMPLETE", "PUBLISH", "FINISH"].includes(action)) {
