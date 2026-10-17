@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Download, Plus, Printer, RefreshCw, Save, Search } from "lucide-react";
 import { deliveryApi as api } from "../../api/deliveryApi.js";
 import { exportCsv, exportElementExcel } from "../../api.js";
@@ -268,7 +268,10 @@ function SectionPlan({ notify }) {
     [vendorCode, setVendorCode] = useState(""),
     [vendor, setVendor] = useState(null),
     [select, setSelect] = useState({ colour: "ALL", size: "ALL", pcs: "ALL" }),
-    [challan, setChallan] = useState(null);
+    [challan, setChallan] = useState(null),
+    [expectedHandoverAt, setExpectedHandoverAt] = useState(""),
+    [submitting, setSubmitting] = useState(false);
+  const submissionKey = useRef(crypto.randomUUID().replaceAll("-","")+"-delivery");
   const colours = [...new Set((data?.lines || []).map((x) => x.colour))],
     sizes = [...new Set((data?.lines || []).map((x) => x.size))];
   async function findPlan() {
@@ -306,18 +309,22 @@ function SectionPlan({ notify }) {
     [data, select],
   );
   async function submit() {
+    if(submitting||!data?.eligible||!vendor||!selected.length)return;
+    setSubmitting(true);
     try {
       const row = await api.saveChallan({
         planNo: data.plan.planNo,
         vendorCode: vendor.vendorCode,
         lines: selected,
-      });
+        ...(expectedHandoverAt?{expectedHandoverAt}:{}),
+      },submissionKey.current);
       setChallan(row);
-      notify?.("Delivery challan created; Cutting Stock updated");
+      submissionKey.current=crypto.randomUUID().replaceAll("-")+"-delivery";
+      notify?.("Delivery challan created; PCS reserved. Confirm physical handover separately.");
       setData(await api.plan(data.plan.planNo));
     } catch (e) {
       notify?.(e.message);
-    }
+    } finally {setSubmitting(false);}
   }
   return (
     <section className="classic-page">
@@ -413,6 +420,11 @@ function SectionPlan({ notify }) {
                     </select>
                   </label>
                   <label>
+                    Expected Vendor Handover Date (optional)
+                    <input type="date" value={expectedHandoverAt}
+                      onChange={e=>setExpectedHandoverAt(e.target.value)} />
+                  </label>
+                  <label>
                     PCS
                     <input
                       value={select.pcs}
@@ -460,7 +472,7 @@ function SectionPlan({ notify }) {
                 </div>
                 <button
                   className="primary"
-                  disabled={!vendor || !selected.length}
+                  disabled={!vendor || !selected.length || submitting}
                   onClick={submit}
                 >
                   <Save /> Create Delivery Challan
