@@ -38,6 +38,9 @@ import {
   transferAssignment,
 } from "../controllers/cuttingMachinePlanController.js";
 
+import {listCuttingMachines,saveCuttingMachine,cuttingTargetActual} from "../controllers/cuttingDepartmentController.js";
+import {requireLegacyFabricFactory} from "../controllers/fabricPlanMonitorController.js";
+
 const router = Router();
 const productionAccess = allowDepartment(
   "ELASTIC",
@@ -66,6 +69,20 @@ const productionPlanningWrite = allowDepartment(
   "cutting_entry",
 );
 
+// Dedicated Cutting APIs are licensed by CUTTING; never rely on ELASTIC.
+const cuttingRead = allowDepartment("CUTTING", "saas_super_admin", "company_owner", "company_admin", "admin", "cutting_admin", "cutting_entry", "management", "view_only");
+const cuttingWrite = allowDepartment("CUTTING", "saas_super_admin", "company_owner", "admin", "cutting_admin", "cutting_entry", "department_entry");
+// Pre-migration machine/plan records may be untagged: block multi-factory reads.
+router.get("/cutting-machines", cuttingRead, asyncHandler(requireLegacyFabricFactory), asyncHandler(listCuttingMachines));
+router.post("/cutting-machines", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(saveCuttingMachine));
+router.put("/cutting-machines/:id", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(saveCuttingMachine));
+router.get("/cutting-overview", cuttingRead, asyncHandler(requireLegacyFabricFactory), asyncHandler(cuttingTargetActual));
+router.get("/cutting-machine-plans", cuttingRead, asyncHandler(requireLegacyFabricFactory), asyncHandler(listAssignments));
+router.get("/cutting-machine-status", cuttingRead, asyncHandler(requireLegacyFabricFactory), asyncHandler(machinePlanStatus));
+router.post("/cutting-machine-plans", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(createAssignment));
+router.patch("/cutting-machine-plans/:id/action", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(assignmentAction));
+router.patch("/cutting-machine-plans/:id/transfer", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(transferAssignment));
+
 router.use(productionAccess);
 router.get("/summary", asyncHandler(getProductionSummary));
 router.get("/cutting-dcs", asyncHandler(getCuttingDcs));
@@ -82,17 +99,6 @@ router.get("/employees", asyncHandler(getEmployees));
 router.post("/employees", asyncHandler(saveEmployee));
 router.put("/employees/:id", asyncHandler(saveEmployee));
 router.get("/jobs", asyncHandler(getJobs));
-router.get("/cutting-machine-plans", asyncHandler(listAssignments));
-router.get("/cutting-machine-status", asyncHandler(machinePlanStatus));
-router.post("/cutting-machine-plans", asyncHandler(createAssignment));
-router.patch(
-  "/cutting-machine-plans/:id/action",
-  asyncHandler(assignmentAction),
-);
-router.patch(
-  "/cutting-machine-plans/:id/transfer",
-  asyncHandler(transferAssignment),
-);
 router.get("/dc/:dcNo", asyncHandler(getDcPlan));
 router.post("/jobs/start", asyncHandler(startJob));
 router.patch("/jobs/:id/stop", asyncHandler(stopJob));
