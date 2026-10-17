@@ -75,6 +75,12 @@ export async function getCompanies(request, response) {
 export async function getCompanyWorkspace(request, response) {
   if (request.user.role === "saas_super_admin")
     throw new ApiError(403, "Customer production data is private. Owner access requires a customer-issued support grant");
+  // Legacy workspace aggregation includes company-wide staff and audit logs.
+  // Factory-/department-scoped administrators must use scoped user routes.
+  if(strictAccess(request.user)&&request.user.accessScope!=='COMPANY')
+    throw new ApiError(403,'Company-wide workspace requires company-scoped access');
+  if(String(request.params.id)!==String(request.user.companyId))
+    throw new ApiError(403,'Own company workspace required');
   const company = await Company.findById(request.params.id).lean();
   if (!company) throw new ApiError(404, "Company not found");
   const users = await User.find({ companyId: company._id })

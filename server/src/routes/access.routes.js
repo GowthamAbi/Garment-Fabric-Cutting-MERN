@@ -2,7 +2,7 @@ import {Router} from 'express';
 import mongoose from 'mongoose';
 import {asyncHandler} from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
-import {hasPermission,validateAccessAssignment,companyOwner} from '../utils/accessPolicy.js';
+import {hasPermission,validateAccessAssignment,companyOwner,strictAccess} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS,ACCESS_SCOPES,ROLE_TEMPLATES} from '../../../shared/accessCatalogue.js';
 import {departmentCode} from '../../../shared/departmentCatalogue.js';
 import {assertSafeBaseRoleAssignment,roleDirectoryFilter} from '../utils/roleAssignmentGuard.js';
@@ -18,7 +18,7 @@ router.get('/',asyncHandler(async(req,res)=>{
  const userFilter=roleDirectoryFilter(req.user);
  const users=await User.find(userFilter).select('userId name role department permissions accessPolicyVersion accessScope assignedFactoryIds assignedWarehouseKeys assignedShopKeys factoryId').limit(2001).lean();
  if(users.length>2000)throw new ApiError(409,'Role directory limit exceeded; use scoped factory selection');
- const visibleFactories=companyOwner(req.user)||req.user.accessScope==='COMPANY'||req.user.role==='company_admin'&&req.user.accessPolicyVersion!==1?
+ const visibleFactories=companyOwner(req.user)||req.user.accessScope==='COMPANY'||req.user.role==='company_admin'&&!strictAccess(req.user)?
   company.factories:company.factories.filter(f=>(userFilter.factoryId?.$in||[]).includes(String(f._id)));
  const templates=ROLE_TEMPLATES.filter(role=>{
   try{assertSafeBaseRoleAssignment(req.user,role.baseRole);return role.key==='DEPARTMENT_OPERATOR'||
