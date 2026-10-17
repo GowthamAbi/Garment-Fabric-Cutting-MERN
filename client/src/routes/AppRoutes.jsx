@@ -10,6 +10,7 @@ import CompanyApprovalSettingsPage from "../pages/dashboard/CompanyApprovalSetti
 import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
 import AccessoriesDepartmentPage from "../pages/erp/AccessoriesDepartmentPage.jsx";
 import ElasticDepartmentPage from "../pages/erp/ElasticDepartmentPage.jsx";
+import StitchingDepartmentPage from "../pages/erp/StitchingDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -257,6 +258,38 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <ElasticDepartmentPage mode="correction" notify={notify} />;
     case "Elastic History Workspace":
       return <ElasticDepartmentPage mode="history" notify={notify} />;
+    case "Stitching Orders Workspace":
+      return <StitchingDepartmentPage mode="orders" notify={notify} />;
+    case "Stitching Operation Workspace":
+      return <StitchingDepartmentPage mode="operations" notify={notify} />;
+    case "Stitching Vendor Workspace":
+      return <StitchingDepartmentPage mode="vendor" notify={notify} />;
+    case "Stitching Targets Workspace":
+      return <StitchingDepartmentPage mode="targets" notify={notify} />;
+    case "Stitching WIP Workspace":
+      return <StitchingDepartmentPage mode="wip" notify={notify} />;
+    case "Stitching Defects Workspace":
+      return <StitchingDepartmentPage mode="defects" notify={notify} />;
+    case "Stitching Reports Workspace":
+      return <StitchingDepartmentPage mode="reports" notify={notify} />;
+    case "Stitching Master Workspace":
+      return <StitchingDepartmentPage mode="master" notify={notify} />;
+    case "Stitching Assigned Workspace":
+      return <StitchingDepartmentPage mode="assigned" notify={notify} />;
+    case "Stitching Bulletin Workspace":
+      return <StitchingDepartmentPage mode="bulletin" notify={notify} />;
+    case "Stitching Start Workspace":
+      return <StitchingDepartmentPage mode="start" notify={notify} />;
+    case "Stitching Completion Workspace":
+      return <StitchingDepartmentPage mode="completion" notify={notify} />;
+    case "Stitching Completed Workspace":
+      return <StitchingDepartmentPage mode="completed" notify={notify} />;
+    case "Stitching Rework Workspace":
+      return <StitchingDepartmentPage mode="rework" notify={notify} />;
+    case "Stitching Handover Workspace":
+      return <StitchingDepartmentPage mode="handover" notify={notify} />;
+    case "Stitching Trace Workspace":
+      return <StitchingDepartmentPage mode="trace" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
