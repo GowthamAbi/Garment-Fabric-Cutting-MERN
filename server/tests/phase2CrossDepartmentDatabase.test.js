@@ -9,7 +9,7 @@ import {DEPARTMENTS} from "../../shared/departmentCatalogue.js";
 import {runWithTenant} from "../src/utils/tenantContext.js";
 import {databaseForName} from "../src/config/tenantDatabase.js";
 import {ErpSettings,ErpSku,ErpBalance,ErpDocument,ErpEntry} from "../src/erp/models.js";
-import {DepartmentBundle,DepartmentLot} from "../src/erp/departmentModels.js";
+import {DepartmentBundle,DepartmentLot,DepartmentMaster} from "../src/erp/departmentModels.js";
 import departmentRoutes from "../src/erp/departmentRoutes.js";
 
 /**
@@ -51,9 +51,17 @@ test("Phase 2: end-to-end partial cartons, separate department roles, Shop POS t
    OWNER:{role:"company_owner"},
    FORGED:{role:"department_entry",department:"WAREHOUSE",
     permissions:["department.warehouse.read","department.warehouse.write"]},
+   DISPATCH:{role:"department_entry",department:"DISPATCH",
+    permissions:["department.dispatch.read","department.dispatch.write"]},
+   WAREHOUSE_OTHER:{role:"department_entry",department:"WAREHOUSE",
+    permissions:["department.warehouse.read","department.warehouse.write"],
+    assignedWarehouseKeys:[String(factoryId)+":WH-QA2"]},
    WAREHOUSE:{role:"department_entry",department:"WAREHOUSE",
     permissions:["department.warehouse.read","department.warehouse.write"],
     assignedWarehouseKeys:[String(factoryId)+":WH-QA"]},
+   SHOP2:{role:"department_entry",department:"SHOP",
+    permissions:["department.shop.read","department.shop.write"],
+    assignedShopKeys:[String(factoryId)+":SH-QA2"]},
    SHOP:{role:"department_entry",department:"SHOP",
     permissions:["department.shop.read","department.shop.write"],
     assignedShopKeys:[String(factoryId)+":SH-QA"]},
@@ -101,6 +109,12 @@ test("Phase 2: end-to-end partial cartons, separate department roles, Shop POS t
    materials:[{sku:"BAG-QA",quantity:1,perPieces:1}]});
   await ok("/masters",{kind:"WAREHOUSE",masterKey:"WH-QA",name:"QA Warehouse"});
   await ok("/masters",{kind:"SHOP",masterKey:"SH-QA",name:"QA Shop"});
+  await ok("/masters",{kind:"WAREHOUSE",masterKey:"WH-QA2",name:"Separate Warehouse"});
+  await ok("/masters",{kind:"SHOP",masterKey:"SH-QA2",name:"Separate Shop"});
+  await ok("/masters",{kind:"WAREHOUSE",masterKey:"WH-DISABLED",name:"Inactive Warehouse"});
+  await ok("/masters",{kind:"SHOP",masterKey:"SH-DISABLED",name:"Inactive Shop"});
+  await runWithTenant(tenant,async()=>DepartmentMaster.updateMany(
+   {key:{$in:["WH-DISABLED","SH-DISABLED"]}},{$set:{active:false}}));
   const delivery=await ok("/delivery",{sku:"TEE-QA",quantity:6,
    sourceLocation:"CUTTING",operationMaster:"ST-QA",packingMaster:"PK-QA",
    orderNo:"SO-QA",dcNo:"DC-QA",section:"TEST"});
@@ -121,8 +135,16 @@ test("Phase 2: end-to-end partial cartons, separate department roles, Shop POS t
   // A Warehouse operator does not gain Dispatch posting permission.
   const denied=await post("/transfer",{bundleId:carton._id,quantity:5,destination:"WH-QA"},"FORGED");
   assert.equal(denied.status,403);
-  let transfer=(await ok("/transfer",{bundleId:carton._id,quantity:4,
-   destination:"WH-QA",dispatch:{vehicleNo:"TN-01-QA",transporter:"Test Carrier"}})).details.bundle;
+  const dispatchKey=crypto.randomUUID();
+  const dispatchPayload={bundleId:carton._id,quantity:4,destination:"WH-QA",
+   dispatch:{vehicleNo:"TN-01-QA",transporter:"Test Carrier"}};
+  const firstDispatch=await post("/transfer",dispatchPayload,"DISPATCH",dispatchKey);
+  assert.equal(firstDispatch.status,200,JSON.stringify(firstDispatch.data));
+  const repeatDispatch=await post("/transfer",dispatchPayload,"DISPATCH",dispatchKey);
+  assert.equal(repeatDispatch.status,200,JSON.stringify(repeatDispatch.data));
+  assert.equal(String(firstDispatch.data._id),String(repeatDispatch.data._id));
+  assert.equal((await post("/transfer",{...dispatchPayload,quantity:3},"DISPATCH",dispatchKey)).status,409);
+  let transfer=firstDispatch.data.details.bundle;
   assert.equal(transfer.stage,"TRANSIT_WAREHOUSE");
   assert.equal((await post("/transfer",{bundleId:transfer._id,quantity:5},"WAREHOUSE")).status,409);
   transfer=(await ok("/transfer",{bundleId:transfer._id,quantity:4},"WAREHOUSE")).details.bundle;
@@ -130,6 +152,12 @@ test("Phase 2: end-to-end partial cartons, separate department roles, Shop POS t
   const transit=(await ok("/transfer",{bundleId:transfer._id,quantity:3,
    destination:"SH-QA"},"WAREHOUSE")).details.bundle;
   assert.equal(transit.stage,"TRANSIT_SHOP:SH-QA");
+  const otherWh=await request("/WAREHOUSE/dashboard",{role:"WAREHOUSE_OTHER"});
+  assert.equal(otherWh.status,200,JSON.stringify(otherWh.data));
+  assert.ok(!otherWh.data.bundles.some(x=>String(x._id)===String(transit._id)));
+  const otherWhOverview=await request("/warehouse-overview",{role:"WAREHOUSE_OTHER"});
+  assert.equal(otherWhOverview.status,200,JSON.stringify(otherWhOverview.data));
+  assert.equal(otherWhOverview.data.summary.outboundTransitPcs,0);
   const ownerRead=await request("/accounts/overview?days=30");
   assert.equal(ownerRead.status,200,JSON.stringify(ownerRead.data));
   assert.equal((await request("/accounts/overview?days=30",{role:"SHOP"})).status,403);
@@ -150,6 +178,23 @@ test("Phase 2: end-to-end partial cartons, separate department roles, Shop POS t
   assert.equal(returned.details.refund.gross,sale.totals.gross/2);
   assert.equal((await post("/return",{saleId:sale._id,quantity:2,
    reason:"Over return"},"SHOP")).status,409);
+  assert.equal((await post("/transfer",{bundleId:stockShop._id,quantity:1,
+   destination:"WH-DISABLED"},"SHOP")).status,409);
+  assert.equal((await post("/transfer",{bundleId:stockShop._id,quantity:1,
+   destination:"SH-DISABLED"},"SHOP")).status,409);
+  const interShop=(await ok("/transfer",{bundleId:stockShop._id,quantity:1,
+   destination:"SH-QA2"},"SHOP")).details.bundle;
+  assert.equal(interShop.stage,"TRANSIT_SHOP:SH-QA2");
+  assert.equal((await post("/transfer",{bundleId:interShop._id,quantity:1},"SHOP")).status,403);
+  const shop2Stock=(await ok("/transfer",{bundleId:interShop._id,quantity:1},"SHOP2")).details.bundle;
+  assert.equal(shop2Stock.stage,"SHOP:SH-QA2");
+  const backToWh=(await ok("/transfer",{bundleId:shop2Stock._id,quantity:1,
+   destination:"WH-QA2"},"SHOP2")).details.bundle;
+  assert.equal(backToWh.stage,"TRANSIT_WAREHOUSE");
+  assert.equal((await post("/transfer",{bundleId:backToWh._id,quantity:1},"WAREHOUSE")).status,403);
+  const received=(await ok("/transfer",{bundleId:backToWh._id,
+   quantity:1},"WAREHOUSE_OTHER")).details.bundle;
+  assert.equal(received.stage,"WAREHOUSE:WH-QA2");
   const moneyBefore=await request("/accounts/overview?days=30",{role:"ACCOUNTS_HEAD"});
   assert.equal(moneyBefore.status,200,JSON.stringify(moneyBefore.data));
   assert.equal(moneyBefore.data.summary.trialDifference,0);
