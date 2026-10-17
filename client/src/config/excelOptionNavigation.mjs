@@ -249,6 +249,25 @@ const ROUTES=Object.freeze({
   "Invoice Print":"Shop Print Workspace",
   "Sales History / Reports":"Shop History Workspace"
  },
+ ACCOUNTS:{
+  "Financial Overview":"Accounts Overview Workspace",
+  "Receivables & Payables":"Accounts Receivable Workspace",
+  "Purchase / Expense Monitoring":"Accounts Purchase Workspace",
+  "Cash / Bank Position":"Accounts Cash Workspace",
+  "Cost & Margin Review":"Accounts Margin Workspace",
+  "Payment Due Alerts":"Accounts Due Workspace",
+  "Financial Reports":"Accounts Reports Workspace",
+  "Customer / Supplier Ledger":"Accounts Parties Workspace",
+  "Purchase Invoice Entry":"Accounts Invoice Entry Workspace",
+  "Sales Invoice Review":"Accounts Sales Review Workspace",
+  "Expense / Voucher Entry":"Accounts Voucher Workspace",
+  "Payment / Receipt Entry":"Accounts Payment Workspace",
+  "Cash / Bank Entry":"Accounts Bank Entry Workspace",
+  "Bank Reconciliation":"Accounts Bank Workspace",
+  "Payroll Accounting":"Accounts Payroll Workspace",
+  "Tax / Ledger Reports":"Accounts Tax Workspace",
+  "Transaction History":"Accounts History Workspace"
+ },
  HR:{
   "Employee Overview":"HR Overview Workspace",
   "Attendance & Shift Monitoring":"HR Monitor Workspace",

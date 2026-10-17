@@ -20,6 +20,7 @@ import WarehouseDepartmentPage from "../pages/erp/WarehouseDepartmentPage.jsx";
 import ShopDepartmentPage from "../pages/erp/ShopDepartmentPage.jsx";
 import MarketingDepartmentPage from "../pages/erp/MarketingDepartmentPage.jsx";
 import HrDepartmentPage from "../pages/erp/HrDepartmentPage.jsx";
+import AccountsDepartmentPage from "../pages/erp/AccountsDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -579,6 +580,40 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <HrDepartmentPage mode="requests" notify={notify} />;
     case "HR Payslip Workspace":
       return <HrDepartmentPage mode="payslip" notify={notify} />;
+    case "Accounts Overview Workspace":
+      return <AccountsDepartmentPage mode="overview" notify={notify} />;
+    case "Accounts Receivable Workspace":
+      return <AccountsDepartmentPage mode="receivable" notify={notify} />;
+    case "Accounts Purchase Workspace":
+      return <AccountsDepartmentPage mode="purchase" notify={notify} />;
+    case "Accounts Cash Workspace":
+      return <AccountsDepartmentPage mode="cash" notify={notify} />;
+    case "Accounts Margin Workspace":
+      return <AccountsDepartmentPage mode="margin" notify={notify} />;
+    case "Accounts Due Workspace":
+      return <AccountsDepartmentPage mode="due" notify={notify} />;
+    case "Accounts Reports Workspace":
+      return <AccountsDepartmentPage mode="reports" notify={notify} />;
+    case "Accounts Parties Workspace":
+      return <AccountsDepartmentPage mode="parties" notify={notify} />;
+    case "Accounts Invoice Entry Workspace":
+      return <AccountsDepartmentPage mode="invoice" notify={notify} />;
+    case "Accounts Sales Review Workspace":
+      return <AccountsDepartmentPage mode="invoices" notify={notify} />;
+    case "Accounts Voucher Workspace":
+      return <AccountsDepartmentPage mode="voucher" notify={notify} />;
+    case "Accounts Payment Workspace":
+      return <AccountsDepartmentPage mode="payment" notify={notify} />;
+    case "Accounts Bank Entry Workspace":
+      return <AccountsDepartmentPage mode="bankEntry" notify={notify} />;
+    case "Accounts Bank Workspace":
+      return <AccountsDepartmentPage mode="bank" notify={notify} />;
+    case "Accounts Payroll Workspace":
+      return <AccountsDepartmentPage mode="payroll" notify={notify} />;
+    case "Accounts Tax Workspace":
+      return <AccountsDepartmentPage mode="tax" notify={notify} />;
+    case "Accounts History Workspace":
+      return <AccountsDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
