@@ -8,6 +8,7 @@ import PublicOutwardPage from "./pages/outward/PublicOutwardPage.jsx";
 import AppRoutes from "./routes/AppRoutes.jsx";
 import ProductionControlPage from "./pages/production/ProductionControlPage.jsx";
 import GlobalFeedback from "./components/common/GlobalFeedback.jsx";
+import UGSaaSLoader from "./components/common/UGSaaSLoader.jsx";
 import { LanguageProvider } from "./context/LanguageContext.jsx";
 import PrivacyPage from "./pages/legal/PrivacyPage.jsx";
 import SuperAdminLayout from "./components/layout/SuperAdminLayout.jsx";
@@ -88,9 +89,8 @@ function Application() {
 
   if (checkingSession) {
     return (
-      <div className="secure-session-check">
-        <strong>UG SaaS</strong>
-        <span>Verifying secure session…</span>
+      <div className="ug-session-loading">
+        <UGSaaSLoader message="Verifying your secure session..." />
       </div>
     );
   }
