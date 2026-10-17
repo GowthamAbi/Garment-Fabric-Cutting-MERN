@@ -9,6 +9,7 @@ import ApprovalGrantsPage from "../pages/dashboard/ApprovalGrantsPage.jsx";
 import CompanyApprovalSettingsPage from "../pages/dashboard/CompanyApprovalSettingsPage.jsx";
 import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
 import AccessoriesDepartmentPage from "../pages/erp/AccessoriesDepartmentPage.jsx";
+import ElasticDepartmentPage from "../pages/erp/ElasticDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -209,6 +210,36 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <AccessoriesDepartmentPage mode="adjustment" notify={notify} />;
     case "Accessories History":
       return <AccessoriesDepartmentPage mode="history" notify={notify} />;
+    case "Elastic Plans Workspace":
+      return <ElasticDepartmentPage mode="plans" notify={notify} />;
+    case "Elastic Material Availability":
+      return <ElasticDepartmentPage mode="availability" notify={notify} />;
+    case "Elastic Target vs Actual":
+      return <ElasticDepartmentPage mode="target" notify={notify} />;
+    case "Elastic Progress Workspace":
+      return <ElasticDepartmentPage mode="progress" notify={notify} />;
+    case "Elastic Shortage Workspace":
+      return <ElasticDepartmentPage mode="issues" notify={notify} />;
+    case "Elastic Wastage Workspace":
+      return <ElasticDepartmentPage mode="waste" notify={notify} />;
+    case "Elastic Reports Workspace":
+      return <ElasticDepartmentPage mode="reports" notify={notify} />;
+    case "Elastic Material Workspace":
+      return <ElasticDepartmentPage mode="master" notify={notify} />;
+    case "Elastic Inward Workspace":
+      return <ElasticDepartmentPage mode="inward" notify={notify} />;
+    case "Elastic Cutting Plan Workspace":
+      return <ElasticDepartmentPage mode="plan" notify={notify} />;
+    case "Elastic Cutting Entry Workspace":
+      return <ElasticDepartmentPage mode="cut" notify={notify} />;
+    case "Elastic Issue Return Workspace":
+      return <ElasticDepartmentPage mode="return" notify={notify} />;
+    case "Elastic Stock Workspace":
+      return <ElasticDepartmentPage mode="stock" notify={notify} />;
+    case "Elastic Correction Workspace":
+      return <ElasticDepartmentPage mode="correction" notify={notify} />;
+    case "Elastic History Workspace":
+      return <ElasticDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
