@@ -1,4 +1,5 @@
 import DisplayTools from '../common/DisplayTools.jsx';
+import {sidebarSectionAllowed,portalSectionForUser,showExtraNavigation} from "../../config/portalNavigationPolicy.mjs";
 import SubscriptionNotice from './SubscriptionNotice';
 import {
   AlertTriangle,
@@ -462,21 +463,18 @@ const departmentNavigation = {
     { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
   ],
   COMPANY_ADMIN: [
+    {label:"Company Dashboard",icon:LayoutDashboard,page:"Company Dashboard"},
     {label:"Factory Management",icon:Factory,page:"Factory Management"},
-    {label:"Production Departments",icon:Factory,page:"Production Departments"},
-    {label:"Warehouse Management",icon:Boxes,page:"Warehouse Management"},
-    {label:"Shop Management",icon:ShoppingCart,page:"Shop Management"},
-    {label:"Marketing Analysis",icon:BarChart3,page:"Marketing Analysis"},
     {label:"Company Purchase Orders",icon:ClipboardList,page:"Company Purchase Orders"},
-    {
-      label: "Company Dashboard",
-      icon: LayoutDashboard,
-      page: "Company Dashboard",
-    },
     { label: "Company Reports", icon: BarChart3, page: "Company Reports" },
     { label: "Company Timeline", icon: Clock3, page: "Company Timeline" },
     { label: "Company Stock", icon: Boxes, page: "Company Stock" },
     { label: "Company Approvals", icon: ListChecks, page: "Company Approvals" },
+    { label: "User Management", icon: Users, page: "User Management" },
+    { label: "Item Master", icon: ClipboardList, page: "Item Master" },
+    { label: "Audit & Backup", icon: DatabaseBackup, page: "Audit & Backup" },
+    { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
+    { label: "Subscription Automation", icon: Clock3, page: "Subscription Automation" },
     {
       label: "Company Subscription",
       icon: CreditCard,
@@ -488,8 +486,6 @@ const departmentNavigation = {
         "Support Access",
       ],
     },
-    { label: "Modules", icon: Sparkles, page: "Modules" },
-    { label: "SaaS Companies", icon: Building2, page: "SaaS Companies" },
   ],
 };
 
@@ -599,6 +595,7 @@ export default function MainLayout({ page, onPageChange, children }) {
     "COMPANY_ADMIN-Company Subscription": true,
   });
   const visibleRole=user?.role==='company_owner'?'company_admin':user?.role;
+  const activePortal=portalSectionForUser(user);
   const { language, setLanguage } = useLanguage();
   const departmentPage =
     {
@@ -658,7 +655,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           </span>
           <div className="brand-copy">
             <b className="brand-title">UG SaaS</b>
-            <small className="brand-subtitle">BUSINESS FLOW MANAGER</small>
+            <small className="brand-subtitle">{activePortal==="COMPANY_ADMIN"?"COMPANY ADMIN PORTAL":activePortal==="ADMIN"?"FACTORY ADMIN PORTAL":activePortal&&activePortal!=="SAAS_OWNER"?activePortal+" DEPARTMENT PORTAL":"BUSINESS FLOW MANAGER"}</small>
           </div>
           <button aria-label="Close navigation" className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />
@@ -666,10 +663,10 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
-          {access?.accessAllowed && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&(
-            user.role==='company_owner'||(!user.accessPolicyVersion&&['company_admin','admin'].includes(user.role))||
-            (user.accessScope!=='SELF'&&(user.accessScope!=='DEPARTMENT'||user.department===d)&&user.permissions?.some(p=>['department.'+d.toLowerCase()+'.read','department.'+d.toLowerCase()+'.write'].includes(p)))
-          )).map(d=><button key={d} className={page==='Department Workspace:'+d?'active':''} onClick={()=>selectPage('Department Workspace:'+d)}>{d}</button>)}</section>}
+          {access?.accessAllowed && ["department_entry","department_incharge"].includes(user?.role) &&
+          !departmentNavigation[activePortal] && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&d===user.department&&
+             (user.accessScope!=='SELF')&&user.permissions?.some(p=>
+               ['department.'+d.toLowerCase()+'.read','department.'+d.toLowerCase()+'.write'].includes(p))).map(d=><button key={d} className={page==='Department Workspace:'+d?'active':''} onClick={()=>selectPage('Department Workspace:'+d)}>{d}</button>)}</section>}
 
           {Object.entries(departmentNavigation)
             .sort(
@@ -679,10 +676,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             .filter(
               ([department]) =>
                 (!DEPARTMENTS.includes(department)||access?.accessAllowed&&access.enabledDepartments?.includes(department)&&(!user?.accessPolicyVersion||user.role==='company_owner'||user.permissions?.some(p=>['department.'+department.toLowerCase()+'.read','department.'+department.toLowerCase()+'.write'].includes(p))))&&
-                (["saas_super_admin", "company_owner", "company_admin"].includes(user?.role) ||
-                (user?.role === "admin" && department !== "COMPANY_ADMIN") ||
-                user?.department === department ||
-                departmentRoles[department]?.includes(user?.role)),
+                sidebarSectionAllowed(user,department),
             )
             .map(([department, groups]) => (
               <section className="department-nav" key={department}>
@@ -745,6 +739,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           {navigation
             .filter(
               ([name, , roles]) =>
+                showExtraNavigation(user) &&
                 !groupedSidebarPages.has(name) &&
                 (roles.includes(visibleRole) ||
                   (["department_incharge", "department_entry"].includes(
