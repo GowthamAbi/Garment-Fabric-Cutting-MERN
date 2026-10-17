@@ -24,6 +24,7 @@ import {checkingOverview,validateQualityHold} from "./checkingOverviewPolicy.js"
 import {ironingOverview,validateIroningTarget,validateIroningIssue} from "./ironingOverviewPolicy.js";
 import {packingOverview,validatePackingPlan,validatePackingIssue} from "./packingOverviewPolicy.js";
 import {dispatchOverview,validateDispatchPlan,validateDispatchException,validateDispatchTransport} from "./dispatchOverviewPolicy.js";
+import {warehouseOverview} from "./warehouseOverviewPolicy.js";
 import DispatchSchedule from "../models/DispatchSchedule.js";
 import DispatchExceptionRequest from "../models/DispatchExceptionRequest.js";
 import PackingProductionPlan from "../models/PackingProductionPlan.js";
@@ -243,6 +244,41 @@ router.post('/targets',asyncHandler(async(req,res)=>{
 // the existing MongoDB transaction and generates an actual PACKED bundle.
 // Dispatch planning/exception requests are NON-POSTING; physical movement is
 // always the existing transactional /transfer (PACKED -> TRANSIT_WAREHOUSE).
+// Tenant/factory and warehouse-assignment scoped read-only reporting.
+router.get('/warehouse-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'WAREHOUSE',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,events,masters,requests,skus]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).limit(1501).lean(),
+  Bundle.find({...scope,qty:{$gt:0},$or:[
+   {stage:'TRANSIT_WAREHOUSE'},{stage:{$regex:'^WAREHOUSE:'}},
+   {stage:{$regex:'^TRANSIT_SHOP:'}}]}).limit(10001).lean(),
+  Event.find({...scope,kind:{$in:['TRANSFER','RELOCATE','EXTERNAL_INWARD','EXTERNAL_OUTWARD',
+   'STOCK_EXCEPTION','STOCK_EXCEPTION_DECISION']},reversedBy:{$exists:false}})
+   .sort({createdAt:-1}).limit(10001).lean(),
+  Master.find({...scope,kind:{$in:['WAREHOUSE','BIN']}}).limit(2001).lean(),
+  Exception.find(scope).sort({createdAt:-1}).limit(2001).lean(),
+  ErpSku.find(scope).limit(4001).lean()
+ ]);
+ if(lots.length>1500||bundles.length>10000||events.length>10000||masters.length>2000||
+   requests.length>2000||skus.length>4000)
+  throw new ApiError(409,'Warehouse report capacity exceeded; filter/archive records first');
+ const locations=masters.filter(m=>m.kind==='WAREHOUSE'&&locationAllowed(req.user,'WAREHOUSE',m.key));
+ const allowed=new Set(locations.map(m=>m.key));
+ // Never infer warehouse permissions merely from a shipment. Show assigned
+ // location stock only; event links are restricted to matching destinations.
+ const filteredEvents=events.filter(e=>{
+  const stage=e.details?.bundle?.stage||'';
+  const destination=e.details?.bundle?.destination||
+    (e.kind==='EXTERNAL_INWARD'?e.details?.destination:'');
+  return allowed.has(destination)||e.department==='WAREHOUSE'&&
+   e.bundleId&&bundles.some(b=>String(b._id)===e.bundleId&&allowed.has(b.destination));
+ });
+ res.json(warehouseOverview(lots,bundles.filter(b=>allowed.has(b.destination)),filteredEvents,
+   masters.filter(m=>m.kind==='WAREHOUSE'?allowed.has(m.key):allowed.has(m.warehouse)),
+   requests.filter(e=>allowed.has(e.destination)),skus));
+}));
+
 router.get('/dispatch-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'DISPATCH',false);
  const scope=workspaceFilter();
