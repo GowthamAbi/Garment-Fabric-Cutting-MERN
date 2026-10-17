@@ -112,3 +112,5 @@ export const saveCuttingMachine = (data,id) => request(`/production/cutting-mach
 export const getCuttingTargetActual = (planNo = "") => request(
   "/production/cutting-overview" + (planNo ? "?"+new URLSearchParams({planNo}) : "")
 );
+
+export const getElasticMachineSummary = () => request("/production/elastic-machine-summary");
