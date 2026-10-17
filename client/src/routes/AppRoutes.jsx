@@ -65,6 +65,7 @@ import CuttingMachineMasterPage from "../pages/production/CuttingMachineMasterPa
 import CuttingGanttOverviewPage from "../pages/production/CuttingGanttOverviewPage.jsx";
 import CuttingTargetActualPage from "../pages/production/CuttingTargetActualPage.jsx";
 import DeliveryDepartmentPage from "../pages/delivery/DeliveryDepartmentPage.jsx";
+import DeliveryMonitoringPage from "../pages/delivery/DeliveryMonitoringPage.jsx";
 import DepartmentOverviewPage from "../pages/dashboard/DepartmentOverviewPage.jsx";
 import OwnerPlansPage from "../pages/saas/OwnerPlansPage.jsx";
 import OwnerSalesPage from "../pages/saas/OwnerSalesPage.jsx";
@@ -166,6 +167,22 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <DashboardPage />;
     case "Elastic Dashboard":
       return <ProductionDashboardPage />;
+    case "Delivery Completion Monitor":
+      return <DeliveryMonitoringPage mode="completion" notify={notify} />;
+    case "Delivery Vendor Status":
+      return <DeliveryMonitoringPage mode="vendors" notify={notify} />;
+    case "Delivery DC Monitor":
+      return <DeliveryMonitoringPage mode="challans" notify={notify} />;
+    case "Delivery Balance Monitor":
+      return <DeliveryMonitoringPage mode="balance" notify={notify} />;
+    case "Delivery Delay Monitor":
+      return <DeliveryMonitoringPage mode="delays" notify={notify} />;
+    case "Delivery Reports Monitor":
+      return <DeliveryMonitoringPage mode="reports" notify={notify} />;
+    case "Delivery Handover Workspace":
+      return <DeliveryMonitoringPage mode="handover" notify={notify} />;
+    case "Delivery Vendor Pending":
+      return <DeliveryMonitoringPage mode="pending" notify={notify} />;
     case "Vendor Registration":
       return <DeliveryDepartmentPage mode="vendors" notify={notify} />;
     case "Delivery Plan Details":
