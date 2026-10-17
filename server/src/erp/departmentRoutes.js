@@ -18,6 +18,7 @@ import {DEPARTMENTS,WORKFLOW_DEPARTMENTS,allowedShop,allowedDepartment,enabledDe
 import {fail,money,ratio,safeInteger} from './policy.js';
 import { forecastDemand, dailyNetSales, scenarioForecast } from './forecastPolicy.js';
 import { departmentSummary } from './departmentReports.js';
+import accessoriesRoutes from "./accessoriesRoutes.js";
 import DeliveryChallan from '../models/DeliveryChallan.js';
 import FabricCutPlan from '../models/FabricCutPlan.js';
 import FabricCutActual from '../models/FabricCutActual.js';
@@ -69,6 +70,8 @@ async function approvedRoute(req,scope,session,sku){
  const bom=route.bomCode?await ErpBom.findOne({...scope,code:route.bomCode,outputSku:sku,approvalStatus:'APPROVED',active:{$ne:false}}).session(session).lean():null;if(route.bomCode&&!bom)fail('Approved BOM version unavailable');
  return {routeSnapshot:{key:route.key,stages:route.stages,externalInput:route.externalInput===true,construction:route.construction,approvedBy:route.approvedBy},bomSnapshot:bom?{code:bom.code,outputQty:bom.outputQty,components:bom.components,approvedBy:bom.approvedBy}:undefined};
 }
+// ACCESSORIES shares the transactional ERP stock ledger.
+router.use("/accessories", accessoriesRoutes);
 router.get('/routing-masters',asyncHandler(async(req,res)=>{routeAdministrator(req);const scope=workspaceFilter();res.json({routes:await Master.find({...scope,kind:'ROUTE'}).sort({_id:-1}).limit(500).lean(),boms:await ErpBom.find(scope).sort({_id:-1}).limit(500).lean()});}));
 router.post('/routing-masters',asyncHandler(async(req,res)=>{routeAdministrator(req);const stages=validateRouting(req.body.stages,req.departmentCompany);requireAccess(req,stages[0]);res.json(await transaction(req,'ROUTE_DRAFT',async(scope,session)=>{
  const key=clean(req.body.masterKey),sku=clean(req.body.sku).toUpperCase();if(!/^[A-Za-z0-9_-]{2,60}$/.test(key)||await Master.exists({...scope,key}).session(session))fail('New unique version key required');if(!await ErpSku.exists({...scope,code:sku,kind:'FINISHED'}).session(session))fail('Finished SKU required');
