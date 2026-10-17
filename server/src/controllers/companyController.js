@@ -1,5 +1,6 @@
 import SubscriptionPayment from "../models/SubscriptionPayment.js";
 import {strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
+import {assertSafeBaseRoleAssignment} from '../utils/roleAssignmentGuard.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import {trialExpiry} from "../utils/subscriptionAccess.js";
 import {DEPARTMENTS} from "../erp/departmentPolicy.js";
@@ -179,6 +180,12 @@ export async function updateCompanyUser(request, response) {
     const user=await User.findOne({_id:request.params.userId,companyId:request.user.companyId,factoryId:request.user.factoryId}).select("+sessionVersion").session(session);
     if(!company||!user||user.role==="saas_super_admin") throw new ApiError(404,"Company user not found");
     if(user.role==='company_owner')throw new ApiError(403,'Ownership cannot change through user updates');
+    // Legacy role PATCH must never elevate administrators without the
+    // owner-reviewed /auth/access/users/:id role assignment workflow.
+    const nextRole=request.body.role||user.role;
+    assertSafeBaseRoleAssignment(request.user,nextRole,user.role);
+    if(strictAccess(request.user)&&nextRole!==user.role)
+      throw new ApiError(403,'Use the audited role assignment workflow to change the base role');
     if(strictAccess(request.user)){
       if(!strictAccess(user))throw new ApiError(409,'Use explicit access assignment for legacy users');
       validateAccessAssignment(request.user,user,{permissions:request.body.permissions||user.permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:request.body.department||user.department},company);

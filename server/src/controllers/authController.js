@@ -1,5 +1,6 @@
 import {includesApprovalGrant,retainExistingApprovalGrants} from "../utils/approvalGrantPolicy.js";
 import {userDirectoryFilter} from "../utils/userDirectoryPolicy.js";
+import {assertSafeBaseRoleAssignment} from "../utils/roleAssignmentGuard.js";
 import {subscriptionAccess} from "../utils/subscriptionAccess.js";
 import {hasPermission,strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
@@ -151,6 +152,9 @@ export async function createUser(request, response) {
       "Name, email, password and a valid role are required",
     );
   }
+  // A base role can open older role-gated endpoints even with zero grants.
+  // General user creation must not mint admin identities.
+  assertSafeBaseRoleAssignment(request.user,role);
   const normalizedEmail=String(email).trim().toLowerCase();
   if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(normalizedEmail))throw new ApiError(400,"Valid email is required");
   const department=departmentCode(request.body.department);
@@ -363,6 +367,7 @@ export async function updateUserPermissions(request, response) {
     validateAccessAssignment(request.user,user,{permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:user.department},company);
   }
   if(user.role==='company_owner')throw new ApiError(403,'Owner permissions cannot be changed here');
+  assertSafeBaseRoleAssignment(request.user,user.role,user.role);
   user.permissions = retainExistingApprovalGrants(permissions,user.permissions||[]); user.sessionVersion = Number(user.sessionVersion || 0) + 1;
   await user.save(); response.json({ message: "ERP permissions updated; user must sign in again" });
 }
