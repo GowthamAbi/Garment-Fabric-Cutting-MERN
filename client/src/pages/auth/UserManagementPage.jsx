@@ -15,6 +15,8 @@ const blank = {
   department: "",
   permissions: [],
 };
+const isDepartmentRole = role => ["department_incharge", "department_entry"].includes(role);
+const departmentGrant = (department, role) => !department ? [] : role === "department_incharge" ? [`department.${department.toLowerCase()}.read`] : role === "department_entry" ? [`department.${department.toLowerCase()}.read`, `department.${department.toLowerCase()}.write`] : [];
 const roles = [
   ["company_admin", "Company Admin"],
   ["store", "Store User"],
@@ -104,7 +106,7 @@ export default function UserManagementPage({ notify }) {
             <select
               value={form.role}
               onChange={(event) =>
-                setForm({ ...form, role: event.target.value })
+                setForm(prev => ({ ...prev, role: event.target.value, department: isDepartmentRole(event.target.value) ? prev.department : "", permissions: isDepartmentRole(event.target.value) ? departmentGrant(prev.department, event.target.value) : prev.permissions.filter(p => !p.startsWith("department.")) }))
               }
             >
               {roles.map(([value, label]) => (
@@ -121,7 +123,7 @@ export default function UserManagementPage({ notify }) {
                 required
                 value={form.department}
                 onChange={(event) =>
-                  setForm({ ...form, department: event.target.value })
+                  setForm(prev => ({...prev, department: event.target.value, permissions: [...prev.permissions.filter(p => !p.startsWith("department.")), ...departmentGrant(event.target.value, prev.role)] }))
                 }
               >
                 <option value="">Select</option>
@@ -131,6 +133,7 @@ export default function UserManagementPage({ notify }) {
               </select>
             </label>
           )}
+          {isDepartmentRole(form.role) && <p role="status">Suggested permissions: Department Head gets read-only access; Department Staff gets read and write. Approval authority must be granted by a separate secure server-side workflow. Review all permissions before creating the user.</p>}
           <fieldset><legend>Integrated ERP permissions</legend>{[...DEPARTMENT_PERMISSIONS, "erp.read", "erp.purchase", "erp.sales", "erp.stock", "erp.quality", "erp.accounts", "erp.finance.read", "erp.masters", "erp.reverse", "erp.reconcile"].map(permission => <label key={permission}><input type="checkbox" checked={form.permissions.includes(permission)} onChange={e => setForm({ ...form, permissions: e.target.checked ? [...form.permissions, permission] : form.permissions.filter(p => p !== permission) })} />{permission}</label>)}</fieldset>
           <button className="primary">Create User</button>
         </form>

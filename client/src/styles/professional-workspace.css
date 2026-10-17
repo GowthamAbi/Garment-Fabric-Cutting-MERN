@@ -1,0 +1,259 @@
+/*
+ * UG SaaS workspace polish — screen only.
+ * Consolidates spacing and responsive behavior across operational departments
+ * without altering stock calculations, permissions, or print documents.
+ */
+@media screen {
+  :root {
+    --ugs-space-xs: 6px;
+    --ugs-space-sm: 10px;
+    --ugs-space-md: 16px;
+    --ugs-space-lg: 20px;
+    --ugs-surface: #ffffff;
+    --ugs-surface-soft: #f4f7f9;
+    --ugs-border: #d3dfe5;
+    --ugs-text: #1a3341;
+    --ugs-muted: #516878;
+    --ugs-focus: #0b746b;
+  }
+
+  .app-shell, .owner-shell, .erp-shell { min-width: 0; }
+  .app-shell > main, .owner-shell > main { min-width: 0; }
+  .app-shell .page, .owner-shell .page {
+    width: 100%;
+    max-width: 1800px;
+    min-width: 0;
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+  .app-shell .page > *, .owner-shell .page > *,
+  .erp-shell > *, .app-shell .page :is(.card,.panel,.erp-card),
+  .owner-shell .page :is(.card,.panel) {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .app-shell .page :is(.card,.panel,.erp-card,.company-card),
+  .owner-shell .page :is(.card,.panel,.saas-plan-card) {
+    border: 1px solid var(--ugs-border);
+    border-radius: 8px;
+    background: var(--ugs-surface);
+    box-sizing: border-box;
+    overflow-wrap: anywhere;
+  }
+  .app-shell .page :is(.erp-grid,.production-start-grid,.form-grid,.company-form-grid,.saas-form-grid,.pending-form,.department-board),
+  .owner-shell .page :is(.saas-form-grid,.pending-form) {
+    min-width: 0;
+    column-gap: var(--ugs-space-md);
+    row-gap: var(--ugs-space-md);
+  }
+  .app-shell .page :is(.erp-grid,.production-start-grid,.form-grid,.company-form-grid,.saas-form-grid,.pending-form,.department-board) > *,
+  .owner-shell .page :is(.saas-form-grid,.pending-form) > * { min-width: 0; }
+
+  .app-shell .page :is(input:not([type=checkbox]):not([type=radio]),select,textarea),
+  .owner-shell .page :is(input:not([type=checkbox]):not([type=radio]),select,textarea) {
+    max-width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+  }
+  .app-shell .page :is(.erp-field,.field,fieldset,label),
+  .owner-shell .page :is(.field,fieldset,label) { min-width: 0; }
+
+  .app-shell .page :is(.erp-table,.table-wrap,.table-container,.cutting-preview),
+  .owner-shell .page :is(.table-wrap,.table-container) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app-shell .page table, .owner-shell .page table { border-collapse: collapse; }
+  .app-shell .page :is(th,td), .owner-shell .page :is(th,td) {
+    padding: 10px 12px;
+    text-align: start;
+    vertical-align: middle;
+  }
+  .app-shell .page th, .owner-shell .page th { font-weight: 650; }
+  .app-shell .page :is(.row-actions,.form-actions,.erp-actions,.department-actions),
+  .owner-shell .page :is(.row-actions,.form-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ugs-space-sm);
+    align-items: center;
+  }
+  .app-shell .page :is(button,input,select,textarea):focus-visible,
+  .owner-shell .page :is(button,input,select,textarea):focus-visible {
+    outline: 2px solid var(--ugs-focus);
+    outline-offset: 2px;
+  }
+
+  /* Department Head / Staff — only the assigned workspace is displayed. */
+  .app-shell aside .role-workspace-nav { margin: 10px 8px 18px; }
+  .app-shell aside .role-workspace-nav .department-nav-title {
+    line-height: 1.45;
+    letter-spacing: .035em;
+    overflow-wrap: anywhere;
+  }
+  .app-shell aside .role-workspace-nav > button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 13px;
+    min-height: 44px;
+    text-align: start;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    border-radius: 4px;
+  }
+  .app-shell aside .role-workspace-nav > button > svg { width: 18px; height: 18px; flex: 0 0 18px; }
+  .app-shell aside .role-workspace-nav .role-menu-label { min-width: 0; flex: 1; }
+  .app-shell aside .role-workspace-nav > button[aria-current="page"] { font-weight: 700; }
+
+  html[data-theme="dark"] {
+    --ugs-surface: #122a32;
+    --ugs-surface-soft: #18353e;
+    --ugs-border: #41616a;
+    --ugs-text: #e4f0ed;
+    --ugs-muted: #afc6c0;
+    --ugs-focus: #7ad2ba;
+  }
+  html[data-theme="dark"] .app-shell .page :is(.card,.panel,.erp-card,.company-card),
+  html[data-theme="dark"] .owner-shell .page :is(.card,.panel,.saas-plan-card) {
+    background: var(--ugs-surface);
+    color: var(--ugs-text);
+    border-color: var(--ugs-border);
+  }
+  html[data-theme="dark"] .app-shell .page :is(.erp-stats article,.erp-gantt-track) {
+    background: var(--ugs-surface-soft);
+    color: var(--ugs-text);
+    border-color: var(--ugs-border);
+  }
+  html[data-theme="dark"] .app-shell .page .erp-tabs button:not(.active) {
+    background: var(--ugs-surface-soft);
+    color: var(--ugs-text);
+    border-color: var(--ugs-border);
+  }
+  html[data-theme="dark"] .app-shell .page :is(input,select,textarea),
+  html[data-theme="dark"] .owner-shell .page :is(input,select,textarea) {
+    color: var(--ugs-text);
+    background: var(--ugs-surface-soft);
+    border-color: var(--ugs-border);
+  }
+}
+@media screen and (max-width: 1024px) {
+  .app-shell .page :is(.production-start-grid,.pending-form),
+  .owner-shell .page :is(.pending-form,.saas-form-grid) {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+}
+@media screen and (max-width: 760px) {
+  .app-shell .page, .owner-shell .page { padding-inline: 12px; }
+  .app-shell .page :is(.card,.panel,.erp-card,.company-card),
+  .owner-shell .page :is(.card,.panel) { padding: 14px; }
+  .app-shell .page :is(.production-start-grid,.pending-form,.form-grid,.company-form-grid,.saas-form-grid,.erp-grid,.department-board),
+  .owner-shell .page :is(.pending-form,.saas-form-grid,.owner-subscription-details) {
+    grid-template-columns: minmax(0,1fr);
+  }
+  .app-shell .page :is(button,input,select,textarea),
+  .owner-shell .page :is(button,input,select,textarea) { font-size: 16px; }
+  .app-shell .page :is(.erp-tabs,.form-actions,.erp-actions,.row-actions) { gap: 8px; }
+  .app-shell .page :is(.erp-table,.table-wrap,.table-container) { margin-inline: 0; }
+  .app-shell .page :is(.erp-table,.table-wrap,.table-container) table { min-width: 520px; }
+  .topbar > .corner-display-tools, .owner-topbar > .corner-display-tools {
+    right: 10px;
+    top: 10px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+}
+@media screen and (max-width: 390px) {
+  .topbar, .owner-topbar { padding-right: 126px !important; }
+  .topbar h1, .owner-topbar h1 { font-size: 17px !important; line-height: 1.3; }
+  .topbar > .corner-display-tools, .owner-topbar > .corner-display-tools { right: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell aside .role-workspace-nav > button { transition: none !important; }
+}
+
+/* Exact Excel options: compact navigation, genuine API-based dashboard. */
+@media screen {
+ .app-shell .excel-option-workspace {min-width:0;max-width:100%}
+ .app-shell .excel-option-header {display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+ .app-shell .excel-option-header h2 {margin:4px 0 0;line-height:1.3;overflow-wrap:anywhere}
+ .app-shell .excel-option-header small {color:var(--ugs-muted)}
+ .app-shell .excel-option-status {font-size:12px;line-height:1.4;border:1px solid var(--ugs-border);border-radius:6px;padding:6px 10px;max-width:100%}
+ .app-shell .department-overview-live {min-width:0}
+ .app-shell .department-overview-live .department-actions {margin:16px 0}
+ .app-shell .department-overview-live .department-actions button {min-height:44px;display:flex;align-items:center;gap:8px}
+ .app-shell .department-overview-live .department-board {display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px}
+ .app-shell .department-overview-live .department-board>article {display:flex;flex-direction:column;gap:10px;text-align:start;min-height:130px}
+ .app-shell .department-overview-live .department-board>article>small {color:var(--ugs-muted)}
+ .app-shell .department-overview-live .department-board>article>strong {font-size:clamp(24px,3vw,32px)}
+ .app-shell .department-overview-live .department-note {font-size:13px;color:var(--ugs-muted)}
+ html[data-theme="dark"] .app-shell .excel-option-status {background:var(--ugs-surface-soft);color:var(--ugs-text)}
+ html[data-theme="dark"] .app-shell .department-overview-live .department-board>article>small {color:var(--ugs-muted)}
+}
+@media screen and (max-width:760px) {
+ .app-shell .department-overview-live .department-board {grid-template-columns:minmax(0,1fr)}
+ .app-shell .excel-option-header {align-items:stretch}
+ .app-shell .excel-option-status {width:fit-content}
+}
+
+/* Department task register: screen only; built around real assigned tasks. */
+@media screen {
+ .app-shell .department-tasks-page {min-width:0;display:grid;gap:18px}
+ .app-shell .department-task-header {display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+ .app-shell .department-task-header h2,.app-shell .department-task-header h3 {margin:4px 0}
+ .app-shell .department-task-header p {margin:6px 0 0;color:var(--ugs-muted)}
+ .app-shell .department-task-header button {min-height:44px;display:inline-flex;align-items:center;gap:8px}
+ .app-shell .department-task-filter {max-width:360px;min-width:180px}
+ .app-shell .department-task-cards {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+ .app-shell .department-task-cards>article {display:flex;align-items:center;gap:12px;padding:18px}
+ .app-shell .department-task-cards>article>strong {font-size:24px;margin-inline-start:auto}
+ .app-shell .department-task-form {padding:18px}
+ .app-shell .department-task-form>h3 {margin-top:0}
+ .app-shell .department-task-form-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+ .app-shell .department-task-form-grid>label {display:flex;flex-direction:column;gap:7px;min-width:0;font-weight:500}
+ .app-shell .department-task-form-grid input,.app-shell .department-task-form-grid select,.app-shell .department-task-form-grid textarea {width:100%;min-width:0;max-width:100%}
+ .app-shell .department-task-form-grid .department-task-wide {grid-column:1/-1}
+ .app-shell .department-task-form>button {margin-top:14px;min-height:44px}
+ .app-shell .department-task-table {overflow-x:auto;max-width:100%}
+ .app-shell .department-task-table table {min-width:850px}
+ .app-shell .department-task-table button {min-height:40px}
+ .app-shell .department-task-table td>small {display:block;color:var(--ugs-muted);max-width:280px;white-space:normal}
+ .app-shell .department-tasks-page .erp-success {color:var(--ugs-focus)}
+}
+@media screen and (max-width:760px) {
+ .app-shell .department-task-cards {grid-template-columns:repeat(1,minmax(0,1fr))}
+ .app-shell .department-task-form-grid {grid-template-columns:minmax(0,1fr)}
+}
+
+/* Fabric monitoring: read-only, narrow-screen safe table and filter alignment. */
+@media screen {
+ .app-shell .fabric-plan-monitor {display:grid;gap:16px;min-width:0}
+ .app-shell .fabric-plan-monitor-heading {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+ .app-shell .fabric-plan-monitor-heading h2 {margin:4px 0 8px}
+ .app-shell .fabric-plan-monitor-heading p {margin:0;color:var(--ugs-muted)}
+ .app-shell .fabric-plan-monitor-heading button,
+ .app-shell .fabric-plan-monitor-filters button {min-height:44px;display:inline-flex;align-items:center;gap:8px}
+ .app-shell .fabric-plan-monitor-filters {padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));align-items:end;gap:12px}
+ .app-shell .fabric-plan-monitor-filters label {display:flex;flex-direction:column;gap:5px;min-width:0}
+ .app-shell .fabric-plan-monitor-filters input,.app-shell .fabric-plan-monitor-filters select {width:100%;min-width:0}
+ .app-shell .fabric-plan-monitor-kpis {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+ .app-shell .fabric-plan-monitor-kpis>article {display:flex;flex-direction:column;padding:14px;gap:8px}
+ .app-shell .fabric-plan-monitor-kpis>article>span {color:var(--ugs-muted);font-size:13px}
+ .app-shell .fabric-plan-monitor-kpis>article>strong {font-size:clamp(20px,2.4vw,28px);font-variant-numeric:tabular-nums}
+ .app-shell .fabric-plan-monitor-table {overflow-x:auto}
+ .app-shell .fabric-plan-monitor-table table {min-width:950px}
+ .app-shell .fabric-plan-monitor-table td>small {display:block;color:var(--ugs-muted)}
+ .app-shell .fabric-plan-issue-details {min-width:175px;max-width:290px;white-space:normal}
+ .app-shell .fabric-plan-issue-details p {border-bottom:1px solid var(--ugs-border);padding:6px 0;margin:0}
+}
+@media screen and (max-width:760px) {
+ .app-shell .fabric-plan-monitor-kpis {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .app-shell .fabric-plan-monitor-filters {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media screen and (max-width:430px) {
+ .app-shell .fabric-plan-monitor-filters {grid-template-columns:minmax(0,1fr)}
+}

@@ -25,6 +25,14 @@ const schema = new mongoose.Schema(
     qcName: { type: String, default: "" },
     lines: { type: [line], default: [] },
     totalPcs: { type: Number, default: 0 },
+    requestKey: String,
+    requestHash: String,
+    expectedHandoverAt: Date,
+    handoverAt: Date,
+    receiptRevision: { type: Number, default: 0 },
+    handoverReference: String,
+    handoverRemarks: String,
+    handoverBy: String,
     status: { type: String, enum: ["ISSUED", "CANCELLED"], default: "ISSUED" },
     remarks: { type: String, default: "" },
     createdBy: String,
@@ -33,4 +41,6 @@ const schema = new mongoose.Schema(
 );
 schema.index({ companyId: 1, factoryId: 1, challanNo: 1 }, { unique: true });
 schema.index({ companyId: 1, factoryId: 1, planNo: 1, deliveryDate: -1 });
+schema.index({companyId:1,factoryId:1,requestKey:1},{unique:true,
+  partialFilterExpression:{requestKey:{$type:"string"}}});
 export default createTenantModel("DeliveryChallan", schema);

@@ -3,6 +3,8 @@ import { allowDepartment, allowRoles } from "../middleware/roleMiddleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import * as c from "../controllers/fabricCuttingController.js";
 import * as m from "../controllers/fabricMasterController.js";
+import {monitorFabricPlans,requireLegacyFabricFactory,legacyFabricRecordNeedsFactoryGuard} from "../controllers/fabricPlanMonitorController.js";
+import {saveFabricIssue,listFabricIssues} from "../controllers/fabricIssueController.js";
 const r = Router(),
   fabricRead = allowDepartment(
     "FABRIC",
@@ -79,10 +81,15 @@ const r = Router(),
     "elastic_admin",
     "elastic_entry",
   );
+// Legacy Fabric master/inward/stock records do not store factoryId.
+// Disallow cross-factory reads/writes until a scoped migration is approved.
+r.use((req,res,next)=>legacyFabricRecordNeedsFactoryGuard(req.path)
+ ? asyncHandler(requireLegacyFabricFactory)(req,res,next)
+ : next());
 r.get("/masters", fabricRead, asyncHandler(m.listFabricMasters));
 r.get("/masters/:code", fabricRead, asyncHandler(m.getFabricMaster));
-r.post("/masters", masterWrite, asyncHandler(m.saveFabricMaster));
-r.put("/masters/:id", masterWrite, asyncHandler(m.saveFabricMaster));
+r.post("/masters", fabricEntry, asyncHandler(m.saveFabricMaster));
+r.put("/masters/:id", fabricEntry, asyncHandler(m.saveFabricMaster));
 r.delete("/masters/:id", masterWrite, asyncHandler(m.deleteFabricMaster));
 r.get("/process-masters", fabricRead, asyncHandler(m.listProcesses));
 r.get("/process-masters/:type/:code", fabricRead, asyncHandler(m.getProcess));
@@ -106,6 +113,14 @@ r.put("/inwards/:id", fabricEntry, asyncHandler(c.saveInward));
 r.get("/stock", fabricRead, asyncHandler(c.listFabricStock));
 r.get("/stock/inward", fabricRead, asyncHandler(c.listOriginalInwardStock));
 r.get("/stock/balance", fabricRead, asyncHandler(c.listFabricBalance));
+r.get("/fabric-issues",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(listFabricIssues));
+r.post("/fabric-issues",fabricEntry,asyncHandler(requireLegacyFabricFactory),asyncHandler(saveFabricIssue));
+r.get("/fabric-plan-monitor", fabricRead, asyncHandler(monitorFabricPlans));
+r.get("/fabric-plans",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.listPlans));
+r.get("/fabric-plans/setup/:itemCode",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.getPlanSetup));
+r.get("/fabric-plans/:no",fabricRead,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.getPlan));
+r.post("/fabric-plans",fabricEntry,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.createPlan));
+r.put("/fabric-plans/:id",fabricEntry,asyncHandler(requireLegacyFabricFactory),asyncHandler(c.updatePlan));
 r.get("/plans", cuttingRead, asyncHandler(c.listPlans));
 r.get("/plans/setup/:itemCode", cuttingRead, asyncHandler(c.getPlanSetup));
 r.get("/plans/:no/folding", fabricRead, asyncHandler(c.getFoldingSetup));

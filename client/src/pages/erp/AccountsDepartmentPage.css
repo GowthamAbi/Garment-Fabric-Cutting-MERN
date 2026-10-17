@@ -1,0 +1,5 @@
+.accounts-dept .accounts-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px}
+.accounts-dept .accounts-scroll{width:100%;overflow-x:auto}
+.accounts-dept .accounts-print-note{font-size:12px}
+.accounts-dept .accounts-form{max-width:900px}
+@media print{.accounts-dept .accounts-entry-form,.accounts-dept .page-actions,.accounts-dept .accounts-filters{display:none!important}}

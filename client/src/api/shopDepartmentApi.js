@@ -1,0 +1,11 @@
+import {request} from "./axiosInstance.js";
+const base="/erp/departments";
+const post=(path,body)=>request(base+path,{method:"POST",body:JSON.stringify(body)});
+export const getShopOverview=()=>request(base+"/shop-overview");
+export const receiveShopTransit=body=>post("/transfer",body);
+export const createShopSale=body=>post("/sale",body);
+export const requestCustomerReturn=body=>post("/shop-return-requests",body);
+export const returnSoldGoods=body=>post("/return",body);
+export const transferShopStock=body=>post("/transfer",body);
+export const requestShopStockCount=body=>post("/stock-exceptions",body);
+export const createShopMaster=body=>post("/masters",{...body,kind:"SHOP"});

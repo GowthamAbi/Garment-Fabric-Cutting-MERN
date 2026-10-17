@@ -4,8 +4,16 @@ import {DEPARTMENTS} from '../../shared/departmentCatalogue.js';
 import {boundaryOptions,assertBoundary,assertOutwardBoundary,inwardStage,outwardAllowed} from '../src/erp/boundaryPolicy.js';
 const company=departments=>({departmentCatalogueVersion:1,enabledDepartments:departments,entitlements:{maxDepartments:departments.length,modules:departments}});
 test('every single-department package has independent external input without adjacent licence',()=>{
- for(const d of DEPARTMENTS){const c=company([d]),b=boundaryOptions(c,d);assert.equal(b.externalInward,true,d);assert.doesNotThrow(()=>assertBoundary(c,d,'IN'));if(!['SHOP','MARKETING'].includes(d))assert.equal(b.externalOutward,true,d);}
+ for(const d of DEPARTMENTS.filter(d=>!['HR','ACCOUNTS'].includes(d))){const c=company([d]),b=boundaryOptions(c,d);assert.equal(b.externalInward,true,d);assert.doesNotThrow(()=>assertBoundary(c,d,'IN'));if(!['SHOP','MARKETING'].includes(d))assert.equal(b.externalOutward,true,d);}
  assert.throws(()=>boundaryOptions(company(['SHOP']),'PACKING'));
+ assert.equal(boundaryOptions(company(['HR']),'HR').externalInward,false);
+ assert.equal(boundaryOptions(company(['HR']),'HR').externalOutward,false);
+ assert.throws(()=>assertBoundary(company(['HR']),'HR','IN'));
+ assert.throws(()=>assertBoundary(company(['HR']),'HR','OUT'));
+ assert.equal(boundaryOptions(company(['ACCOUNTS']),'ACCOUNTS').externalInward,false);
+ assert.equal(boundaryOptions(company(['ACCOUNTS']),'ACCOUNTS').externalOutward,false);
+ assert.throws(()=>assertBoundary(company(['ACCOUNTS']),'ACCOUNTS','IN'));
+ assert.throws(()=>assertBoundary(company(['ACCOUNTS']),'ACCOUNTS','OUT'));
 });
 test('integrated neighbours cannot be bypassed by external receipt or outward',()=>{
  const c=company(DEPARTMENTS);for(const d of ['CUTTING','DELIVERY','STITCHING','INWARD','CHECKING','IRONING','PACKING','DISPATCH','WAREHOUSE','SHOP','MARKETING'])assert.throws(()=>assertBoundary(c,d,'IN'),d);

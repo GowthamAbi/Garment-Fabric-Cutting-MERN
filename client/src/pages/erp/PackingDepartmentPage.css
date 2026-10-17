@@ -1,0 +1,11 @@
+.packing-page .packing-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.packing-page .packing-two-column{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.packing-page .packing-label-area{padding:16px;max-width:480px;margin-top:20px;border:1px solid #bbb;background:white;color:#111}
+.packing-page .packing-label-area dl{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;word-break:break-word}
+.packing-page .packing-label-area dl dt{font-weight:700}
+.packing-page .packing-label-area dl dd{margin:0}
+.packing-page .packing-label-area h3{margin:0 0 12px}
+@media print{.packing-page.packing-label-mode .packing-nolabel{display:none!important}
+.packing-page.packing-label-mode .packing-label-area{border:1px solid #000!important;max-width:90mm!important;margin:0!important;break-inside:avoid}
+.packing-page.packing-label-mode .packing-label-area img{max-width:100%!important}
+.packing-page.packing-label-mode .packing-label-area dl{font-size:10pt!important}}

@@ -97,10 +97,22 @@ export const getMeasurements = (params = {}) =>
 export const transferRework = (id, data) =>
   request(`/warehouse/rework/${id}`, {
     method: "POST",
+    headers: { "Idempotency-Key": data.key },
     body: JSON.stringify(data),
   });
 export const deliverWarehouseStock = (id, data) =>
   request(`/warehouse/deliver/${id}`, {
     method: "POST",
+    headers: { "Idempotency-Key": data.key },
     body: JSON.stringify(data),
   });
+
+export const getCuttingMachines = () => request("/production/cutting-machines");
+export const saveCuttingMachine = (data,id) => request(`/production/cutting-machines${id?"/"+encodeURIComponent(id):""}`, {
+  method: id ? "PUT" : "POST", body: JSON.stringify(data)
+});
+export const getCuttingTargetActual = (planNo = "") => request(
+  "/production/cutting-overview" + (planNo ? "?"+new URLSearchParams({planNo}) : "")
+);
+
+export const getElasticMachineSummary = () => request("/production/elastic-machine-summary");

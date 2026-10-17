@@ -1,8 +1,12 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
+import {assertSafeNetlifyPreview} from "./src/utils/apiEndpointPolicy.mjs";
 import react from "@vitejs/plugin-react";
 import { readFileSync } from 'node:fs';
 
-export default defineConfig({
+export default defineConfig(({mode})=>{
+  const env=loadEnv(mode,process.cwd(),"VITE_");
+  assertSafeNetlifyPreview({context:process.env.CONTEXT,apiUrl:env.VITE_API_URL});
+  return {
   plugins: [react(), {name:'offline-pos-shared-modules',generateBundle(){
     for(const [fileName,path] of [['offline-pos/drafts.js','./src/utils/offlinePos.js'],['offline-pos/receipt.js','./src/utils/offlineReceipt.js']])
       this.emitFile({type:'asset',fileName,source:readFileSync(new URL(path,import.meta.url),'utf8')});
@@ -20,4 +24,5 @@ export default defineConfig({
       },
     },
   },
+};
 });

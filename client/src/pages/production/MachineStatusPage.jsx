@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, CalendarDays, Clock3 } from "lucide-react";
-import { getProductionSummary } from "../../api/productionApi.js";
+import { getProductionSummary, getElasticMachineSummary } from "../../api/productionApi.js";
 import Card from "../../components/common/Card.jsx";
 import PageTitle from "../../components/common/PageTitle.jsx";
 
@@ -129,15 +129,15 @@ function hours(value) {
   return `${Number(value || 0).toFixed(2)} h`;
 }
 
-export default function MachineStatusPage({ timelineType = "" }) {
+export default function MachineStatusPage({ timelineType = "", elasticOnly = false }) {
   const [data, setData] = useState(null);
   const [selectedMachine, setSelectedMachine] = useState(null);
   const todayStart = useMemo(() => startOfDay(new Date()), []);
   const todayEnd = useMemo(() => endOfDay(new Date()), []);
 
   useEffect(() => {
-    getProductionSummary().then(setData).catch(console.error);
-  }, []);
+    (elasticOnly ? getElasticMachineSummary() : getProductionSummary()).then(setData).catch(console.error);
+  }, [elasticOnly]);
 
   if (!data)
     return (

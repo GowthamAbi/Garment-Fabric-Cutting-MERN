@@ -6,13 +6,16 @@ export const ADMIN_ROLES=['company_owner','admin','company_admin'];
 export function pieces(value){const n=Number(value);if(value===''||value==null||typeof value==='boolean'||!Number.isSafeInteger(n)||n<=0||n>1000000)fail('Use 1–1,000,000 whole pieces');return n;}
 export function names(values){if(!Array.isArray(values)||!values.length||values.length>100)fail('Use 1–100 operation names');const out=values.map(v=>String(v).trim());if(out.some(v=>!v||v.length>80)||new Set(out).size!==out.length)fail('Operation names must be unique and non-empty');return out;}
 export function checkSplit(input,available){const out={};for(const k of ['good','rework','oil','reject']){const v=Number(input[k]||0);if(!Number.isSafeInteger(v)||v<0)fail('Checking quantities must be whole pieces');out[k]=v;}const total=Object.values(out).reduce((a,b)=>a+b,0);if(total<=0||total>available)fail('Checking split exceeds available pieces');return {...out,total};}
-export function allowedDepartment(user,department,write=false){if(['saas_super_admin','support_viewer'].includes(user?.role))return false;if(user?.role==='company_owner'||(!user?.accessPolicyVersion&&ADMIN_ROLES.includes(user?.role)))return true;if(user?.accessScope==='SELF'||(user?.accessScope==='DEPARTMENT'&&user.department!==department))return false;const p=user?.permissions||[];return p.includes(`department.${department.toLowerCase()}.${write?'write':'read'}`)||(!write&&p.includes(`department.${department.toLowerCase()}.write`));}
+export function allowedDepartment(user,department,write=false){if(write&&user?.accessPolicyVersion>=1&&user?.accessScope==='DEPARTMENT'&&user?.role==='department_incharge')return false;if(['saas_super_admin','support_viewer'].includes(user?.role))return false;if(user?.role==='company_owner'||(!user?.accessPolicyVersion&&ADMIN_ROLES.includes(user?.role)))return true;if(user?.accessScope==='SELF'||(user?.accessScope==='DEPARTMENT'&&user.department!==department))return false;const p=user?.permissions||[];return p.includes(`department.${department.toLowerCase()}.${write?'write':'read'}`)||(!write&&p.includes(`department.${department.toLowerCase()}.write`));}
 export function enabledDepartment(company,department){
  const code=departmentCode(department),selected=company.enabledDepartments?.slice(0,company.entitlements?.maxDepartments||100);
  if(company.departmentCatalogueVersion>=1)return Boolean(selected?.includes(code)&&licensedDepartments(company.entitlements?.modules).includes(code));
  // Preserve the original nine-stage contract for existing installations until
  // an administrator explicitly reviews and saves the new department selection.
  const licensed=(company.entitlements?.modules||[]).filter(x=>WORKFLOW_DEPARTMENTS.includes(x));
+ // Accounts is a newly licensed finance department; legacy nine-stage
+ // contracts must never receive financial access implicitly.
+ if(code==='ACCOUNTS')return false;
  if(!WORKFLOW_DEPARTMENTS.includes(code))return true;
  return (!selected?.length||selected.includes(code))&&(!licensed.length||licensed.includes(code));
 }

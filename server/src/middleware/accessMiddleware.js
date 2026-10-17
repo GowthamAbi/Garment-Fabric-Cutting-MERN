@@ -1,4 +1,5 @@
 import ApiError from '../utils/ApiError.js';
+import {approvalRouteAllowed} from '../utils/approvalRoutePolicy.js';
 import {hasPermission,strictAccess,companyOwner} from '../utils/accessPolicy.js';
 import {enabledDepartment} from '../erp/departmentPolicy.js';
 export function legacyDepartment(path){
@@ -7,20 +8,31 @@ export function legacyDepartment(path){
  if(/^\/fabric-cutting\/elastic\//.test(path))return 'ELASTIC';
  if(/^\/fabric-cutting\/(actuals|waste)(\/|$)/.test(path))return 'CUTTING';
  if(/^\/fabric-cutting\/stock(\/|$)/.test(path))return 'FABRIC';
+ if(path==='/fabric-cutting/fabric-plan-monitor')return 'FABRIC';
+ if(/^\/fabric-cutting\/fabric-plans(?:\/|$)/.test(path))return 'FABRIC';
+ if(/^\/fabric-cutting\/fabric-issues(?:\/|$)/.test(path))return 'FABRIC';
  if(/^\/fabric-cutting\/plans\/[^/]+\/folding$/.test(path))return 'FABRIC';
  if(/^\/fabric-cutting\/plans(\/|$)/.test(path))return 'CUTTING';
  if(/^\/fabric-cutting\/(masters|process-masters|item-masters|inwards|inward-stock|balance-stock|rolls)(\/|$)/.test(path))return 'FABRIC';
- if(/^\/production\/cutting-machine-(plans|status)(\/|$)/.test(path))return 'CUTTING';
+ if(/^\/production\/(cutting-machine-(plans|status)|cutting-machines|cutting-overview)(\/|$)/.test(path))return 'CUTTING';
+ if(/^\/production\/elastic-machine-summary$/.test(path))return 'ELASTIC';
  return null;
 }
 export function enforceAccessBoundary(req){
  const user=req.user;if(!strictAccess(user))return;
  const path=req.originalUrl.split('?')[0].replace(/^\/api/,'');
+ if(path==='/fabric-cutting/fabric-plan-monitor'&&req.method!=='GET')throw new ApiError(405,'Fabric plan monitoring has no write permission');
  if(companyOwner(user)){const department=legacyDepartment(path);if(department&&req.accessCompany&&!enabledDepartment(req.accessCompany,department))throw new ApiError(403,'Legacy department is not subscribed');return;}
  if(/^\/auth\/(session|logout|profile)$/.test(path)||path==='/saas/access-status')return;
  if(path.startsWith('/auth/factories')){if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');if(req.method==='GET'||hasPermission(user,'company.settings'))return;throw new ApiError(403,'Company settings permission required');}
  if(path.startsWith('/auth/access')){if(path==='/auth/access/factory'||hasPermission(user,'users.roles.assign')||hasPermission(user,'roles.manage'))return;throw new ApiError(403,'Role administration permission required');}
  if(path.startsWith('/auth/users')){if(hasPermission(user,'users.manage'))return;throw new ApiError(403,'User management permission required');}
+ // New workflow APIs require explicit strict-access authorization before the
+ // legacy unmapped-path gate, including users with DEPARTMENT scope.
+ if(path==='/approval-grants'||path.startsWith('/approval-grants/')||path==='/department-approval-requests'||path.startsWith('/department-approval-requests/')){
+  if(approvalRouteAllowed(user,path,req.method))return;
+  throw new ApiError(403,'Approval workflow access denied');
+ }
  if(user.accessScope==='SELF')throw new ApiError(403,'Self scope permits personal profile only');
  if(path.startsWith('/saas/')){if(path.startsWith('/saas/support')&&req.method!=='GET')throw new ApiError(403,'Only the company owner can issue or revoke owner support access');const permission=path.startsWith('/saas/customer-database')?'company.settings':path.includes('/support')?'support.manage':path.includes('/audit')?'audit.read':'billing.manage';if(hasPermission(user,permission))return;throw new ApiError(403,'Company account permission required');}
  if(path==='/dashboard/company-overview'&&hasPermission(user,'erp.read')&&user.accessScope!=='DEPARTMENT'&&!user.assignedShopKeys?.length&&!user.assignedWarehouseKeys?.length)return;
@@ -35,6 +47,7 @@ export function enforceAccessBoundary(req){
  }
  const department=legacyDepartment(path);
  if(department){
+  if(req.method!=='GET'&&user.accessScope==='DEPARTMENT'&&user.role==='department_incharge')throw new ApiError(403,'Department Head has review access, not operational entry permission');
   if(user.accessScope==='DEPARTMENT'&&user.department!==department)throw new ApiError(403,'Department outside assigned scope');
   const permission=`department.${department.toLowerCase()}.${req.method==='GET'?'read':'write'}`;
   if(!hasPermission(user,permission)&&!(req.method==='GET'&&hasPermission(user,permission.replace('.read','.write'))))throw new ApiError(403,'Legacy department permission required');

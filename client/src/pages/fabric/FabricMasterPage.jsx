@@ -12,12 +12,9 @@ const blankProcess = { processType: "COMPACTING", code: "", name: "" };
 
 export default function FabricMasterPage({ notify }) {
   const { user } = useAuth();
-  const canManage = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
-    user?.role,
-  );
-  const canDelete = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(
-    user?.role,
-  );
+  const canManage = ["saas_super_admin", "company_owner", "company_admin", "admin", "fabric_admin", "fabric_entry"].includes(user?.role) || (user?.role==="department_entry" && user?.department==="FABRIC" && (user?.permissions||[]).includes("department.fabric.write"));
+  const canManageProcess = ["saas_super_admin", "company_owner", "company_admin", "admin"].includes(user?.role);
+  const canDelete = false; // Permanent deletion is globally disabled by retention middleware.
   const [rows, setRows] = useState([]);
   const [processes, setProcesses] = useState([]);
   const [search, setSearch] = useState("");
@@ -89,7 +86,7 @@ export default function FabricMasterPage({ notify }) {
               <Save /> {form._id ? "Update" : "Save"} Fabric
             </button>
           </form>
-          <form className="classic-card" onSubmit={submitProcess}>
+          {canManageProcess && <form className="classic-card" onSubmit={submitProcess}>
             <h3>Compacting / Dyeing Code Master</h3>
             <div className="form-grid">
               <label>
@@ -128,7 +125,7 @@ export default function FabricMasterPage({ notify }) {
             <button className="primary">
               <Save /> Save Mapping
             </button>
-          </form>
+          </form>}
         </div>
       )}
       <div className="classic-card">
@@ -191,7 +188,7 @@ export default function FabricMasterPage({ notify }) {
         <h3>Code → Name Directory</h3>
         <div className="master-chip-grid">
           {processes.map((row) => (
-            <button key={row._id} onClick={() => canManage && setProcess(row)}>
+            <button key={row._id} onClick={() => canManageProcess && setProcess(row)}>
               <small>{row.processType}</small>
               <b>{row.code}</b>
               <span>{row.name}</span>

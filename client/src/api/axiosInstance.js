@@ -1,9 +1,9 @@
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  (window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "http://localhost:5000/api"
-    : "https://api.ugsaas.com/api");
+import { resolveApiEndpoint } from "../utils/apiEndpointPolicy.mjs";
+// Fail closed in previews unless a non-production API is explicitly configured.
+const API_URL=resolveApiEndpoint({
+  hostname:window.location.hostname,
+  configuredUrl:import.meta.env.VITE_API_URL
+});
 import { companyKeyFromLocation } from "../utils/tenantClient.js";
 
 export async function request(path, options = {}) {

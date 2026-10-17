@@ -26,6 +26,7 @@ const allocation = new mongoose.Schema(
   {
     inwardNo: String,
     colour: String,
+    dia: String,
     weightKg: Number,
     issuedAt: { type: Date, default: Date.now },
     issuedBy: String,
@@ -80,6 +81,7 @@ const schema = new mongoose.Schema(
     totalPlannedPcs: Number,
     totalWantedWeightKg: Number,
     issuedWeightKg: { type: Number, default: 0 },
+    deliveryRevision: { type: Number, default: 0 },
     status: {
       type: String,
       enum: [

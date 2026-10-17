@@ -2,9 +2,10 @@ import {Router} from 'express';
 import mongoose from 'mongoose';
 import {asyncHandler} from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
-import {hasPermission,validateAccessAssignment,companyOwner} from '../utils/accessPolicy.js';
+import {hasPermission,validateAccessAssignment,companyOwner,strictAccess} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS,ACCESS_SCOPES,ROLE_TEMPLATES} from '../../../shared/accessCatalogue.js';
 import {departmentCode} from '../../../shared/departmentCatalogue.js';
+import {assertSafeBaseRoleAssignment,roleDirectoryFilter} from '../utils/roleAssignmentGuard.js';
 import AccessRole from '../models/AccessRole.js';
 import User from '../models/User.js';
 import Company from '../models/Company.js';
@@ -14,13 +15,23 @@ router.use((req,_res,next)=>req.path==='/factory'||hasPermission(req.user,'users
 router.get('/',asyncHandler(async(req,res)=>{
  const company=await Company.findById(req.user.companyId).select('ownerUserId factories enabledDepartments').lean();
  if(!company)throw new ApiError(404,'Company not found');
- const users=await User.find({companyId:company._id}).select('userId name role department permissions accessPolicyVersion accessScope assignedFactoryIds assignedWarehouseKeys assignedShopKeys factoryId').limit(2000).lean();
- res.json({company,users,roles:await AccessRole.find({companyId:company._id}).limit(500).lean(),templates:ROLE_TEMPLATES,permissions:ACCESS_PERMISSIONS.filter(p=>companyOwner(req.user)||hasPermission(req.user,p)),scopes:ACCESS_SCOPES});
+ const userFilter=roleDirectoryFilter(req.user);
+ const users=await User.find(userFilter).select('userId name role department permissions accessPolicyVersion accessScope assignedFactoryIds assignedWarehouseKeys assignedShopKeys factoryId').limit(2001).lean();
+ if(users.length>2000)throw new ApiError(409,'Role directory limit exceeded; use scoped factory selection');
+ const visibleFactories=companyOwner(req.user)||req.user.accessScope==='COMPANY'||req.user.role==='company_admin'&&!strictAccess(req.user)?
+  company.factories:company.factories.filter(f=>(userFilter.factoryId?.$in||[]).includes(String(f._id)));
+ const templates=ROLE_TEMPLATES.filter(role=>{
+  try{assertSafeBaseRoleAssignment(req.user,role.baseRole);return role.key==='DEPARTMENT_OPERATOR'||
+   role.permissions.every(p=>hasPermission(req.user,p));}catch{return false;}
+ });
+ res.json({company:{...company,factories:visibleFactories},users,roles:await AccessRole.find({companyId:company._id}).limit(500).lean(),templates,
+  permissions:ACCESS_PERMISSIONS.filter(p=>companyOwner(req.user)||hasPermission(req.user,p)),scopes:ACCESS_SCOPES});
 }));
 router.post('/roles',asyncHandler(async(req,res)=>{
  if(!hasPermission(req.user,'roles.manage'))throw new ApiError(403,'Custom role management permission required');
  const {key,name,baseRole,permissions}=req.body;
  if(!/^[A-Z0-9_-]{2,60}$/.test(key||'')||!String(name||'').trim()||!['company_admin','department_incharge','department_entry','management','view_only','store'].includes(baseRole)||!Array.isArray(permissions)||permissions.some(p=>!ACCESS_PERMISSIONS.includes(p)||!hasPermission(req.user,p))||new Set(permissions).size!==permissions.length)throw new ApiError(400,'Valid role, base role and delegable permissions required');
+ assertSafeBaseRoleAssignment(req.user,baseRole);
  await AccessRole.init();const session=await mongoose.startSession();let result;
  try{await session.withTransaction(async()=>{
   [result]=await AccessRole.create([{companyId:req.user.companyId,key,name:String(name).trim().slice(0,120),baseRole,permissions,createdBy:req.user.userId}],{session});
@@ -37,6 +48,7 @@ router.post('/users/:id',asyncHandler(async(req,res)=>{
   let role=ROLE_TEMPLATES.find(r=>r.key===req.body.roleKey);
   if(!role)role=await AccessRole.findOne({companyId:company._id,key:req.body.roleKey}).session(session).lean();
   if(!role)throw new ApiError(400,'Select a role template or saved custom role');
+  assertSafeBaseRoleAssignment(req.user,role.baseRole,user.role);
   const input={...req.body,permissions:role.key==='DEPARTMENT_OPERATOR'?[`department.${departmentCode(req.body.department).toLowerCase()}.read`,`department.${departmentCode(req.body.department).toLowerCase()}.write`]:role.permissions};
   const assignment=validateAccessAssignment(req.user,user,input,company);
   Object.assign(user,assignment,{role:role.baseRole,accessRoleKey:role.key,sessionVersion:Number(user.sessionVersion||0)+1});await user.save({session});

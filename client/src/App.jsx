@@ -1,4 +1,6 @@
 import {api} from "./api.js";
+import {isSingleDepartmentUser} from "./config/roleDepartmentNavigation.mjs";
+import {visiblePageForUser} from "./config/portalNavigationPolicy.mjs";
 import { useEffect, useState } from "react";
 import MainLayout from "./components/layout/MainLayout.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -42,7 +44,7 @@ function Application() {
 
   useEffect(() => {
     if (!token || !user) return;
-    const nextPage = user.subscriptionAccess?.accessAllowed===false&&["company_owner","company_admin","admin"].includes(user.role)?"Subscription Purchase":user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
+    const nextPage = isSingleDepartmentUser(user)?"Department Dashboard":user.subscriptionAccess?.accessAllowed===false&&["company_owner","company_admin","admin"].includes(user.role)?"Subscription Purchase":user.accessPolicyVersion>=1&&user.accessScope==='SELF'?'Profile Settings':user.accessPolicyVersion>=1&&!['company_owner','company_admin'].includes(user.role)?((user.permissions||[]).includes('erp.read')&&user.accessScope!=='DEPARTMENT'&&!(user.assignedShopKeys?.length||user.assignedWarehouseKeys?.length)?'Integrated ERP':'Production & Retail'):
       window.location.pathname === "/production"
         ? "Production Control"
         : user.role === "saas_super_admin"
@@ -95,6 +97,7 @@ function Application() {
   }
 
   if (!token || !user) return <LoginPage />;
+  const visiblePage=visiblePageForUser(user,page);
   const erpBundle = window.location.pathname.match(/^\/c\/[a-z0-9-]{3,40}\/erp-bundle\/([a-f0-9]{24})$/i);
   if(erpBundle) return <div className="erp-shell"><BundleTrace bundleId={erpBundle[1]}/></div>;
   const erpRoll = window.location.pathname.match(/^\/c\/[a-z0-9-]{3,40}\/erp-roll\/([a-f0-9]{24})$/i);
@@ -134,8 +137,8 @@ function Application() {
 
   return (
     <>
-      <MainLayout page={page} onPageChange={setPage}>
-        <AppRoutes page={page} notify={notify} onPageChange={setPage} />
+      <MainLayout page={visiblePage} onPageChange={setPage}>
+        <AppRoutes page={visiblePage} notify={notify} onPageChange={setPage} />
       </MainLayout>
 
       {message && <div className="toast">{message}</div>}

@@ -10,6 +10,7 @@ import { ACCOUNTS, TYPES, LOCATIONS, quantity, minimumQuantity, money, authorize
 import { financialReport } from "./reports.js";
 import { currentDatabase } from "../config/tenantDatabase.js";
 import departmentRoutes from "./departmentRoutes.js";
+import departmentTaskRoutes from "./departmentTaskRoutes.js";
 import operationsRoutes from "./operationsRoutes.js";
 import approvalRoutes from "./approvalRoutes.js";
 import { commercialReport } from "./commercialPolicy.js";
@@ -36,6 +37,7 @@ router.use(asyncHandler(async(req,_res,next)=>{
   if(!featureAllowed(req.erpModules,"ERP_CORE")||!featureAllowed(req.erpModules,featureForRequest(req.path,req.body?.type)))throw new ApiError(403,"This ERP feature is not included in the company subscription");
   next();
 }));
+router.use("/departments/tasks", departmentTaskRoutes);
 router.use("/departments", departmentRoutes);
 router.use("/operations", operationsRoutes);
 router.use("/approvals", approvalRoutes);

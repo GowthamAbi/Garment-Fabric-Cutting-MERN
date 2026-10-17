@@ -1,4 +1,6 @@
 import DisplayTools from '../common/DisplayTools.jsx';
+import {sidebarSectionAllowed,portalSectionForUser,showExtraNavigation} from "../../config/portalNavigationPolicy.mjs";
+import {isSingleDepartmentUser,roleDepartmentPages} from "../../config/roleDepartmentNavigation.mjs";
 import SubscriptionNotice from './SubscriptionNotice';
 import {
   AlertTriangle,
@@ -37,6 +39,9 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 
 const navigation = [
+  ["Management Approval Inbox", ListChecks, ["department_incharge", "management", "company_owner"]],
+  ["Department Tasks", ClipboardList, ["management", "company_owner", "company_admin", "admin"]],
+  ["Department Approval Requests", ListChecks, ["department_incharge", "department_entry"]],
   ["Integrated ERP", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
   ["Production & Retail", Factory, ["company_owner", "company_admin", "admin", "management", "view_only", "store", "quality", "production_planner", "production_operator", "production", "supervisor", "department_incharge", "department_entry", "fabric_admin", "fabric_entry", "cutting_admin", "cutting_entry", "accessories_admin", "accessories_entry", "elastic_admin", "elastic_entry", "stitching_admin", "stitching_entry", "delivery_admin", "delivery_entry"]],
   ["Subscription Automation", Clock3, ["company_owner", "company_admin", "admin"]],
@@ -462,21 +467,23 @@ const departmentNavigation = {
     { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
   ],
   COMPANY_ADMIN: [
+    {label:"Company Dashboard",icon:LayoutDashboard,page:"Company Dashboard"},
     {label:"Factory Management",icon:Factory,page:"Factory Management"},
-    {label:"Production Departments",icon:Factory,page:"Production Departments"},
-    {label:"Warehouse Management",icon:Boxes,page:"Warehouse Management"},
-    {label:"Shop Management",icon:ShoppingCart,page:"Shop Management"},
-    {label:"Marketing Analysis",icon:BarChart3,page:"Marketing Analysis"},
     {label:"Company Purchase Orders",icon:ClipboardList,page:"Company Purchase Orders"},
-    {
-      label: "Company Dashboard",
-      icon: LayoutDashboard,
-      page: "Company Dashboard",
-    },
     { label: "Company Reports", icon: BarChart3, page: "Company Reports" },
+    { label: "Company Approval Settings", icon: ListChecks, page: "Company Approval Settings" },
+    { label: "Approval Authority", icon: ShieldCheck, page: "Approval Authority" },
+    { label: "Department Sidebar Planning", icon: ListChecks, page: "Department Sidebar Planning" },
     { label: "Company Timeline", icon: Clock3, page: "Company Timeline" },
     { label: "Company Stock", icon: Boxes, page: "Company Stock" },
     { label: "Company Approvals", icon: ListChecks, page: "Company Approvals" },
+    { label: "User Management", icon: Users, page: "User Management" },
+    { label: "Item Master", icon: ClipboardList, page: "Item Master" },
+    { label: "Audit & Backup", icon: DatabaseBackup, page: "Audit & Backup" },
+    { label: "Setup Guide", icon: ListChecks, page: "Setup Guide" },
+    { label: "Subscription Automation", icon: Clock3, page: "Subscription Automation" },
+    { label: "Department Tasks", icon: ClipboardList, page: "Department Tasks" },
+    { label: "Management Approval Inbox", icon: ShieldCheck, page: "Management Approval Inbox" },
     {
       label: "Company Subscription",
       icon: CreditCard,
@@ -488,8 +495,6 @@ const departmentNavigation = {
         "Support Access",
       ],
     },
-    { label: "Modules", icon: Sparkles, page: "Modules" },
-    { label: "SaaS Companies", icon: Building2, page: "SaaS Companies" },
   ],
 };
 
@@ -599,6 +604,7 @@ export default function MainLayout({ page, onPageChange, children }) {
     "COMPANY_ADMIN-Company Subscription": true,
   });
   const visibleRole=user?.role==='company_owner'?'company_admin':user?.role;
+  const activePortal=portalSectionForUser(user);
   const { language, setLanguage } = useLanguage();
   const departmentPage =
     {
@@ -658,7 +664,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           </span>
           <div className="brand-copy">
             <b className="brand-title">UG SaaS</b>
-            <small className="brand-subtitle">BUSINESS FLOW MANAGER</small>
+            <small className="brand-subtitle">{activePortal==="COMPANY_ADMIN"?"COMPANY ADMIN PORTAL":activePortal==="ADMIN"?"FACTORY ADMIN PORTAL":activePortal&&activePortal!=="SAAS_OWNER"?activePortal+" DEPARTMENT PORTAL":"BUSINESS FLOW MANAGER"}</small>
           </div>
           <button aria-label="Close navigation" className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />
@@ -666,10 +672,26 @@ export default function MainLayout({ page, onPageChange, children }) {
         </div>
 
         <nav>
-          {access?.accessAllowed && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&(
-            user.role==='company_owner'||(!user.accessPolicyVersion&&['company_admin','admin'].includes(user.role))||
-            (user.accessScope!=='SELF'&&(user.accessScope!=='DEPARTMENT'||user.department===d)&&user.permissions?.some(p=>['department.'+d.toLowerCase()+'.read','department.'+d.toLowerCase()+'.write'].includes(p)))
-          )).map(d=><button key={d} className={page==='Department Workspace:'+d?'active':''} onClick={()=>selectPage('Department Workspace:'+d)}>{d}</button>)}</section>}
+          {isSingleDepartmentUser(user) ? (
+            <section className="department-nav role-workspace-nav" aria-label="Authorized department navigation">
+              <div className="department-nav-title">{user?.department} · {user?.role==="department_incharge"?"Department Head":"Department Staff"}</div>
+              {roleDepartmentPages(user,access).map(item=>{
+                const ItemIcon=item.page==="Department Dashboard"?LayoutDashboard:
+                  item.page.startsWith("Department Workspace:")?Factory:
+                  item.page==="Management Approval Inbox"?ShieldCheck:
+                  item.page==="Department Approval Requests"||item.page==="Department Tasks"?ClipboardList:Settings2;
+                return <button type="button" key={item.page} className={page===item.page?"active":""}
+                  aria-current={page===item.page?"page":undefined} onClick={()=>selectPage(item.page)}>
+                  <ItemIcon aria-hidden="true"/><span className="role-menu-label">{item.label}</span>
+                </button>;
+              })}
+              {access?.accessAllowed===false&&<button type="button" className={page==="Profile Settings"?"active":""} aria-current={page==="Profile Settings"?"page":undefined}
+                onClick={()=>selectPage("Profile Settings")}><Settings2 aria-hidden="true"/><span className="role-menu-label">Profile Settings</span></button>}
+            </section>
+          ) : (<>
+          {access?.accessAllowed && ["department_entry","department_incharge"].includes(user?.role) &&
+          !departmentNavigation[activePortal] && <section className="department-nav"><div className="department-nav-title">Department workspaces</div>{access.enabledDepartments?.filter(d=>DEPARTMENTS.includes(d)&&d===user.department&&
+            user.accessScope!=='SELF'&&user.permissions?.some(p=>['department.'+d.toLowerCase()+'.read','department.'+d.toLowerCase()+'.write'].includes(p))).map(d=><button key={d} className={page==='Department Workspace:'+d?'active':''} onClick={()=>selectPage('Department Workspace:'+d)}>{d}</button>)}</section>}
 
           {Object.entries(departmentNavigation)
             .sort(
@@ -679,10 +701,7 @@ export default function MainLayout({ page, onPageChange, children }) {
             .filter(
               ([department]) =>
                 (!DEPARTMENTS.includes(department)||access?.accessAllowed&&access.enabledDepartments?.includes(department)&&(!user?.accessPolicyVersion||user.role==='company_owner'||user.permissions?.some(p=>['department.'+department.toLowerCase()+'.read','department.'+department.toLowerCase()+'.write'].includes(p))))&&
-                (["saas_super_admin", "company_owner", "company_admin"].includes(user?.role) ||
-                (user?.role === "admin" && department !== "COMPANY_ADMIN") ||
-                user?.department === department ||
-                departmentRoles[department]?.includes(user?.role)),
+                sidebarSectionAllowed(user,department),
             )
             .map(([department, groups]) => (
               <section className="department-nav" key={department}>
@@ -745,6 +764,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           {navigation
             .filter(
               ([name, , roles]) =>
+                showExtraNavigation(user) &&
                 !groupedSidebarPages.has(name) &&
                 (roles.includes(visibleRole) ||
                   (["department_incharge", "department_entry"].includes(
@@ -756,6 +776,8 @@ export default function MainLayout({ page, onPageChange, children }) {
                   ["company_owner","company_admin"].includes(user?.role) &&
                   ![
                     "Company Dashboard",
+                    "Management Approval Inbox",
+                    "Department Tasks",
                     "Integrated ERP",
                     "Subscription Automation",
                     "Item Master",
@@ -961,6 +983,7 @@ export default function MainLayout({ page, onPageChange, children }) {
                 </button>
               ),
             )}
+          </>)}
         </nav>
 
         <div className="profile">

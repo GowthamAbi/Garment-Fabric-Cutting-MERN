@@ -1,5 +1,6 @@
 import SubscriptionPayment from "../models/SubscriptionPayment.js";
 import {strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
+import {assertSafeBaseRoleAssignment} from '../utils/roleAssignmentGuard.js';
 import {departmentSelection,licensedDepartments} from '../../../shared/departmentCatalogue.js';
 import {trialExpiry} from "../utils/subscriptionAccess.js";
 import {DEPARTMENTS} from "../erp/departmentPolicy.js";
@@ -74,6 +75,12 @@ export async function getCompanies(request, response) {
 export async function getCompanyWorkspace(request, response) {
   if (request.user.role === "saas_super_admin")
     throw new ApiError(403, "Customer production data is private. Owner access requires a customer-issued support grant");
+  // Legacy workspace aggregation includes company-wide staff and audit logs.
+  // Factory-/department-scoped administrators must use scoped user routes.
+  if(strictAccess(request.user)&&request.user.accessScope!=='COMPANY')
+    throw new ApiError(403,'Company-wide workspace requires company-scoped access');
+  if(String(request.params.id)!==String(request.user.companyId))
+    throw new ApiError(403,'Own company workspace required');
   const company = await Company.findById(request.params.id).lean();
   if (!company) throw new ApiError(404, "Company not found");
   const users = await User.find({ companyId: company._id })
@@ -179,6 +186,12 @@ export async function updateCompanyUser(request, response) {
     const user=await User.findOne({_id:request.params.userId,companyId:request.user.companyId,factoryId:request.user.factoryId}).select("+sessionVersion").session(session);
     if(!company||!user||user.role==="saas_super_admin") throw new ApiError(404,"Company user not found");
     if(user.role==='company_owner')throw new ApiError(403,'Ownership cannot change through user updates');
+    // Legacy role PATCH must never elevate administrators without the
+    // owner-reviewed /auth/access/users/:id role assignment workflow.
+    const nextRole=request.body.role||user.role;
+    assertSafeBaseRoleAssignment(request.user,nextRole,user.role);
+    if(strictAccess(request.user)&&nextRole!==user.role)
+      throw new ApiError(403,'Use the audited role assignment workflow to change the base role');
     if(strictAccess(request.user)){
       if(!strictAccess(user))throw new ApiError(409,'Use explicit access assignment for legacy users');
       validateAccessAssignment(request.user,user,{permissions:request.body.permissions||user.permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:request.body.department||user.department},company);

@@ -5,7 +5,8 @@ export function featureAllowed(modules,feature){
   return configured.length===0||configured.includes(feature);
 }
 export function featureForRequest(path,type){
-  if(path.startsWith("/workforce"))return "ERP_HR";
+  if(path.startsWith("/workforce")||path.startsWith("/departments/hr/"))return "ERP_HR";
+  if(path.startsWith("/departments/accounts/"))return "ERP_FINANCE";
   if(path.startsWith("/departments"))return "ERP_CORE";
   if(path.startsWith("/operations"))return "ERP_SHOP_FLOOR";
   if(path.endsWith("/reconcile")||["/financials","/commercial","/bank"].some(p=>path===p||path.startsWith(p+"/"))||["JOURNAL","RECEIPT","PAYMENT","WORK_COST"].includes(type))return "ERP_FINANCE";

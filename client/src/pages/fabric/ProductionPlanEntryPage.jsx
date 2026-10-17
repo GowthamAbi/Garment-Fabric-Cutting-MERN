@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Save } from "lucide-react";
-import { fabricCuttingApi as api } from "../../api/fabricCuttingApi.js";
+import { fabricCuttingApi as baseApi } from "../../api/fabricCuttingApi.js";
+import {useAuth} from "../../context/AuthContext.jsx";
 import ProductionPlanDocument from "./ProductionPlanDocument.jsx";
 
 const blank = () => ({
@@ -21,6 +22,16 @@ const blank = () => ({
 });
 
 export default function ProductionPlanEntryPage({ notify }) {
+  const {user}=useAuth();
+  const isFabricUser=["fabric_admin","fabric_entry"].includes(user?.role)||
+    ["department_entry","department_incharge"].includes(user?.role)&&user.department==="FABRIC";
+  const api=isFabricUser?{
+    ...baseApi,
+    planSetup:baseApi.fabricPlanSetup,
+    savePlan:baseApi.saveFabricPlan,
+    updatePlan:baseApi.updateFabricPlan,
+    plan:baseApi.fabricPlan
+  }:baseApi;
   const [form, setForm] = useState(blank());
   const [stock, setStock] = useState([]);
   const [saved, setSaved] = useState(null);
@@ -133,7 +144,7 @@ export default function ProductionPlanEntryPage({ notify }) {
     <section className="classic-page">
       <div className="classic-title">
         <div>
-          <small>CUTTING DEPARTMENT</small>
+          <small>{isFabricUser?"FABRIC DEPARTMENT":"CUTTING DEPARTMENT"}</small>
           <h2>Production Plan · Data Entry</h2>
           <p>
             Approved Item Master measurement and live fabric stock based

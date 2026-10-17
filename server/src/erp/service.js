@@ -142,7 +142,10 @@ export async function postDocument(body, idempotencyKey, actor, reverseId = null
         ...plan.moves.map(move => ({ ...scope, ...move, kind: "STOCK", documentId: document._id, documentNo: number, date })),
         ...plan.journals.map(line => ({ ...scope, ...line, kind: "JOURNAL", documentId: document._id, documentNo: number, date })),
       ];
-      if (entries.length) await ErpEntry.create(entries, { session });
+      // Multiple immutable journal/stock rows must insert in deterministic order
+       // within the same transaction; Mongoose requires ordered:true for
+       // multi-document create() when a transaction session is provided.
+       if (entries.length) await ErpEntry.create(entries, { session, ordered: true });
       if (original) { original.reversedBy = String(document._id); await original.save({ session }); }
       if (approval) { await appendApprovalAudit(scope,session,{action:"POSTED",actor,reference:String(approval._id),documentId:String(document._id),amountPaise:exposure(plan),policyRevision:settings.policyRevision||0});approval.status="POSTED"; approval.documentId=String(document._id); await approval.save({ session }); }
       result = document.toObject();

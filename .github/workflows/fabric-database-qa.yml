@@ -1,0 +1,37 @@
+name: Fabric Database Workflow QA
+on:
+  pull_request:
+    paths:
+      - "server/**"
+      - ".github/workflows/fabric-database-qa.yml"
+  workflow_dispatch:
+jobs:
+  fabric-replica-set:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install backend dependencies
+        run: npm install --prefix server --no-audit --no-fund
+      - name: Start disposable MongoDB replica set
+        run: |
+          docker run --detach --rm --name ugs-fabric-test-mongo --publish 127.0.0.1:27017:27017 mongo:7 mongod --replSet rs0 --bind_ip_all
+          for i in $(seq 1 30); do
+            if docker exec ugs-fabric-test-mongo mongosh --quiet --eval 'db.adminCommand({ping:1})' >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          docker exec ugs-fabric-test-mongo mongosh --quiet --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"127.0.0.1:27017"}]})'
+          for i in $(seq 1 30); do
+            if docker exec ugs-fabric-test-mongo mongosh --quiet --eval 'rs.status().myState' 2>/dev/null | grep -q '^1$'; then break; fi
+            sleep 2
+          done
+      - name: Run Fabric, phase-2 and P0 approval replica-set integration QA
+        env:
+          TEST_MONGODB_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0
+        run: node --test server/tests/fabricMongoWorkflow.test.js server/tests/phase2CrossDepartmentDatabase.test.js server/tests/p0ApprovalAccessDatabase.test.js server/tests/p0LegacyWarehouseStockDatabase.test.js
+      - name: Stop disposable database
+        if: always()
+        run: docker stop ugs-fabric-test-mongo || true

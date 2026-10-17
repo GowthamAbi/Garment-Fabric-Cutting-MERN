@@ -51,6 +51,7 @@ export default function WarehousePage({
     setSelected(row);
     setForm({
       ...blankAction,
+      key: crypto.randomUUID(),
       action,
       itemName: row.itemName,
       colour: row.colour,
@@ -179,10 +180,11 @@ export default function WarehousePage({
                   required
                   type="number"
                   min="1"
+                  step="1"
                   max={selected.balanceQty}
                   value={form.quantity}
                   onChange={(event) =>
-                    setForm({ ...form, quantity: event.target.value })
+                    setForm({ ...form, quantity: event.target.value, key: crypto.randomUUID() })
                   }
                 />
                 <small>Available: {selected.balanceQty} PCS</small>
@@ -196,7 +198,7 @@ export default function WarehousePage({
                         required
                         value={form[key]}
                         onChange={(event) =>
-                          setForm({ ...form, [key]: event.target.value })
+                          setForm({ ...form, [key]: event.target.value, key: crypto.randomUUID() })
                         }
                       />
                     </label>
@@ -210,7 +212,7 @@ export default function WarehousePage({
                     required
                     value={form.reason}
                     onChange={(event) =>
-                      setForm({ ...form, reason: event.target.value })
+                      setForm({ ...form, reason: event.target.value, key: crypto.randomUUID() })
                     }
                   />
                 </label>
@@ -221,7 +223,7 @@ export default function WarehousePage({
                   label="Section QR"
                   value={form.sectionCode}
                   onChange={(value) =>
-                    setForm({ ...form, sectionCode: value.toUpperCase() })
+                    setForm({ ...form, sectionCode: value.toUpperCase(), key: crypto.randomUUID() })
                   }
                 />
               )}

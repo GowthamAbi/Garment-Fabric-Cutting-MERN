@@ -1,3 +1,6 @@
+import {includesApprovalGrant,retainExistingApprovalGrants} from "../utils/approvalGrantPolicy.js";
+import {userDirectoryFilter} from "../utils/userDirectoryPolicy.js";
+import {assertSafeBaseRoleAssignment} from "../utils/roleAssignmentGuard.js";
 import {subscriptionAccess} from "../utils/subscriptionAccess.js";
 import {hasPermission,strictAccess,validateAccessAssignment} from '../utils/accessPolicy.js';
 import {ACCESS_PERMISSIONS} from '../../../shared/accessCatalogue.js';
@@ -102,9 +105,9 @@ export async function register(_request, _response) {
   throw new ApiError(403, "Public owner registration is disabled. Run the private owner bootstrap command.");
 }
 
-export async function getUsers(_request, response) {
+export async function getUsers(request, response) {
   response.json(
-    await User.find()
+    await User.find(userDirectoryFilter(request.user))
       .select(
         "userId name email emailVerified role department permissions active accountStatus companyId factoryId createdAt lastLoginAt",
       )
@@ -149,6 +152,9 @@ export async function createUser(request, response) {
       "Name, email, password and a valid role are required",
     );
   }
+  // A base role can open older role-gated endpoints even with zero grants.
+  // General user creation must not mint admin identities.
+  assertSafeBaseRoleAssignment(request.user,role);
   const normalizedEmail=String(email).trim().toLowerCase();
   if(!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(normalizedEmail))throw new ApiError(400,"Valid email is required");
   const department=departmentCode(request.body.department);
@@ -166,6 +172,9 @@ export async function createUser(request, response) {
       ? request.body.factoryId || request.user.factoryId
       : request.user.factoryId;
   const userId = await generateUserId({ name, department, role });
+  // Approval authority cannot be granted by general account creation.
+  if(!Array.isArray(request.body.permissions||[])||includesApprovalGrant(request.body.permissions||[]))
+    throw new ApiError(403,"Approval authority must be assigned by the company owner");
   const userData = {
     userId,
     name,
@@ -358,7 +367,8 @@ export async function updateUserPermissions(request, response) {
     validateAccessAssignment(request.user,user,{permissions,accessScope:user.accessScope,assignedFactoryIds:user.assignedFactoryIds.map(String),assignedWarehouseKeys:user.assignedWarehouseKeys,assignedShopKeys:user.assignedShopKeys,department:user.department},company);
   }
   if(user.role==='company_owner')throw new ApiError(403,'Owner permissions cannot be changed here');
-  user.permissions = [...new Set(permissions)]; user.sessionVersion = Number(user.sessionVersion || 0) + 1;
+  assertSafeBaseRoleAssignment(request.user,user.role,user.role);
+  user.permissions = retainExistingApprovalGrants(permissions,user.permissions||[]); user.sessionVersion = Number(user.sessionVersion || 0) + 1;
   await user.save(); response.json({ message: "ERP permissions updated; user must sign in again" });
 }
 
