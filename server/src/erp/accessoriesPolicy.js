@@ -73,3 +73,32 @@ export function validateAccessoryAdjustment(body={}){
   if(reason.length<5||reason.length>300)throw new ApiError(400,"Adjustment reason must be 5–300 characters");
   return {sku,countedQty:counted,reason};
 }
+
+export function accessoryOrderRequirements(workOrders=[],documents=[],stock=[]) {
+  const stockBySku=new Map(stock.map(row=>[String(row.code).toUpperCase(),Number(row.available||0)]));
+  const result=[];
+  for(const order of workOrders) {
+    if(order.reversedBy||order.cancelledAt)continue;
+    const bom=order.metadata?.bom, output=Number(bom?.outputQty),workQty=Number(order.lines?.[0]?.qty);
+    if(!Number.isSafeInteger(output)||output<=0||!Number.isSafeInteger(workQty)||workQty<=0)continue;
+    for(const part of bom.components||[]){
+      const sku=String(part.sku||"").toUpperCase(),componentQty=Number(part.qty);
+      if(!stockBySku.has(sku)||!Number.isSafeInteger(componentQty)||componentQty<0)continue;
+      const requiredScaled=Number((BigInt(componentQty)*BigInt(workQty)+BigInt(output)-1n)/BigInt(output));
+      if(!Number.isSafeInteger(requiredScaled))continue;
+      const netIssued=documents.filter(doc=>!doc.reversedBy&&String(doc.sourceId)===String(order._id)&&
+        ["MATERIAL_ISSUE","MATERIAL_RETURN"].includes(doc.type))
+        .reduce((sum,doc)=>sum+(doc.type==="MATERIAL_ISSUE"?1:-1)*
+          (doc.lines||[]).filter(line=>line.sku===sku&&line.location==="ACCESSORIES")
+            .reduce((v,line)=>v+Number(line.qty||0),0),0);
+      const requiredQty=Number((requiredScaled/1000).toFixed(3)),
+        issuedQty=Number((netIssued/1000).toFixed(3)),
+        pendingQty=Number((Math.max(0,requiredScaled-netIssued)/1000).toFixed(3)),
+        availableQty=Number(stockBySku.get(sku)||0);
+      result.push({workOrderId:String(order._id),workOrderNo:order.number,sku,
+        requiredQty,issuedQty,pendingQty,availableQty,
+        shortageQty:Number(Math.max(0,pendingQty-availableQty).toFixed(3))});
+    }
+  }
+  return result;
+}
