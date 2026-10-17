@@ -60,6 +60,11 @@ test("Department logins only see their own department sidebar and workspace",()=
  assert.equal(pageAllowedForPortal(fabricHead,"Department Workspace:FABRIC"),true);
  assert.equal(pageAllowedForPortal(fabricHead,"Department Workspace:CUTTING"),false);
  assert.equal(showExtraNavigation(fabricHead),false);
+ assert.equal(pageAllowedForPortal(fabricHead,"Company Dashboard"),false);
+ assert.equal(pageAllowedForPortal(fabricHead,"Admin Dashboard"),false);
+ assert.equal(pageAllowedForPortal(fabricHead,"SaaS Owner Dashboard"),false);
+ assert.equal(pageAllowedForPortal(fabricHead,"Cutting Dashboard"),false);
+ assert.equal(pageAllowedForPortal(fabricHead,"Fabric Dashboard"),true);
  assert.equal(portalSectionForUser(packingStaff),"PACKING");
  assert.equal(pageAllowedForPortal(packingStaff,"Department Workspace:PACKING"),true);
  assert.equal(pageAllowedForPortal(packingStaff,"Department Workspace:FABRIC"),false);
@@ -80,6 +85,8 @@ test("Navigation and content both use policy guard; no Company Admin direct depa
  const routes=file("../src/routes/AppRoutes.jsx");
  const dashboard=file("../src/pages/dashboard/CompanyAdminDashboardPage.jsx");
  assert.match(layout,/sidebarSectionAllowed\(user,department\)/);
+ assert.match(layout,/COMPANY ADMIN PORTAL/);
+ assert.match(layout,/FACTORY ADMIN PORTAL/);
  assert.match(layout,/showExtraNavigation\(user\)/);
  assert.match(layout,/!departmentNavigation\[activePortal\]/);
  assert.match(app,/const visiblePage = visiblePageForUser\(user,page\)/);

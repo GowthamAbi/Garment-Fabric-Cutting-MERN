@@ -655,7 +655,7 @@ export default function MainLayout({ page, onPageChange, children }) {
           </span>
           <div className="brand-copy">
             <b className="brand-title">UG SaaS</b>
-            <small className="brand-subtitle">BUSINESS FLOW MANAGER</small>
+            <small className="brand-subtitle">{activePortal==="COMPANY_ADMIN"?"COMPANY ADMIN PORTAL":activePortal==="ADMIN"?"FACTORY ADMIN PORTAL":activePortal&&activePortal!=="SAAS_OWNER"?activePortal+" DEPARTMENT PORTAL":"BUSINESS FLOW MANAGER"}</small>
           </div>
           <button aria-label="Close navigation" className="brand-close" onClick={() => setMenuOpen(false)}>
             <X />

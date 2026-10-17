@@ -60,6 +60,13 @@ export function pageAllowedForPortal(user,page){
   if(section==="SAAS_OWNER")return OWNER_PAGES.has(page);
   if(["department_entry","department_incharge"].includes(user.role)){
     if(page==="Department Dashboard"||page==="Profile Settings"||page==="Account Details")return true;
+    // Department logins cannot switch to management or owner consoles by
+    // clicking a stale link or by restoring a page from an older session.
+    if((COMPANY_PAGES.has(page)||FACTORY_ADMIN_PAGES.has(page)||OWNER_PAGES.has(page)))return false;
+    const departmentScreens={"Fabric Dashboard":"FABRIC","Cutting Dashboard":"CUTTING",
+     "Delivery Dashboard":"DELIVERY","Accessories Dashboard":"ACCESSORIES",
+     "Elastic Dashboard":"ELASTIC"};
+    if(departmentScreens[page]&&departmentScreens[page]!==String(user.department||"").toUpperCase())return false;
     if(page==="Department Workspace:"+String(user.department||"").toUpperCase())return true;
     // Existing in-department navigation is granted by server-side permissions.
     // Prevent cross-department workspace selection in the client.
