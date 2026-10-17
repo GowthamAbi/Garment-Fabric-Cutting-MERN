@@ -8,7 +8,7 @@ import {synchronizeApprovalAudit} from "../services/synchronizeApprovalAudit.js"
 import Company from "../models/Company.js";
 import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js";
 import {REQUEST_TYPES,evaluateApproval,determineDecision} from "../services/departmentApprovalPolicy.js";
-import {approvalFactoryAllowed,licensedApprovalDepartments,verifiedCompanyOwner,reviewableApprovalDepartments,canSubmitApproval} from "../services/approvalScopePolicy.js";
+import {approvalFactoryAllowed,licensedApprovalDepartments,verifiedCompanyOwner,reviewableApprovalDepartments,canSubmitApproval,canReadApprovalHistory,canReadApprovalSettings} from "../services/approvalScopePolicy.js";
 
 const router=Router();
 const permitted=(user,d,action)=>Array.isArray(user?.permissions)&&user.permissions.includes(`department.${d.toLowerCase()}.${action}`);
@@ -40,7 +40,7 @@ router.get("/inbox",asyncHandler(async(req,res)=>{
  res.json({level,items:records,pendingCount,notificationMessage:pendingCount?`${pendingCount} pending approval requests`:"No pending approvals"});
 }));
 router.get("/settings",asyncHandler(async(req,res)=>{
- if(!hasFactory(req.user)||!["company_owner","company_admin"].includes(req.user.role))return res.status(403).json({message:"Company management only"});
+ if(!hasFactory(req.user)||!canReadApprovalSettings(req.user))return res.status(403).json({message:"Authorized company approval settings reviewer required"});
  const company=await Company.findById(req.user.companyId).select("ownerUserId factories").lean();
  if(!approvalFactoryAllowed(req.user,company)||(req.user.role==="company_owner"&&!verifiedCompanyOwner(req.user,company)))return res.status(403).json({message:"Company owner/factory verification failed"});
  const record=await CompanyApprovalSettings.findOne({companyId:req.user.companyId}).lean();
@@ -71,9 +71,8 @@ router.get("/",asyncHandler(async(req,res)=>{
  const company=await Company.findById(user.companyId).select("ownerUserId enabledDepartments factories").lean();
  if(!approvalFactoryAllowed(user,company)||!licensedApprovalDepartments(company).includes(d))return res.status(403).json({message:"Department is not licensed for this factory"});
  const owner=user.role==="company_owner";
- const admin=["company_admin","admin"].includes(user.role);
  if(owner&&!verifiedCompanyOwner(user,company))return res.status(403).json({message:"Owner verification required"});
- if(!owner&&!admin&&(!permitted(user,d,"read")||departmentCode(user.department)!==d))return res.status(403).json({message:"Access denied"});
+ if(!canReadApprovalHistory(user,d))return res.status(403).json({message:"Department approval history access denied"});
  const rows=await DepartmentApprovalRequest.find({companyId:user.companyId,factoryId:user.factoryId,department:d}).sort({createdAt:-1}).limit(100).lean();
  res.json({items:rows});
 }));

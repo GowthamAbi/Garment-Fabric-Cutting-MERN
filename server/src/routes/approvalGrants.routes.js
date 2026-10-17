@@ -7,7 +7,13 @@ import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js
 import {asyncHandler} from "../utils/asyncHandler.js";
 const router=Router();
 router.get("/",asyncHandler(async(req,res)=>{
- if(req.user?.role!=="company_owner")return res.status(403).json({message:"Company owner required"});
+ if(req.user?.role!=="company_owner"||
+  !mongoose.isValidObjectId(req.user.companyId)||
+  !mongoose.isValidObjectId(req.user.factoryId))return res.status(403).json({message:"Verified company owner required"});
+ const company=await Company.findById(req.user.companyId).select("ownerUserId factories").lean();
+ if(String(company?.ownerUserId)!==String(req.user.id)||
+  !company.factories?.some(f=>String(f._id)===String(req.user.factoryId)&&f.active!==false))
+  return res.status(403).json({message:"Verified owner/factory required"});
  const users=await User.find({companyId:req.user.companyId,factoryId:req.user.factoryId,role:{$in:["department_incharge","management"]}})
   .select("name userId role department permissions").limit(250).lean();
  res.json({users:users.map(u=>({...u,approvalGrants:(u.permissions||[]).filter(p=>p.startsWith("approval."))}))});
@@ -32,10 +38,19 @@ router.put("/:id",asyncHandler(async(req,res)=>{
  const grant=`approval.${level}.${d.toLowerCase()}`;
  const permissions=new Set(user.permissions||[]);
  if(req.body.enabled)permissions.add(grant);else permissions.delete(grant);
- const updated=await User.findOneAndUpdate({_id:user.id,companyId:owner.companyId,factoryId:owner.factoryId,sessionVersion:user.sessionVersion||0},
-  {$set:{permissions:[...permissions]},$inc:{sessionVersion:1}},{new:true,runValidators:true});
- if(!updated)return res.status(409).json({message:"User permissions changed concurrently; refresh"});
- await AuditLog.create({actorId:owner.id,actorUserId:owner.userId,actorRole:owner.role,method:"PUT",path:req.originalUrl.split("?")[0],action:"APPROVAL_GRANT_CHANGED",entity:"User",entityId:String(user.id),ip:req.ip,userAgent:req.get("user-agent"),changes:{companyId:String(owner.companyId),factoryId:String(owner.factoryId),grant,enabled:req.body.enabled,previouslyEnabled:(user.permissions||[]).includes(grant)}});
+ const session=await mongoose.startSession();
+ try{
+  await session.withTransaction(async()=>{
+   const updated=await User.findOneAndUpdate({_id:user.id,companyId:owner.companyId,factoryId:owner.factoryId,sessionVersion:user.sessionVersion||0},
+    {$set:{permissions:[...permissions]},$inc:{sessionVersion:1}},{new:true,runValidators:true,session});
+   if(!updated){const error=new Error("User permissions changed concurrently; refresh");error.statusCode=409;throw error;}
+   await AuditLog.create([{actorId:owner.id,actorUserId:owner.userId,actorRole:owner.role,
+    method:"PUT",path:req.originalUrl.split("?")[0],action:"APPROVAL_GRANT_CHANGED",
+    entity:"User",entityId:String(user.id),ip:req.ip,userAgent:req.get("user-agent"),
+    changes:{companyId:String(owner.companyId),factoryId:String(owner.factoryId),
+     grant,enabled:req.body.enabled,previouslyEnabled:(user.permissions||[]).includes(grant)}}],{session});
+  });
+ }finally{await session.endSession();}
  res.json({message:"Approval authority updated; user must sign in again",grant,enabled:req.body.enabled});
 }));
 export default router;
