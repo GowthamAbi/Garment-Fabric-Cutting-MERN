@@ -23,6 +23,9 @@ import {inwardOverview,validateInwardDiscrepancy} from "./inwardOverviewPolicy.j
 import {checkingOverview,validateQualityHold} from "./checkingOverviewPolicy.js";
 import {ironingOverview,validateIroningTarget,validateIroningIssue} from "./ironingOverviewPolicy.js";
 import {packingOverview,validatePackingPlan,validatePackingIssue} from "./packingOverviewPolicy.js";
+import {dispatchOverview,validateDispatchPlan,validateDispatchException,validateDispatchTransport} from "./dispatchOverviewPolicy.js";
+import DispatchSchedule from "../models/DispatchSchedule.js";
+import DispatchExceptionRequest from "../models/DispatchExceptionRequest.js";
 import PackingProductionPlan from "../models/PackingProductionPlan.js";
 import PackingRepackRequest from "../models/PackingRepackRequest.js";
 import IroningTarget from "../models/IroningTarget.js";
@@ -238,6 +241,97 @@ router.post('/targets',asyncHandler(async(req,res)=>{
 // receipt/completion MUST use the existing transactional /advance endpoint.
 // Packing overview never posts inventory; only /pack allocates material in
 // the existing MongoDB transaction and generates an actual PACKED bundle.
+// Dispatch planning/exception requests are NON-POSTING; physical movement is
+// always the existing transactional /transfer (PACKED -> TRANSIT_WAREHOUSE).
+router.get('/dispatch-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'DISPATCH',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,events,plans,exceptions,masters,skus]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1501).lean(),
+  Bundle.find({...scope,qty:{$gt:0},stage:{$in:['PACKED','TRANSIT_WAREHOUSE']}}).limit(10001).lean(),
+  Event.find({...scope,kind:'TRANSFER',department:{$in:['DISPATCH','WAREHOUSE']},
+   reversedBy:{$exists:false}}).sort({createdAt:-1}).limit(10001).lean(),
+  DispatchSchedule.find(scope).sort({date:-1}).limit(2001).lean(),
+  DispatchExceptionRequest.find(scope).sort({createdAt:-1}).limit(2001).lean(),
+  Master.find({...scope,kind:'WAREHOUSE',active:{$ne:false}}).limit(2001).lean(),
+  ErpSku.find(scope).limit(4001).lean()
+ ]);
+ if(lots.length>1500||bundles.length>10000||events.length>10000||
+    plans.length>2000||exceptions.length>2000||masters.length>2000||skus.length>4000)
+  throw new ApiError(409,'Dispatch report capacity exceeded; filter/archive before reporting');
+ const accessible=masters.filter(m=>locationAllowed(req.user,'WAREHOUSE',m.key));
+ const visibleEvents=events.filter(e=>e.department==='DISPATCH'||(
+   e.department==='WAREHOUSE'&&accessible.some(m=>m.key===e.details?.bundle?.destination)));
+ res.json(dispatchOverview(lots,bundles.filter(b=>b.stage!=='TRANSIT_WAREHOUSE'||
+    locationAllowed(req.user,'WAREHOUSE',b.destination)),
+   visibleEvents,plans,exceptions,accessible,skus));
+}));
+router.post('/dispatch-schedules',asyncHandler(async(req,res)=>{
+ requireAccess(req,'DISPATCH');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Stable 16–100 character plan key required');
+ const values=validateDispatchPlan(req.body);
+ if(!await ErpSku.exists({...scope,code:values.sku,kind:'FINISHED',active:{$ne:false}}))
+  throw new ApiError(400,'Active finished SKU required');
+ if(!await Master.exists({...scope,key:values.destination,kind:'WAREHOUSE',active:{$ne:false}}))
+  throw new ApiError(400,'Active Warehouse master required');
+ if(!locationAllowed(req.user,'WAREHOUSE',values.destination))
+  throw new ApiError(403,'Destination warehouse assignment required');
+ const hash=requestHash(values);
+ await DispatchSchedule.init();
+ let old=await DispatchSchedule.findOne({...scope,key}).lean();
+ if(old){
+  if(old.requestHash!==hash)throw new ApiError(409,'Schedule key reused for different plan');
+  if(old.createdBy!==req.user.userId&&!['company_owner','company_admin','admin'].includes(req.user.role))
+   throw new ApiError(403,'Schedule belongs to another user');
+  return res.json(old);
+ }
+ try{
+  const saved=await DispatchSchedule.create({...scope,key,requestHash:hash,...values,createdBy:req.user.userId});
+  return res.status(201).json(saved);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  old=await DispatchSchedule.findOne({...scope,key}).lean();
+  if(old?.requestHash===hash&&old.createdBy===req.user.userId)return res.json(old);
+  throw new ApiError(409,'Schedule already exists for date/SKU/DC/warehouse');
+ }
+}));
+router.post('/dispatch-exception-requests',asyncHandler(async(req,res)=>{
+ requireAccess(req,'DISPATCH');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Stable 16–100 character request key required');
+ if(!mongoose.isValidObjectId(req.body.bundleId))throw new ApiError(400,'Valid carton bundle required');
+ const bundle=await Bundle.findOne({...scope,_id:req.body.bundleId,
+   qty:{$gt:0},stage:{$in:['PACKED','TRANSIT_WAREHOUSE']}}).lean();
+ if(!bundle)throw new ApiError(404,'Carton not currently available');
+ if(bundle.stage==='TRANSIT_WAREHOUSE'&&!locationAllowed(req.user,'WAREHOUSE',bundle.destination))
+  throw new ApiError(403,'Transit warehouse assignment required');
+ const lot=await Lot.findOne({...scope,_id:bundle.lotId,status:{$ne:'CANCELLED'}}).lean();
+ if(!lot)throw new ApiError(404,'Related lot not found');
+ const values=validateDispatchException(req.body,bundle),
+  hash=requestHash({bundleId:String(bundle._id),...values});
+ await DispatchExceptionRequest.init();
+ let old=await DispatchExceptionRequest.findOne({...scope,key}).lean();
+ if(old){
+  if(old.requestHash!==hash)throw new ApiError(409,'Request key reused');
+  if(old.requestedBy!==req.user.userId&&!['company_owner','company_admin','admin'].includes(req.user.role))
+   throw new ApiError(403,'Request belongs to another user');
+  return res.json(old);
+ }
+ try{
+  const row=await DispatchExceptionRequest.create({...scope,key,requestHash:hash,
+   lotId:String(lot._id),lotNo:lot.code,dcNo:lot.dcNo,
+   bundleId:String(bundle._id),cartonNo:bundle.code,
+   ...values,requestedBy:req.user.userId});
+  return res.status(201).json(row);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  old=await DispatchExceptionRequest.findOne({...scope,key}).lean();
+  if(old?.requestHash===hash&&old.requestedBy===req.user.userId)return res.json(old);
+  throw new ApiError(409,'Concurrent duplicate exception key');
+ }
+}));
+
 router.get('/packing-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'PACKING',false);
  const scope=workspaceFilter();
@@ -588,7 +682,7 @@ router.post('/transfer',asyncHandler(async(req,res)=>res.json(await transaction(
  else if(b.stage.startsWith('TRANSIT_SHOP:')){requireAccess(req,'SHOP');shopAccess(req,destination);next=`SHOP:${destination}`;}
  else if(b.stage.startsWith('SHOP:')){shopAccess(req,b.destination);const target=await Master.findOne({...scope,key:req.body.destination,kind:{$in:['SHOP','WAREHOUSE']}}).session(session);if(!target)fail('Shop or warehouse destination required');destination=target.key;next=target.kind==='SHOP'?`TRANSIT_SHOP:${destination}`:'TRANSIT_WAREHOUSE';}
  else fail('Unsupported transfer stage');
- bundleAccess(req,{stage:next,destination});const moved=await moveBundle(req,scope,session,b,count,next,destination);return {bundleId:String(b._id),quantity:count,documentId:moved.documentId,details:{bundle:moved.child}};
+ bundleAccess(req,{stage:next,destination});const dispatch=b.stage==='PACKED'?validateDispatchTransport(req.body.dispatch||{}):null;const moved=await moveBundle(req,scope,session,b,count,next,destination);return {bundleId:String(b._id),quantity:count,documentId:moved.documentId,details:{bundle:moved.child,...(dispatch?{dispatch}:{})}};
 }))));
 router.post('/split',asyncHandler(async(req,res)=>res.json(await transaction(req,'SPLIT',async(scope,session)=>{const b=await getBundle(req.body.bundleId,scope,session,req);requireAccess(req,deptFor(b.stage));const count=pieces(req.body.quantity);if(count>=b.qty)fail('Split must leave quantity in parent');const moved=await moveBundle(req,scope,session,b,count,b.stage,b.destination);return {bundleId:String(b._id),quantity:count,documentId:moved.documentId,details:{bundle:moved.child}};}))));
 router.get('/trace/:id',asyncHandler(async(req,res)=>{const scope=workspaceFilter();if(!mongoose.isValidObjectId(req.params.id))fail('Invalid bundle');const b=await Bundle.findOne({...scope,_id:req.params.id}).lean();if(!b)fail('Bundle not found');const traceLot=await Lot.findOne({...scope,_id:b.lotId}).lean();requireAccess(req,routeActor(traceLot,b.stage,b.stage==='GOOD'&&enabledDepartment(req.departmentCompany,'IRONING')&&allowedDepartment(req.user,'IRONING',false)?'IRONING':b.stage==='IRONED'?'PACKING':b.stage==='STITCHED'||b.stage==='REWORK_DONE'?'INWARD':b.stage==='TRANSIT_WAREHOUSE'?'WAREHOUSE':b.stage.startsWith('TRANSIT_SHOP:')?'SHOP':deptFor(b.stage)),false);const lot=await Lot.findOne({...scope,_id:b.lotId}).lean();const eventScope=(b.stage.startsWith('SHOP:')||b.stage.startsWith('TRANSIT_SHOP:'))?{bundleId:String(b._id)}:{$or:[{bundleId:String(b._id)},{lotId:b.lotId}]};const events=await Event.find({...scope,...eventScope}).sort({_id:-1}).limit(500).lean();if(b.stage.startsWith('SHOP:')||b.stage.startsWith('TRANSIT_SHOP:'))shopAccess(req,b.destination);bundleAccess(req,b);res.json({bundle:b,lot:strictAccess(req.user)&&!allowedDepartment(req.user,'PACKING',false)?{...lot,packing:undefined}:lot,events:events.filter(e=>!strictAccess(req.user)||allowedDepartment(req.user,e.department,false)).map(e=>({createdAt:e.createdAt,kind:e.kind,quantity:e.quantity,actor:e.actor,operator:e.details?.operator||'',shift:e.details?.shift||''}))});}));
