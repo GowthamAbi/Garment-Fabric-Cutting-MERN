@@ -7,8 +7,9 @@ import {allowedDepartment,enabledDepartment} from "../src/erp/departmentPolicy.j
 import {boundaryOptions} from "../src/erp/boundaryPolicy.js";
 
 test("HR is licensed without inventing garment stock stages",()=>{
- assert.equal(DEPARTMENTS.length,15);
- assert.equal(DEPARTMENTS.at(-1),"HR");
+ assert.equal(DEPARTMENTS.length,16);
+ assert.equal(DEPARTMENTS.at(-2),"HR");
+ assert.equal(DEPARTMENTS.at(-1),"ACCOUNTS");
  assert.equal(WORKFLOW_DEPARTMENTS.length,9);
  const company={departmentCatalogueVersion:1,enabledDepartments:["HR"],
   entitlements:{maxDepartments:1,modules:["HR","ERP_HR"]}};

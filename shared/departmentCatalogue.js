@@ -1,7 +1,7 @@
 export const DEPARTMENT_CATALOGUE=Object.freeze([
  ['FABRIC','Fabric'],['CUTTING','Cutting'],['ELASTIC','Elastic'],['ACCESSORIES','Accessories'],['DELIVERY','Delivery'],
  ['STITCHING','Stitching'],['INWARD','Inward'],['CHECKING','Checking'],['IRONING','Ironing'],['PACKING','Packing'],
- ['DISPATCH','Dispatch'],['WAREHOUSE','Warehouse'],['SHOP','Shop'],['MARKETING','Marketing'],['HR','HR'],
+ ['DISPATCH','Dispatch'],['WAREHOUSE','Warehouse'],['SHOP','Shop'],['MARKETING','Marketing'],['HR','HR'],['ACCOUNTS','Accounts'],
 ].map(([code,label])=>Object.freeze({code,label})));
 export const DEPARTMENTS=Object.freeze(DEPARTMENT_CATALOGUE.map(d=>d.code));
 // Preserve the original garment-workflow license contract for pre-v1 tenants.
