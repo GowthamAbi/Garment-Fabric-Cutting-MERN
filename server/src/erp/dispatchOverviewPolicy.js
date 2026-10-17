@@ -61,7 +61,7 @@ export function dispatchOverview(lots=[],bundles=[],events=[],plans=[],exception
   const field=b.stage==="PACKED"?"readyPackedPcs":"inTransitPcs";
   summary[field]+=qty;
   summary[b.stage==="PACKED"?"readyCartons":"transitCartons"]++;
-  const key=l.orderNo||l.dcNo||l.code||String(l._id);
+  const key=JSON.stringify([l.orderNo||"",l.dcNo||"",l.sku||"",l.section||""]);
   const agg=byOrder.get(key)||{orderNo:l.orderNo||"",dcNo:l.dcNo||"",sku:l.sku||"",
    readyPackedPcs:0,inTransitPcs:0,cartons:0};
   agg[field]+=qty;agg.cartons++;byOrder.set(key,agg);

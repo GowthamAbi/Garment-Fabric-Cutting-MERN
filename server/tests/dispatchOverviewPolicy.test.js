@@ -4,7 +4,7 @@ import {dispatchOverview,validateDispatchTransport,validateDispatchPlan,validate
 import {allowedDepartment,enabledDepartment} from "../src/erp/departmentPolicy.js";
 test("Dispatch shows packed live PCS, transit and separately warehouse-confirmed partial receipts",()=>{
  const lots=[{_id:"L1",code:"LOT1",sku:"TEE-M",dcNo:"DC-1",orderNo:"ORD-1"},
- { _id:"L2",code:"LOT2",sku:"TEE-L",dcNo:"DC-2",orderNo:"ORD-2"}];
+ { _id:"L2",code:"LOT2",sku:"TEE-L",dcNo:"DC-2",orderNo:"ORD-1"}];
  const bundles=[
   {_id:"C1",code:"CARTON1",lotId:"L1",stage:"PACKED",qty:30},
   {_id:"T1",code:"TRANSIT1",lotId:"L1",stage:"TRANSIT_WAREHOUSE",qty:5,destination:"WH1",createdAt:new Date("2026-10-16T00:00:00Z")},
@@ -30,6 +30,7 @@ test("Dispatch shows packed live PCS, transit and separately warehouse-confirmed
  [{kind:"WAREHOUSE",key:"WH1",name:"Warehouse 1",active:true}],
  [{code:"TEE-M",size:"M",colour:"Red"}],new Date("2026-10-17T12:00:00Z"));
  assert.equal(out.summary.readyPackedPcs,50);
+ assert.equal(out.orders.length,2);
  assert.equal(out.summary.inTransitPcs,5);
  assert.equal(out.summary.readyCartons,2);
  assert.equal(out.summary.transitCartons,1);

@@ -260,11 +260,11 @@ router.get('/dispatch-overview',asyncHandler(async(req,res)=>{
     plans.length>2000||exceptions.length>2000||masters.length>2000||skus.length>4000)
   throw new ApiError(409,'Dispatch report capacity exceeded; filter/archive before reporting');
  const accessible=masters.filter(m=>locationAllowed(req.user,'WAREHOUSE',m.key));
- const visibleEvents=events.filter(e=>e.department==='DISPATCH'||(
-   e.department==='WAREHOUSE'&&accessible.some(m=>m.key===e.details?.bundle?.destination)));
+ const visibleEvents=events.filter(e=>accessible.some(m=>m.key===e.details?.bundle?.destination));
+ const visiblePlans=plans.filter(p=>locationAllowed(req.user,'WAREHOUSE',p.destination));
  res.json(dispatchOverview(lots,bundles.filter(b=>b.stage!=='TRANSIT_WAREHOUSE'||
     locationAllowed(req.user,'WAREHOUSE',b.destination)),
-   visibleEvents,plans,exceptions,accessible,skus));
+   visibleEvents,visiblePlans,exceptions,accessible,skus));
 }));
 router.post('/dispatch-schedules',asyncHandler(async(req,res)=>{
  requireAccess(req,'DISPATCH');
