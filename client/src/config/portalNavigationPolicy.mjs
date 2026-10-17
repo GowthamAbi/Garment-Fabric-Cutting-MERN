@@ -1,6 +1,6 @@
 // Single-portal navigation boundary. This is a UI guard, not a substitute
 // for API authorization, tenant isolation or subscription enforcement.
-import {DEPARTMENTS} from "../../../../shared/departmentCatalogue.js";
+import {DEPARTMENTS} from "../../../shared/departmentCatalogue.js";
 const COMPANY_PAGES = new Set([
   "Company Dashboard","Factory Management","Company Reports","Company Timeline",
   "Company Stock","Company Approvals","Company Purchase Orders",
