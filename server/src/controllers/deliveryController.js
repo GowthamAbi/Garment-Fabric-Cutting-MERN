@@ -166,11 +166,14 @@ export async function createChallan(req, res) {
         throw new ApiError(409,"Cutting and Folding must be completed before delivery");
       const vendor=await DeliveryVendor.findOne({vendorCode,active:true}).session(session).lean();
       if(!vendor)throw new ApiError(409,"Active Vendor required");
+      const existing=await DeliveryChallan.findOne({requestKey}).session(session).lean();
       const used=await deliveryMap([planNo],session);
-      const lines=validateDeliveryLines(req.body.lines,actual.lines,used,planNo);
+      // A replay validates shape against original cutting quantities but must
+      // not consume its own previously allocated stock twice.
+      const lines=validateDeliveryLines(req.body.lines,actual.lines,
+        existing?new Map():used,planNo);
       const hash=crypto.createHash("sha256").update(JSON.stringify({planNo,vendorCode,lines,
         expectedHandoverAt:expectedHandoverAt?.toISOString()||"",remarks})).digest("hex");
-      const existing=await DeliveryChallan.findOne({requestKey}).session(session).lean();
       if(existing){
         if(existing.requestHash!==hash)
           throw new ApiError(409,"Idempotency key reused with different challan data");
