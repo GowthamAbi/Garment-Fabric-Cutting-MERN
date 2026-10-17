@@ -34,7 +34,7 @@ test("Cutting machine registration accepts only valid machine & bounded capacity
 });
 
 test("Cutting APIs are department licensed, staff-write and head-read only",()=>{
-  const subscription={enabledDepartments:["CUTTING"],entitlements:{modules:["CUTTING"],maxDepartments:1}};
+  const subscription={departmentCatalogueVersion:1,enabledDepartments:["CUTTING"],entitlements:{modules:["CUTTING"],maxDepartments:1}};
   const staff={role:"department_entry",department:"CUTTING",accessPolicyVersion:1,accessScope:"DEPARTMENT",permissions:["department.cutting.read","department.cutting.write"]};
   const head={...staff,role:"department_incharge",permissions:["department.cutting.read"]};
   for (const path of ["/production/cutting-machines","/production/cutting-machine-plans","/production/cutting-machine-status","/production/cutting-overview"]){
@@ -52,7 +52,7 @@ test("Cutting APIs are department licensed, staff-write and head-read only",()=>
 });
 
 test("Cutting write actions only work for Cutting Staff, never Head or other departments",()=>{
-  const scope={enabledDepartments:["CUTTING"],entitlements:{modules:["CUTTING"],maxDepartments:1}};
+  const scope={departmentCatalogueVersion:1,enabledDepartments:["CUTTING"],entitlements:{modules:["CUTTING"],maxDepartments:1}};
   const staff={role:"department_entry",department:"CUTTING",accessPolicyVersion:1,accessScope:"DEPARTMENT",permissions:["department.cutting.read","department.cutting.write"]};
   const head={...staff,role:"department_incharge"};
   for(const [path,method] of [["/production/cutting-machine-plans","POST"],["/production/cutting-machines","POST"],["/production/cutting-machine-plans/fake/action","PATCH"]]){
