@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {accessoryStockRows,accessoryStageFromNote,accessoriesMovementNote,
+import {accessoryOrderRequirements,accessoryStockRows,accessoryStageFromNote,accessoriesMovementNote,
 validateAccessoryMovement,validateAccessorySku,validateAccessoryPurchase,
 validateAccessoryAdjustment} from "../src/erp/accessoriesPolicy.js";
 import {allowedDepartment,enabledDepartment} from "../src/erp/departmentPolicy.js";
@@ -58,4 +58,19 @@ test("Accessories department authorization: staff writes, head reads, other depa
  // The shared ERP /departments boundary defers to the authoritative department router.
  assert.doesNotThrow(()=>enforceAccessBoundary(req));
  assert.equal(allowedDepartment({...staff,department:"FABRIC"},"ACCESSORIES",false),false);
+});
+
+test("Accessories BOM requirement reconciles issued/returned materials and shortage",()=>{
+ const order={_id:"w1",number:"WO-001",lines:[{qty:100000}],metadata:{bom:{
+   outputQty:100000,components:[{sku:"BTN01",qty:250000},{sku:"FAB01",qty:1000}]}}};
+ const movements=[
+   {type:"MATERIAL_ISSUE",sourceId:"w1",lines:[{sku:"BTN01",location:"ACCESSORIES",qty:100000}]},
+   {type:"MATERIAL_RETURN",sourceId:"w1",lines:[{sku:"BTN01",location:"ACCESSORIES",qty:5000}]},
+   {type:"MATERIAL_ISSUE",sourceId:"w1",reversedBy:"reverse-id",lines:[{sku:"BTN01",location:"ACCESSORIES",qty:100000}]}
+ ];
+ const result=accessoryOrderRequirements([order],movements,[{code:"BTN01",available:100}]);
+ assert.equal(result.length,1);
+ assert.deepEqual(result[0],{workOrderId:"w1",workOrderNo:"WO-001",sku:"BTN01",
+   requiredQty:250,issuedQty:95,pendingQty:155,availableQty:100,shortageQty:55});
+ assert.deepEqual(accessoryOrderRequirements([{...order,cancelledAt:new Date()}],movements,[{code:"BTN01",available:100}]),[]);
 });
