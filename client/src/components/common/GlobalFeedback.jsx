@@ -1,8 +1,10 @@
-import { AlertTriangle, LoaderCircle, X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
+import UGSaaSLoader from "./UGSaaSLoader.jsx";
 import { useEffect, useState } from "react";
 
 export default function GlobalFeedback() {
   const [pending, setPending] = useState(0);
+  const [showLoader, setShowLoader] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -19,15 +21,21 @@ export default function GlobalFeedback() {
     };
   }, []);
 
+  // Avoid flashing a modal for requests that finish almost instantly.
+  useEffect(() => {
+    if (pending === 0) {
+      setShowLoader(false);
+      return;
+    }
+    const id = window.setTimeout(() => setShowLoader(true), 180);
+    return () => window.clearTimeout(id);
+  }, [pending]);
+
   return (
     <>
-      {pending > 0 && (
-        <div className="global-loading-overlay">
-          <div>
-            <LoaderCircle className="spin" />
-            <b>Loading...</b>
-            <small>Please wait</small>
-          </div>
+      {showLoader && pending > 0 && (
+        <div className="ug-global-loader-backdrop">
+          <UGSaaSLoader message="Loading your workspace..." />
         </div>
       )}
       {error && (

@@ -1,0 +1,33 @@
+name: UG SaaS Loader Release Checks
+
+on:
+  push:
+    branches:
+      - fix/live-ugsaas-branded-loader-20261017
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "client/**"
+      - ".github/workflows/loader-release-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  loader-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: client/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci --prefix client --no-audit --no-fund
+      - name: Branded loader regression test
+        run: node --test client/tests/ugSaasLoaderIntegration.test.mjs
+      - name: Build production frontend
+        run: npm run build --prefix client
