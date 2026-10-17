@@ -25,6 +25,8 @@ import {ironingOverview,validateIroningTarget,validateIroningIssue} from "./iron
 import {packingOverview,validatePackingPlan,validatePackingIssue} from "./packingOverviewPolicy.js";
 import {dispatchOverview,validateDispatchPlan,validateDispatchException,validateDispatchTransport} from "./dispatchOverviewPolicy.js";
 import {warehouseOverview} from "./warehouseOverviewPolicy.js";
+import {shopOverview,validateShopReturnRequest} from "./shopOverviewPolicy.js";
+import ShopCustomerReturnRequest from "../models/ShopCustomerReturnRequest.js";
 import DispatchSchedule from "../models/DispatchSchedule.js";
 import DispatchExceptionRequest from "../models/DispatchExceptionRequest.js";
 import PackingProductionPlan from "../models/PackingProductionPlan.js";
@@ -250,6 +252,77 @@ router.post('/targets',asyncHandler(async(req,res)=>{
 // Dispatch planning/exception requests are NON-POSTING; physical movement is
 // always the existing transactional /transfer (PACKED -> TRANSIT_WAREHOUSE).
 // Tenant/factory and warehouse-assignment scoped read-only reporting.
+// Shop reporting shows live stock, posted POS collections and posted refunds
+// separately. Requests do not reserve stock or process customer refunds.
+router.get('/shop-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'SHOP',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,sales,events,masters,requests,skus]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).limit(1501).lean(),
+  Bundle.find({...scope,qty:{$gt:0},$or:[{stage:{$regex:'^SHOP:'}},
+   {stage:{$regex:'^TRANSIT_SHOP:'}}]}).limit(10001).lean(),
+  Sale.find(scope).sort({createdAt:-1}).limit(10001).lean(),
+  Event.find({...scope,department:{$in:['SHOP','WAREHOUSE']},
+   kind:{$in:['TRANSFER','RETURN']},reversedBy:{$exists:false}})
+   .sort({createdAt:-1}).limit(10001).lean(),
+  Master.find({...scope,kind:'SHOP',active:{$ne:false}}).limit(2001).lean(),
+  ShopCustomerReturnRequest.find(scope).sort({createdAt:-1}).limit(2001).lean(),
+  ErpSku.find(scope).limit(4001).lean()
+ ]);
+ if(lots.length>1500||bundles.length>10000||sales.length>10000||
+  events.length>10000||masters.length>2000||requests.length>2000||skus.length>4000)
+  throw new ApiError(409,'Shop report limit reached; filter/archive records before reporting');
+ const shopMasters=masters.filter(m=>allowedShop(req.user,m.key));
+ const shops=new Set(shopMasters.map(m=>m.key));
+ const safeSales=sales.filter(s=>shops.has(s.shop));
+ const docs=safeSales.length?await ErpDocument.find({...scope,_id:{$in:[
+  ...new Set(safeSales.map(s=>String(s.documentId)).filter(x=>mongoose.isValidObjectId(x)))
+ ]}}).limit(10001).lean():[];
+ if(docs.length>10000)throw new ApiError(409,'Shop finance document limit exceeded');
+ const filteredEvents=events.filter(e=>{
+  if(e.kind==='RETURN')return safeSales.some(s=>String(s._id)===String(e.details?.saleId));
+  const stage=String(e.details?.bundle?.stage||''),dest=e.details?.bundle?.destination;
+  return shops.has(dest)||e.department==='SHOP'&&
+   bundles.some(b=>String(b._id)===String(e.bundleId)&&shops.has(b.destination));
+ });
+ res.json(shopOverview(lots,bundles.filter(b=>shops.has(b.destination)),safeSales,
+  filteredEvents,docs,shopMasters,requests.filter(x=>shops.has(x.shop)),skus));
+}));
+router.post('/shop-return-requests',asyncHandler(async(req,res)=>{
+ requireAccess(req,'SHOP');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Stable 16–100 character return request key required');
+ if(!mongoose.isValidObjectId(req.body.saleId))throw new ApiError(400,'Valid invoice ID required');
+ const sale=await Sale.findOne({...scope,_id:req.body.saleId}).lean();
+ if(!sale||!allowedShop(req.user,sale.shop))throw new ApiError(404,'Accessible sale invoice not found');
+ const pending=await ShopCustomerReturnRequest.find({...scope,saleId:String(sale._id),status:'PENDING'})
+  .limit(501).lean();
+ if(pending.length>500)throw new ApiError(409,'Too many open requests for invoice');
+ const values=validateShopReturnRequest(req.body,sale,pending);
+ const hash=requestHash({saleId:String(sale._id),...values});
+ await ShopCustomerReturnRequest.init();
+ let old=await ShopCustomerReturnRequest.findOne({...scope,key}).lean();
+ if(old){
+  if(old.requestHash!==hash)throw new ApiError(409,'Return request key reused with different content');
+  if(old.requestedBy!==req.user.userId&&!['company_owner','company_admin','admin'].includes(req.user.role))
+   throw new ApiError(403,'Return request belongs to another user');
+  return res.json(old);
+ }
+ try{
+  const created=await ShopCustomerReturnRequest.create({...scope,key,requestHash:hash,
+   saleId:String(sale._id),invoice:sale.number,shop:sale.shop,sku:sale.sku,
+   quantity:values.quantity,kind:values.kind,reason:values.reason,
+   unreturnedAtRequest:values.unreturnedPcs,
+   otherPendingAtRequest:values.otherPendingPcs,requestedBy:req.user.userId});
+  return res.status(201).json(created);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  old=await ShopCustomerReturnRequest.findOne({...scope,key}).lean();
+  if(old?.requestedBy===req.user.userId&&old.requestHash===hash)return res.json(old);
+  throw new ApiError(409,'Return request duplicate key conflict');
+ }
+}));
+
 router.get('/warehouse-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'WAREHOUSE',false);
  const scope=workspaceFilter();
