@@ -18,6 +18,7 @@ import PackingDepartmentPage from "../pages/erp/PackingDepartmentPage.jsx";
 import DispatchDepartmentPage from "../pages/erp/DispatchDepartmentPage.jsx";
 import WarehouseDepartmentPage from "../pages/erp/WarehouseDepartmentPage.jsx";
 import ShopDepartmentPage from "../pages/erp/ShopDepartmentPage.jsx";
+import MarketingDepartmentPage from "../pages/erp/MarketingDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -515,6 +516,36 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <ShopDepartmentPage mode="print" notify={notify} />;
     case "Shop History Workspace":
       return <ShopDepartmentPage mode="history" notify={notify} />;
+    case "Marketing Performance Workspace":
+      return <MarketingDepartmentPage mode="performance" notify={notify} />;
+    case "Marketing Analysis Workspace":
+      return <MarketingDepartmentPage mode="analysis" notify={notify} />;
+    case "Marketing Pipeline Workspace":
+      return <MarketingDepartmentPage mode="pipeline" notify={notify} />;
+    case "Marketing Orders Workspace":
+      return <MarketingDepartmentPage mode="order" notify={notify} />;
+    case "Marketing Forecast Workspace":
+      return <MarketingDepartmentPage mode="forecast" notify={notify} />;
+    case "Marketing Expenses Workspace":
+      return <MarketingDepartmentPage mode="expenses" notify={notify} />;
+    case "Marketing Reports Workspace":
+      return <MarketingDepartmentPage mode="reports" notify={notify} />;
+    case "Marketing Lead Workspace":
+      return <MarketingDepartmentPage mode="lead" notify={notify} />;
+    case "Marketing Enquiry Workspace":
+      return <MarketingDepartmentPage mode="enquiry" notify={notify} />;
+    case "Marketing Followup Workspace":
+      return <MarketingDepartmentPage mode="followup" notify={notify} />;
+    case "Marketing Demand Workspace":
+      return <MarketingDepartmentPage mode="demand" notify={notify} />;
+    case "Marketing Campaign Workspace":
+      return <MarketingDepartmentPage mode="campaign" notify={notify} />;
+    case "Marketing Communication Workspace":
+      return <MarketingDepartmentPage mode="communication" notify={notify} />;
+    case "Marketing Calendar Workspace":
+      return <MarketingDepartmentPage mode="calendar" notify={notify} />;
+    case "Marketing History Workspace":
+      return <MarketingDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

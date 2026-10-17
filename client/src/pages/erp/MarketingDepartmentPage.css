@@ -1,0 +1,4 @@
+.marketing-dept .marketing-counter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+.marketing-dept .marketing-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.marketing-dept .marketing-note{font-size:12px}
+@media print{.marketing-dept .marketing-entry-form,.marketing-dept .page-actions{display:none!important}}

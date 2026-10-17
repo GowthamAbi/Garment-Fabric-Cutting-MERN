@@ -250,10 +250,22 @@ const ROUTES=Object.freeze({
   "Sales History / Reports":"Shop History Workspace"
  },
  MARKETING:{
-  "Marketing Performance":"Marketing Analysis",
-  "Sales & Demand Analysis":"Marketing Analysis",
-  "Reports":"Marketing Analysis",
-  "Marketing Reports":"Marketing Analysis",
+  "Marketing Performance":"Marketing Performance Workspace",
+  "Sales & Demand Analysis":"Marketing Analysis Workspace",
+  "Customer / Lead Pipeline":"Marketing Pipeline Workspace",
+  "Order Follow-Up":"Marketing Orders Workspace",
+  "Replenishment Forecast":"Marketing Forecast Workspace",
+  "Marketing Expenses":"Marketing Expenses Workspace",
+  "Marketing Reports":"Marketing Reports Workspace",
+  "Customer / Lead Registration":"Marketing Lead Workspace",
+  "Customer Enquiry Entry":"Marketing Enquiry Workspace",
+  "Follow-Up Entry":"Marketing Followup Workspace",
+  "Sales / Demand Request":"Marketing Demand Workspace",
+  "Marketing Campaign Entry":"Marketing Campaign Workspace",
+  "Customer Communication":"Marketing Communication Workspace",
+  "Follow-Up Calendar":"Marketing Calendar Workspace",
+  "Request History":"Marketing History Workspace",
+  "Reports":"Marketing Reports Workspace"
  }
 });
 
