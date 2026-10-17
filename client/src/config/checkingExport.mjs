@@ -5,7 +5,7 @@ export function checkingExportRecords(mode,data={},filtered={}){
   "Defect Category":d.category,"Inspections":d.inspections,
   "Rework PCS":d.reworkPcs,"Oil PCS":d.oilPcs,"Reject PCS":d.rejectPcs
  }));
- if(["entry","split","recheck","oil","scan","bundles","pending"].includes(mode))
+ if(["entry","split","recheck","oil","scan","bundles","pending","followup"].includes(mode))
   return bundles.map(b=>({"Bundle":b.bundleNo,"Lot":b.lotNo,"DC":b.dcNo,
    "SKU":b.sku,"Section":b.vendor,"Status":b.stage,"Qty PCS":b.quantity,
    "Recheck Cycle":b.cycle}));
