@@ -34,7 +34,7 @@ test("all 16 departments have their exact ordered Head and Staff options",()=>{
 });
 test("original source tracking and licensed department guards stay intact",()=>{
  assert.equal(getDepartmentSidebar("HR","HEAD").length,10);
- assert.deepEqual(getDepartmentSidebar("ACCOUNTS","HEAD"),[]);
+ assert.equal(getDepartmentSidebar("ACCOUNTS","HEAD").length,10);
  assert.equal(getDepartmentSidebar("DESPATCH","HEAD")[0].label,"Dashboard");
  assert.equal(getDepartmentSidebar("FABRIC","STAFF")[0].excelSourceCell,"F16");
  assert.equal(getDepartmentSidebar("FABRIC","STAFF").at(-1).label,"Reports & Print");

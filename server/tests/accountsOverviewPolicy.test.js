@@ -15,6 +15,7 @@ test("Accounts licensed as sixteenth department without inventing a garment move
   entitlements:{modules:["ACCOUNTS","ERP_FINANCE"],maxDepartments:1}};
  assert.equal(enabledDepartment(company,"ACCOUNTS"),true);
  assert.equal(enabledDepartment({...company,enabledDepartments:["HR"]},"ACCOUNTS"),false);
+ assert.equal(enabledDepartment({enabledDepartments:["ACCOUNTS"],entitlements:{modules:["ACCOUNTS"]}},"ACCOUNTS"),false);
  assert.equal(boundaryOptions(company,"ACCOUNTS").externalInward,false);
  assert.equal(boundaryOptions(company,"ACCOUNTS").externalOutward,false);
  assert.equal(featureForRequest("/departments/accounts/overview"),"ERP_FINANCE");

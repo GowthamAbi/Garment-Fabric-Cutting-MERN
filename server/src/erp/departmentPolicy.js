@@ -13,6 +13,9 @@ export function enabledDepartment(company,department){
  // Preserve the original nine-stage contract for existing installations until
  // an administrator explicitly reviews and saves the new department selection.
  const licensed=(company.entitlements?.modules||[]).filter(x=>WORKFLOW_DEPARTMENTS.includes(x));
+ // Accounts is a newly licensed finance department; legacy nine-stage
+ // contracts must never receive financial access implicitly.
+ if(code==='ACCOUNTS')return false;
  if(!WORKFLOW_DEPARTMENTS.includes(code))return true;
  return (!selected?.length||selected.includes(code))&&(!licensed.length||licensed.includes(code));
 }
