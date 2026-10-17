@@ -97,11 +97,13 @@ export const getMeasurements = (params = {}) =>
 export const transferRework = (id, data) =>
   request(`/warehouse/rework/${id}`, {
     method: "POST",
+    headers: { "Idempotency-Key": data.key },
     body: JSON.stringify(data),
   });
 export const deliverWarehouseStock = (id, data) =>
   request(`/warehouse/deliver/${id}`, {
     method: "POST",
+    headers: { "Idempotency-Key": data.key },
     body: JSON.stringify(data),
   });
 
