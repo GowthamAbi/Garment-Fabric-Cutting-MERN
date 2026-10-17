@@ -68,9 +68,9 @@ test("Elastic colour/size cutting and returns are traced separately from shared 
  const plan={planNo:"ELA-001",sku:"ELA01",targetMtr:35,lines:[
    {colour:"BLUE",size:"M",wantedMtr:20},{colour:"BLUE",size:"L",wantedMtr:15}]};
  const docs=[
-   {notes:elasticCutNote("CUT","ELA-001","CUT-M01","BLUE","M"),lines:[{sku:"ELA01",qty:12000}]},
-   {notes:elasticCutNote("CUT","ELA-001","CUT-L01","BLUE","L"),lines:[{sku:"ELA01",qty:10000}]},
-   {notes:elasticCutNote("RETURN","ELA-001","RET-M01","BLUE","M"),lines:[{sku:"ELA01",qty:1000}]},
+   {notes:elasticCutNote("CUT","ELA-001","CUT-M01","BLUE","M"),type:"STOCK_TRANSFER",lines:[{sku:"ELA01",qty:12000}]},
+   {notes:elasticCutNote("CUT","ELA-001","CUT-L01","BLUE","L"),type:"STOCK_TRANSFER",lines:[{sku:"ELA01",qty:10000}]},
+   {notes:elasticCutNote("RETURN","ELA-001","RET-M01","BLUE","M"),type:"STOCK_TRANSFER",lines:[{sku:"ELA01",qty:1000}]},
  ];
  assert.deepEqual(elasticMovementTag(docs[0].notes),{kind:"CUT",planNo:"ELA-001",reference:"CUT-M01",
    colour:"BLUE",size:"M"});
