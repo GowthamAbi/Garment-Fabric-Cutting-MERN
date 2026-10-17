@@ -18,7 +18,9 @@ test("P0 role guard: only company owner can create or modify privileged base rol
   ["company_admin","department_entry"],["admin","department_entry"],
   ["company_admin","company_admin"],["admin","admin"]])
   assert.throws(()=>assertSafeBaseRoleAssignment(admin,to,from),{statusCode:403});
+ assert.equal(assertSafeBaseRoleAssignment({role:"saas_super_admin"},"department_entry"),true);
  assert.throws(()=>assertSafeBaseRoleAssignment({role:"saas_super_admin"},"company_admin"),{statusCode:403});
+ assert.throws(()=>assertSafeBaseRoleAssignment({role:"saas_super_admin"},"admin"),{statusCode:403});
  assert.throws(()=>assertSafeBaseRoleAssignment({role:"support_viewer"},"department_entry"),{statusCode:403});
 });
 test("P0: delegated user directory never enumerates unassigned factories",()=>{

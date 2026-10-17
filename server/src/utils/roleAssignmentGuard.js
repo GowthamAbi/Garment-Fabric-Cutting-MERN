@@ -4,9 +4,14 @@ import {hasPermission,strictAccess,companyOwner} from "./accessPolicy.js";
 // customer company owner can assign/modify company_admin and admin accounts.
 const ownerOnlyRoles=new Set(["company_admin","admin"]);
 export function assertSafeBaseRoleAssignment(actor,newRole,previousRole=""){
- if(!actor||["saas_super_admin","support_viewer"].includes(actor.role))
-  throw new ApiError(403,"Customer owner authorization required for privileged role management");
- if(!companyOwner(actor)&&
+ if(!actor||actor.role==="support_viewer")
+  throw new ApiError(403,"Customer owner authorization required for role management");
+ // Existing platform provisioning may create ordinary staff accounts, but
+ // must never mint administrator identities in a customer's tenant.
+ if(actor.role==="saas_super_admin"&&
+   (ownerOnlyRoles.has(String(newRole||""))||ownerOnlyRoles.has(String(previousRole||""))))
+  throw new ApiError(403,"Only a customer company owner can grant administrator identity");
+ if(!companyOwner(actor)&&actor.role!=="saas_super_admin"&&
   (ownerOnlyRoles.has(String(newRole||""))||ownerOnlyRoles.has(String(previousRole||""))))
   throw new ApiError(403,"Only the company owner can assign or modify an administrator role");
  return true;
