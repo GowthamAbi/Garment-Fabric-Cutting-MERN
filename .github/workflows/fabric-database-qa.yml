@@ -28,10 +28,10 @@ jobs:
             if docker exec ugs-fabric-test-mongo mongosh --quiet --eval 'rs.status().myState' 2>/dev/null | grep -q '^1$'; then break; fi
             sleep 2
           done
-      - name: Run Fabric and phase-2 cross-department MongoDB QA
+      - name: Run Fabric, phase-2 and P0 approval replica-set integration QA
         env:
           TEST_MONGODB_URI: mongodb://127.0.0.1:27017/?replicaSet=rs0
-        run: node --test server/tests/fabricMongoWorkflow.test.js server/tests/phase2CrossDepartmentDatabase.test.js
+        run: node --test server/tests/fabricMongoWorkflow.test.js server/tests/phase2CrossDepartmentDatabase.test.js server/tests/p0ApprovalAccessDatabase.test.js
       - name: Stop disposable database
         if: always()
         run: docker stop ugs-fabric-test-mongo || true

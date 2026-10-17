@@ -18,7 +18,7 @@
 
 ## Testing vs acceptance
 - New server policy tests verify strict factory, company, department, missing grants, history/settings, self approval, escalation and over-limit behaviour.
-- Existing database approval audit/integration tests remain CI gates. Owner-grant transaction and full reviewer HTTP scenario should be exercised on isolated replica-set staging before marking acceptance.
+- New `server/tests/p0ApprovalAccessDatabase.test.js` exercises owner grant changes, persisted grant AuditLog, reviewer inbox filtering, wrong-factory rejection, real decision outbox and duplicate-decision conflict on a **disposable GitHub CI MongoDB replica set**. The Database QA workflow explicitly executes this test; check that it reports a non-skipped pass before claiming database coverage. Authentication through real signed user sessions and live browser acceptance are still separate.
 - No P0 workbook cell is marked **UAT PASSED** solely from unit/CI evidence. All 58 P0 remain subject to signed-off role-wise browser/mobile testing, screenshots and tenant isolation checks.
 
 ## Follow-up P0 priority
