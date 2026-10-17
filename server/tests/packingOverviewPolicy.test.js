@@ -80,7 +80,7 @@ test("Repacking request validates active carton and never independently changes 
   [{category:"REPACK",quantity:21,reason:"Carton label mismatch"},{stage:"PACKED",qty:20}],
   [{category:"REPACK",quantity:1.25,reason:"Carton label mismatch"},{stage:"PACKED",qty:20}],
   [{category:"UNKNOWN",quantity:2,reason:"Carton label mismatch"},{stage:"PACKED",qty:20}],
-  [{category:"REPACK",quantity:2,reason:"Too short"},{stage:"PACKED",qty:20}],
+  [{category:"REPACK",quantity:2,reason:"Tiny"},{stage:"PACKED",qty:20}],
   [{category:"REPACK",quantity:2,reason:"Carton label mismatch"},{stage:"IRONED",qty:20}]
  ])assert.throws(()=>validatePackingIssue(request,bundle));
 });
