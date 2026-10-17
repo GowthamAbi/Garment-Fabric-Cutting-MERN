@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {DEPARTMENTS,WORKFLOW_DEPARTMENTS,departmentSelection,planModules,licensedDepartments} from '../../shared/departmentCatalogue.js';
 import {enabledDepartment} from '../src/erp/departmentPolicy.js';
 import {checkUserQuota} from '../src/utils/entitlementPolicy.js';
-test('shared catalogue covers fourteen departments without inventing downstream implementations',()=>{
- assert.equal(DEPARTMENTS.length,14);assert.equal(new Set(DEPARTMENTS).size,14);assert.equal(WORKFLOW_DEPARTMENTS.length,9);
+test('shared catalogue covers HR as a separately licensed non-stock department',()=>{
+ assert.equal(DEPARTMENTS.length,15);assert.equal(new Set(DEPARTMENTS).size,15);assert.equal(DEPARTMENTS.at(-1),'HR');assert.equal(WORKFLOW_DEPARTMENTS.length,9);
  assert.deepEqual(departmentSelection(['Fabric','despatch','shope']),['FABRIC','DISPATCH','SHOP']);
  assert.throws(()=>departmentSelection(['SHOP','Shope']));assert.throws(()=>departmentSelection(['unknown']));assert.throws(()=>departmentSelection([]));
  assert.deepEqual(planModules(['Fabric','ERP_FINANCE']),['FABRIC','ERP_FINANCE']);assert.throws(()=>planModules(['ERP_CORE']));

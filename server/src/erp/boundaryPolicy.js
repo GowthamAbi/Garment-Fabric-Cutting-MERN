@@ -1,10 +1,10 @@
 import {DEPARTMENTS} from '../../../shared/departmentCatalogue.js';
 import {enabledDepartment} from './departmentPolicy.js';
 import {fail} from './policy.js';
-const peers={FABRIC:[null,'CUTTING'],CUTTING:['FABRIC','DELIVERY'],ELASTIC:[null,null],ACCESSORIES:[null,null],DELIVERY:['CUTTING','STITCHING'],STITCHING:['DELIVERY','INWARD'],INWARD:['STITCHING','CHECKING'],CHECKING:['INWARD','IRONING'],IRONING:['CHECKING','PACKING'],PACKING:['IRONING','DISPATCH'],DISPATCH:['PACKING','WAREHOUSE'],WAREHOUSE:['DISPATCH','SHOP'],SHOP:['WAREHOUSE',null],MARKETING:['SHOP',null]};
+const peers={FABRIC:[null,'CUTTING'],CUTTING:['FABRIC','DELIVERY'],ELASTIC:[null,null],ACCESSORIES:[null,null],DELIVERY:['CUTTING','STITCHING'],STITCHING:['DELIVERY','INWARD'],INWARD:['STITCHING','CHECKING'],CHECKING:['INWARD','IRONING'],IRONING:['CHECKING','PACKING'],PACKING:['IRONING','DISPATCH'],DISPATCH:['PACKING','WAREHOUSE'],WAREHOUSE:['DISPATCH','SHOP'],SHOP:['WAREHOUSE',null],MARKETING:['SHOP',null],HR:[null,null]};
 export function boundaryOptions(company,department){
  if(!DEPARTMENTS.includes(department)||!enabledDepartment(company,department))fail('Department not subscribed');
- const [upstream,downstream]=peers[department];return {department,upstream,downstream,externalInward:!upstream||!enabledDepartment(company,upstream),externalRework:department==='CHECKING'&&!enabledDepartment(company,'STITCHING'),externalOutward:department!=='SHOP'&&department!=='MARKETING'&&(!downstream||!enabledDepartment(company,downstream))};
+ const [upstream,downstream]=peers[department];if(department==='HR')return {department,upstream,downstream,externalInward:false,externalOutward:false,externalRework:false};return {department,upstream,downstream,externalInward:!upstream||!enabledDepartment(company,upstream),externalRework:department==='CHECKING'&&!enabledDepartment(company,'STITCHING'),externalOutward:department!=='SHOP'&&department!=='MARKETING'&&(!downstream||!enabledDepartment(company,downstream))};
 }
 export function assertBoundary(company,department,direction){if(!['IN','OUT'].includes(direction))fail('Invalid boundary direction');const b=boundaryOptions(company,department);if(!b[direction==='IN'?'externalInward':'externalOutward'])fail('Use the integrated handoff; adjacent department is subscribed');return b;}
 export function inwardStage(department,destination=''){
