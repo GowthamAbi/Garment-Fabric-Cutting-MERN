@@ -64,12 +64,7 @@ function bundleAccess(req,b){
  if(b.stage.startsWith("WAREHOUSE:")||b.stage==="TRANSIT_WAREHOUSE"){
   if(!locationAllowed(req.user,"WAREHOUSE",b.destination))throw new ApiError(403,"Assigned warehouse required");
  }
- if(b.stage.startsWith("SHOP:"))shopAccess(req,b.destination);
- // Warehouse initiates a shop-bound transit, shop staff later receives it.
- // Do not let unrelated departments access transit shop bundles.
- if(b.stage.startsWith("TRANSIT_SHOP:")&&
-   !allowedDepartment(req.user,"WAREHOUSE",false)&&!allowedShop(req.user,b.destination))
-  throw new ApiError(403,"Warehouse or assigned shop access required");
+ if(b.stage.startsWith("SHOP:")||b.stage.startsWith("TRANSIT_SHOP:"))shopAccess(req,b.destination);
 }
 async function getBundle(id,scope,session,req){if(!mongoose.isValidObjectId(id))fail('Invalid bundle');const b=await Bundle.findOne({...scope,_id:id}).session(session);if(!b||b.qty<=0)fail('Bundle is empty or unavailable');bundleAccess(req,b);return b;}
 async function newBundle(scope,session,lot,qty,stage,parent='',destination='',cycle=0){const [b]=await Bundle.create([{...scope,code:await sequence(scope,session,'BND'),lotId:String(lot._id),parentId:parent,qty,stage,destination,cycle}],{session});return b;}
@@ -275,18 +270,32 @@ router.get('/warehouse-overview',asyncHandler(async(req,res)=>{
   throw new ApiError(409,'Warehouse report capacity exceeded; filter/archive records first');
  const locations=masters.filter(m=>m.kind==='WAREHOUSE'&&locationAllowed(req.user,'WAREHOUSE',m.key));
  const allowed=new Set(locations.map(m=>m.key));
- // Never infer warehouse permissions merely from a shipment. Show assigned
- // location stock only; event links are restricted to matching destinations.
- const filteredEvents=events.filter(e=>{
-  const stage=e.details?.bundle?.stage||'';
+ // Shop-bound transit has a Shop destination; use its original Warehouse
+ // bundle even after it reaches zero quantity. No cross-warehouse bleed.
+ const parentIds=[...new Set([
+  ...bundles.filter(b=>b.stage.startsWith('TRANSIT_SHOP:')).map(b=>String(b.parentId||'')),
+  ...events.filter(e=>e.department==='WAREHOUSE'&&
+   String(e.details?.bundle?.stage||'').startsWith('TRANSIT_SHOP:'))
+   .map(e=>String(e.bundleId||''))
+ ].filter(id=>mongoose.isValidObjectId(id)))];
+ const warehouseSources=parentIds.length?await Bundle.find({...scope,_id:{$in:parentIds},
+  stage:{$regex:'^WAREHOUSE:'}}).limit(10001).lean():[];
+ if(warehouseSources.length>10000)throw new ApiError(409,'Warehouse origin lookup exceeds capacity');
+ const sourceWarehouse=new Map(warehouseSources.map(b=>[String(b._id),b.destination]));
+ const visibleBundles=bundles.filter(b=>allowed.has(
+  b.stage.startsWith('TRANSIT_SHOP:')?sourceWarehouse.get(String(b.parentId)):b.destination))
+  .map(b=>({...b,sourceWarehouse:b.stage.startsWith('TRANSIT_SHOP:')?
+   sourceWarehouse.get(String(b.parentId)):undefined}));
+ const bundleWarehouses=new Map(bundles.map(b=>[String(b._id),b.destination]));
+ const visibleEvents=events.filter(e=>{
   const destination=e.details?.bundle?.destination||
-    (e.kind==='EXTERNAL_INWARD'?e.details?.destination:'');
-  return allowed.has(destination)||e.department==='WAREHOUSE'&&
-   e.bundleId&&bundles.some(b=>String(b._id)===e.bundleId&&allowed.has(b.destination));
- });
- res.json(warehouseOverview(lots,bundles.filter(b=>allowed.has(b.destination)),filteredEvents,
-   masters.filter(m=>m.kind==='SHOP'||(m.kind==='WAREHOUSE'?allowed.has(m.key):allowed.has(m.warehouse))),
-   requests.filter(e=>allowed.has(e.destination)),skus));
+   (e.kind==='EXTERNAL_INWARD'?e.details?.destination:'');
+  return allowed.has(destination)||allowed.has(sourceWarehouse.get(String(e.bundleId)))||
+   allowed.has(bundleWarehouses.get(String(e.bundleId)));
+ }).map(e=>({...e,sourceWarehouse:sourceWarehouse.get(String(e.bundleId))}));
+ res.json(warehouseOverview(lots,visibleBundles,visibleEvents,
+  masters.filter(m=>m.kind==='SHOP'||(m.kind==='WAREHOUSE'?allowed.has(m.key):allowed.has(m.warehouse))),
+  requests.filter(e=>allowed.has(e.destination)),skus));
 }));
 
 router.get('/dispatch-overview',asyncHandler(async(req,res)=>{
@@ -728,7 +737,14 @@ router.post('/transfer',asyncHandler(async(req,res)=>res.json(await transaction(
  else if(b.stage.startsWith('TRANSIT_SHOP:')){requireAccess(req,'SHOP');shopAccess(req,destination);next=`SHOP:${destination}`;}
  else if(b.stage.startsWith('SHOP:')){shopAccess(req,b.destination);const target=await Master.findOne({...scope,key:req.body.destination,kind:{$in:['SHOP','WAREHOUSE']}}).session(session);if(!target)fail('Shop or warehouse destination required');destination=target.key;next=target.kind==='SHOP'?`TRANSIT_SHOP:${destination}`:'TRANSIT_WAREHOUSE';}
  else fail('Unsupported transfer stage');
- bundleAccess(req,{stage:next,destination});const dispatch=b.stage==='PACKED'?validateDispatchTransport(req.body.dispatch||{}):null;const moved=await moveBundle(req,scope,session,b,count,next,destination);return {bundleId:String(b._id),quantity:count,documentId:moved.documentId,details:{bundle:moved.child,...(dispatch?{dispatch}:{})}};
+ // Initiating source access was checked by getBundle. The receiving team
+ // owns the cross-department transit; sender needs no receiver assignment.
+ const crossHandoff=(b.stage.startsWith('WAREHOUSE:')&&next.startsWith('TRANSIT_SHOP:'))||
+  (b.stage.startsWith('SHOP:')&&next==='TRANSIT_WAREHOUSE');
+ if(!crossHandoff)bundleAccess(req,{stage:next,destination});
+ const dispatch=b.stage==='PACKED'?validateDispatchTransport(req.body.dispatch||{}):null;
+ const moved=await moveBundle(req,scope,session,b,count,next,destination);
+ return {bundleId:String(b._id),quantity:count,documentId:moved.documentId,details:{bundle:moved.child,...(dispatch?{dispatch}:{})}};
 }))));
 router.post('/split',asyncHandler(async(req,res)=>res.json(await transaction(req,'SPLIT',async(scope,session)=>{const b=await getBundle(req.body.bundleId,scope,session,req);requireAccess(req,deptFor(b.stage));const count=pieces(req.body.quantity);if(count>=b.qty)fail('Split must leave quantity in parent');const moved=await moveBundle(req,scope,session,b,count,b.stage,b.destination);return {bundleId:String(b._id),quantity:count,documentId:moved.documentId,details:{bundle:moved.child}};}))));
 router.get('/trace/:id',asyncHandler(async(req,res)=>{const scope=workspaceFilter();if(!mongoose.isValidObjectId(req.params.id))fail('Invalid bundle');const b=await Bundle.findOne({...scope,_id:req.params.id}).lean();if(!b)fail('Bundle not found');const traceLot=await Lot.findOne({...scope,_id:b.lotId}).lean();requireAccess(req,routeActor(traceLot,b.stage,b.stage==='GOOD'&&enabledDepartment(req.departmentCompany,'IRONING')&&allowedDepartment(req.user,'IRONING',false)?'IRONING':b.stage==='IRONED'?'PACKING':b.stage==='STITCHED'||b.stage==='REWORK_DONE'?'INWARD':b.stage==='TRANSIT_WAREHOUSE'?'WAREHOUSE':b.stage.startsWith('TRANSIT_SHOP:')?'SHOP':deptFor(b.stage)),false);const lot=await Lot.findOne({...scope,_id:b.lotId}).lean();const eventScope=(b.stage.startsWith('SHOP:')||b.stage.startsWith('TRANSIT_SHOP:'))?{bundleId:String(b._id)}:{$or:[{bundleId:String(b._id)},{lotId:b.lotId}]};const events=await Event.find({...scope,...eventScope}).sort({_id:-1}).limit(500).lean();if(b.stage.startsWith('SHOP:')||b.stage.startsWith('TRANSIT_SHOP:'))shopAccess(req,b.destination);bundleAccess(req,b);res.json({bundle:b,lot:strictAccess(req.user)&&!allowedDepartment(req.user,'PACKING',false)?{...lot,packing:undefined}:lot,events:events.filter(e=>!strictAccess(req.user)||allowedDepartment(req.user,e.department,false)).map(e=>({createdAt:e.createdAt,kind:e.kind,quantity:e.quantity,actor:e.actor,operator:e.details?.operator||'',shift:e.details?.shift||''}))});}));

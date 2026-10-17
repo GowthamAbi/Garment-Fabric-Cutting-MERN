@@ -21,7 +21,8 @@ export function warehouseOverview(lots=[],bundles=[],events=[],masters=[],except
   unassignedBinPcs:0,openCountRequests:0};
  for(const b of bundles){
   const l=byLot.get(String(b.lotId)),qty=pcs(b.qty),stage=str(b.stage);
-  if(!l||!qty||!locSet.has(b.destination))continue;
+  const originWarehouse=stage.startsWith("TRANSIT_SHOP:")?b.sourceWarehouse:b.destination;
+  if(!l||!qty||!locSet.has(originWarehouse))continue;
   if(!warehouseStage(stage)&&!transitStage(stage))continue;
   const direction=warehouseStage(stage)?"IN_STOCK":
    stage==="TRANSIT_WAREHOUSE"?"INBOUND_TRANSIT":"OUTBOUND_TRANSIT";
@@ -31,7 +32,7 @@ export function warehouseOverview(lots=[],bundles=[],events=[],masters=[],except
   const row={id:String(b._id),code:b.code||"",lotId:String(l._id),
    lotNo:l.code||"",dcNo:l.dcNo||"",orderNo:l.orderNo||"",sku:l.sku||"",
    colour:sku.colour||"",size:sku.size||"",section:l.section||"",
-   stage,quantity:qty,warehouse:b.destination||"",bin:b.bin||"",
+   stage,quantity:qty,warehouse:originWarehouse||"",shopDestination:stage.startsWith("TRANSIT_SHOP:")?b.destination:"",bin:b.bin||"",
    direction,parentId:b.parentId||"",ageHours,createdAt:b.createdAt||null};
   rows.push(row);
   if(direction==="IN_STOCK"){
@@ -76,7 +77,7 @@ export function warehouseOverview(lots=[],bundles=[],events=[],masters=[],except
  .map(e=>{
   const b=e.details?.bundle||{},l=byLot.get(String(b.lotId||e.lotId));
   return {id:String(e._id),date:e.createdAt||null,kind:e.kind,department:e.department,
-   quantity:pcs(e.quantity),warehouse:b.destination||"",stage:b.stage||"",
+   quantity:pcs(e.quantity),warehouse:e.sourceWarehouse||b.destination||"",shopDestination:e.sourceWarehouse?b.destination:"",stage:b.stage||"",
    cartonNo:b.code||"",dcNo:l?.dcNo||"",sku:l?.sku||"",
    sourceBundleId:e.bundleId||"",documentId:e.documentId||"",actor:e.actor||""};
  });
