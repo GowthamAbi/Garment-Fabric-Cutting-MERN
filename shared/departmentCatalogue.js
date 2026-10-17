@@ -1,10 +1,11 @@
 export const DEPARTMENT_CATALOGUE=Object.freeze([
  ['FABRIC','Fabric'],['CUTTING','Cutting'],['ELASTIC','Elastic'],['ACCESSORIES','Accessories'],['DELIVERY','Delivery'],
  ['STITCHING','Stitching'],['INWARD','Inward'],['CHECKING','Checking'],['IRONING','Ironing'],['PACKING','Packing'],
- ['DISPATCH','Dispatch'],['WAREHOUSE','Warehouse'],['SHOP','Shop'],['MARKETING','Marketing'],
+ ['DISPATCH','Dispatch'],['WAREHOUSE','Warehouse'],['SHOP','Shop'],['MARKETING','Marketing'],['HR','HR'],
 ].map(([code,label])=>Object.freeze({code,label})));
 export const DEPARTMENTS=Object.freeze(DEPARTMENT_CATALOGUE.map(d=>d.code));
-export const WORKFLOW_DEPARTMENTS=Object.freeze(DEPARTMENTS.slice(5));
+// Preserve the original garment-workflow license contract for pre-v1 tenants.
+export const WORKFLOW_DEPARTMENTS=Object.freeze(DEPARTMENTS.slice(5,14));
 export const ERP_MODULES=Object.freeze(['ERP_CORE','ERP_SHOP_FLOOR','ERP_FINANCE','ERP_HR']);
 export function departmentCode(value){const code=String(value||'').trim().toUpperCase();return ({DESPATCH:'DISPATCH',SHOPE:'SHOP',STICHING:'STITCHING'})[code]||code;}
 export function departmentSelection(values){

@@ -26,6 +26,7 @@ import {packingOverview,validatePackingPlan,validatePackingIssue} from "./packin
 import {dispatchOverview,validateDispatchPlan,validateDispatchException,validateDispatchTransport} from "./dispatchOverviewPolicy.js";
 import {warehouseOverview} from "./warehouseOverviewPolicy.js";
 import {shopOverview,validateShopReturnRequest} from "./shopOverviewPolicy.js";
+import hrDepartmentRoutes from "./hrDepartmentRoutes.js";
 import {marketingOverview,validateMarketingLead,validateMarketingActivity,
  validateMarketingCampaign,validateMarketingExpense} from "./marketingOverviewPolicy.js";
 import MarketingLead from "../models/MarketingLead.js";
@@ -847,6 +848,8 @@ router.post('/return',asyncHandler(async(req,res)=>{requireAccess(req,'SHOP');re
  }));}));
 // Marketing CRM planning and activity logs. Event transactions provide
 // idempotent, auditable writes and protect tenant/factory isolation.
+// HR uses dedicated permission-guarded workforce records, never stock flow.
+router.use('/hr',hrDepartmentRoutes);
 router.get('/marketing/overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'MARKETING',false);
  const scope=workspaceFilter();

@@ -3,7 +3,7 @@ import {DEPARTMENTS,departmentCode} from "../../../shared/departmentCatalogue.js
 import {requirementsForRole,EXCEL_DEPARTMENT_CODES} from "../../../shared/excelRequirementCatalogue.js";
 
 export const PROPOSED_DEPARTMENTS=Object.freeze([...EXCEL_DEPARTMENT_CODES]);
-export const NOT_YET_LICENSED=Object.freeze(["HR","ACCOUNTS"]);
+export const NOT_YET_LICENSED=Object.freeze(["ACCOUNTS"]);
 export const WORKSPACE_ROLES=Object.freeze({HEAD:"HEAD",STAFF:"STAFF"});
 
 function actionForRequirement(role,label){
