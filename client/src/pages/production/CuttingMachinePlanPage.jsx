@@ -26,8 +26,8 @@ const allowedActions = (row) => {
   if (["QUEUED", "READY"].includes(row.status))
     return ["START", "CHANGE", "BREAKDOWN"];
   return row.machineType === "SPREADER"
-    ? ["COMPLETE", "CHANGE", "BREAKDOWN", "BREAK"]
-    : ["COMPLETE", "CHANGE", "BREAKDOWN", "BREAK"];
+    ? ["COMPLETE", "CHANGE", "BREAKDOWN", "PAUSE"]
+    : ["COMPLETE", "CHANGE", "BREAKDOWN", "PAUSE"];
 };
 
 export default function CuttingMachinePlanPage({ notify, mode = "plan" }) {
@@ -74,7 +74,7 @@ export default function CuttingMachinePlanPage({ notify, mode = "plan" }) {
   }
   async function act(row, action) {
     let reason = "";
-    if (["CHANGE", "BREAKDOWN", "BREAK"].includes(action)) {
+    if (["CHANGE", "BREAKDOWN", "BREAK", "PAUSE"].includes(action)) {
       const entered = window.prompt(`${action} reason (required)`);
       if (entered === null) return;
       reason = entered.trim();
@@ -573,7 +573,7 @@ function CuttingGantt({ data }) {
               ? "change"
               : action === "TRANSFER"
                 ? "transfer"
-                : action === "BREAK"
+                : ["BREAK", "PAUSE"].includes(action)
                   ? "paused"
                   : ["COMPLETE", "PUBLISH", "FINISH"].includes(action)
                     ? "completed"
