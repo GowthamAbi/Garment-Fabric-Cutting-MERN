@@ -50,3 +50,14 @@ test("Cutting APIs are department licensed, staff-write and head-read only",()=>
     assert.throws(()=>enforceAccessBoundary({...get,accessCompany:{...subscription,enabledDepartments:["FABRIC"]}}),/not subscribed/);
   }
 });
+
+test("Cutting write actions only work for Cutting Staff, never Head or other departments",()=>{
+  const scope={enabledDepartments:["CUTTING"],entitlements:{modules:["CUTTING"],maxDepartments:1}};
+  const staff={role:"department_entry",department:"CUTTING",accessPolicyVersion:1,accessScope:"DEPARTMENT",permissions:["department.cutting.read","department.cutting.write"]};
+  const head={...staff,role:"department_incharge"};
+  for(const [path,method] of [["/production/cutting-machine-plans","POST"],["/production/cutting-machines","POST"],["/production/cutting-machine-plans/fake/action","PATCH"]]){
+    const req={user:staff,accessCompany:scope,method,originalUrl:"/api"+path};
+    assert.doesNotThrow(()=>enforceAccessBoundary(req));
+    assert.throws(()=>enforceAccessBoundary({...req,user:head}),/review access/);
+  }
+});
