@@ -15,6 +15,7 @@ import InwardDepartmentPage from "../pages/erp/InwardDepartmentPage.jsx";
 import CheckingDepartmentPage from "../pages/erp/CheckingDepartmentPage.jsx";
 import IroningDepartmentPage from "../pages/erp/IroningDepartmentPage.jsx";
 import PackingDepartmentPage from "../pages/erp/PackingDepartmentPage.jsx";
+import DispatchDepartmentPage from "../pages/erp/DispatchDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -412,6 +413,38 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <PackingDepartmentPage mode="issue" notify={notify} />;
     case "Packing History Workspace":
       return <PackingDepartmentPage mode="history" notify={notify} />;
+    case "Dispatch Ready Workspace":
+      return <DispatchDepartmentPage mode="ready" notify={notify} />;
+    case "Dispatch Schedule Workspace":
+      return <DispatchDepartmentPage mode="schedule" notify={notify} />;
+    case "Dispatch Orders Workspace":
+      return <DispatchDepartmentPage mode="orders" notify={notify} />;
+    case "Dispatch Progress Workspace":
+      return <DispatchDepartmentPage mode="progress" notify={notify} />;
+    case "Dispatch Transit Workspace":
+      return <DispatchDepartmentPage mode="transit" notify={notify} />;
+    case "Dispatch Delays Workspace":
+      return <DispatchDepartmentPage mode="delays" notify={notify} />;
+    case "Dispatch Reports Workspace":
+      return <DispatchDepartmentPage mode="reports" notify={notify} />;
+    case "Dispatch Packed Workspace":
+      return <DispatchDepartmentPage mode="packed" notify={notify} />;
+    case "Dispatch Plan Workspace":
+      return <DispatchDepartmentPage mode="plan" notify={notify} />;
+    case "Dispatch Entry Workspace":
+      return <DispatchDepartmentPage mode="entry" notify={notify} />;
+    case "Dispatch Destination Workspace":
+      return <DispatchDepartmentPage mode="destination" notify={notify} />;
+    case "Dispatch Transport Workspace":
+      return <DispatchDepartmentPage mode="transport" notify={notify} />;
+    case "Dispatch Loading Workspace":
+      return <DispatchDepartmentPage mode="loading" notify={notify} />;
+    case "Dispatch Challan Workspace":
+      return <DispatchDepartmentPage mode="challen" notify={notify} />;
+    case "Dispatch Pending Workspace":
+      return <DispatchDepartmentPage mode="pending" notify={notify} />;
+    case "Dispatch History Workspace":
+      return <DispatchDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

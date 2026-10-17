@@ -192,6 +192,25 @@ const ROUTES=Object.freeze({
   "Repacking Request":"Packing Issue Entry Workspace",
   "Packing History / Print":"Packing History Workspace"
  },
+ DISPATCH:{
+  "Ready for Despatch":"Dispatch Ready Workspace",
+  "Despatch Schedule":"Dispatch Schedule Workspace",
+  "Order-Wise Despatch":"Dispatch Orders Workspace",
+  "Dispatched vs Pending":"Dispatch Progress Workspace",
+  "Transit / Receipt Status":"Dispatch Transit Workspace",
+  "Delay & Exception Monitoring":"Dispatch Delays Workspace",
+  "Despatch Reports":"Dispatch Reports Workspace",
+  "Ready Packed Orders":"Dispatch Packed Workspace",
+  "Despatch Plan":"Dispatch Plan Workspace",
+  "Despatch Entry":"Dispatch Entry Workspace",
+  "Warehouse / Customer Selection":"Dispatch Destination Workspace",
+  "Transport & Vehicle Details":"Dispatch Transport Workspace",
+  "Loading / Handover":"Dispatch Loading Workspace",
+  "Delivery Challan Print":"Dispatch Challan Workspace",
+  "Transit / Pending Status":"Dispatch Pending Workspace",
+  "Despatch History":"Dispatch History Workspace",
+  "Reports":"Dispatch Reports Workspace"
+ },
  WAREHOUSE:{
   "Warehouse Stock Overview":"Warehouse Management",
   "Warehouse Stock":"Warehouse Management",

@@ -1,0 +1,10 @@
+.dispatch-page .dispatch-counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.dispatch-page .dispatch-memo{background:white;color:#111;border:2px solid #333;padding:18px;max-width:800px;margin:16px auto;page-break-inside:avoid}
+.dispatch-page .dispatch-memo table{width:100%;border-collapse:collapse;margin-top:12px}
+.dispatch-page .dispatch-memo td,.dispatch-page .dispatch-memo th{border:1px solid #555;text-align:left;padding:6px}
+.dispatch-page .dispatch-memo h3,.dispatch-page .dispatch-memo p{text-align:center}
+.dispatch-page .dispatch-memo .dispatch-code{font-family:monospace;font-size:11px;overflow-wrap:anywhere}
+@media print{
+ .dispatch-page.dispatch-print-memo .dispatch-not-memo{display:none!important}
+ .dispatch-page.dispatch-print-memo .dispatch-memo{max-width:100%;margin:0;border:1px solid #000}
+}

@@ -92,9 +92,9 @@ export function dispatchOverview(lots=[],bundles=[],events=[],plans=[],exception
  const keyed=new Map();
  for(const h of history){
   const isoDate=h.date?new Date(h.date).toISOString().slice(0,10):"";
-  for(const key of [JSON.stringify([isoDate,h.sku,h.dcNo]),JSON.stringify([isoDate,h.sku,""])])
-   if(keyed.has(key)||key===JSON.stringify([isoDate,h.sku,h.dcNo]))
-    keyed.set(key,(keyed.get(key)||0)+h.shippedPcs);
+  for(const key of new Set([JSON.stringify([isoDate,h.sku,h.dcNo]),
+   JSON.stringify([isoDate,h.sku,""])]))
+   keyed.set(key,(keyed.get(key)||0)+h.shippedPcs);
  }
  const schedules=plans.map(p=>{
   const actualPcs=keyed.get(JSON.stringify([p.date,p.sku,p.dcNo||""]))||0;
