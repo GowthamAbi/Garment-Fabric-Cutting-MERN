@@ -249,6 +249,24 @@ const ROUTES=Object.freeze({
   "Invoice Print":"Shop Print Workspace",
   "Sales History / Reports":"Shop History Workspace"
  },
+ HR:{
+  "Employee Overview":"HR Overview Workspace",
+  "Attendance & Shift Monitoring":"HR Monitor Workspace",
+  "Leave / Overtime Overview":"HR Leave Workspace",
+  "Payroll Review":"HR Payroll Workspace",
+  "Employee Performance":"HR Performance Workspace",
+  "Recruitment / Compliance":"HR Compliance Workspace",
+  "HR Reports":"HR Reports Workspace",
+  "Employee Master":"HR Employee Workspace",
+  "Employee Onboarding":"HR Onboarding Workspace",
+  "Attendance Entry / Import":"HR Attendance Workspace",
+  "Shift / Leave Entry":"HR Shift Workspace",
+  "Overtime Entry":"HR Overtime Workspace",
+  "Payroll Input Preparation":"HR Payroll Input Workspace",
+  "Employee Documents":"HR Documents Workspace",
+  "Leave / Correction Request":"HR Requests Workspace",
+  "Payslip / History":"HR Payslip Workspace"
+ },
  MARKETING:{
   "Marketing Performance":"Marketing Performance Workspace",
   "Sales & Demand Analysis":"Marketing Analysis Workspace",

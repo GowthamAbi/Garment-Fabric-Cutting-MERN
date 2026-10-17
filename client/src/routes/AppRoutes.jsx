@@ -19,6 +19,7 @@ import DispatchDepartmentPage from "../pages/erp/DispatchDepartmentPage.jsx";
 import WarehouseDepartmentPage from "../pages/erp/WarehouseDepartmentPage.jsx";
 import ShopDepartmentPage from "../pages/erp/ShopDepartmentPage.jsx";
 import MarketingDepartmentPage from "../pages/erp/MarketingDepartmentPage.jsx";
+import HrDepartmentPage from "../pages/erp/HrDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -546,6 +547,38 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <MarketingDepartmentPage mode="calendar" notify={notify} />;
     case "Marketing History Workspace":
       return <MarketingDepartmentPage mode="history" notify={notify} />;
+    case "HR Overview Workspace":
+      return <HrDepartmentPage mode="overview" notify={notify} />;
+    case "HR Monitor Workspace":
+      return <HrDepartmentPage mode="monitor" notify={notify} />;
+    case "HR Leave Workspace":
+      return <HrDepartmentPage mode="leave" notify={notify} />;
+    case "HR Payroll Workspace":
+      return <HrDepartmentPage mode="payroll" notify={notify} />;
+    case "HR Performance Workspace":
+      return <HrDepartmentPage mode="performance" notify={notify} />;
+    case "HR Compliance Workspace":
+      return <HrDepartmentPage mode="compliance" notify={notify} />;
+    case "HR Reports Workspace":
+      return <HrDepartmentPage mode="reports" notify={notify} />;
+    case "HR Employee Workspace":
+      return <HrDepartmentPage mode="employee" notify={notify} />;
+    case "HR Onboarding Workspace":
+      return <HrDepartmentPage mode="onboarding" notify={notify} />;
+    case "HR Attendance Workspace":
+      return <HrDepartmentPage mode="attendance" notify={notify} />;
+    case "HR Shift Workspace":
+      return <HrDepartmentPage mode="shift" notify={notify} />;
+    case "HR Overtime Workspace":
+      return <HrDepartmentPage mode="overtime" notify={notify} />;
+    case "HR Payroll Input Workspace":
+      return <HrDepartmentPage mode="payroll-input" notify={notify} />;
+    case "HR Documents Workspace":
+      return <HrDepartmentPage mode="documents" notify={notify} />;
+    case "HR Requests Workspace":
+      return <HrDepartmentPage mode="requests" notify={notify} />;
+    case "HR Payslip Workspace":
+      return <HrDepartmentPage mode="payslip" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

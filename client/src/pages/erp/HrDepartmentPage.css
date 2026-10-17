@@ -1,0 +1,5 @@
+.hr-dept .hr-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.hr-dept .hr-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.hr-dept .hr-controls label{display:flex;flex-direction:column;gap:6px}
+.hr-dept .hr-help{font-size:.82rem}
+@media print{.hr-dept .hr-entry,.hr-dept .page-actions{display:none!important}}
