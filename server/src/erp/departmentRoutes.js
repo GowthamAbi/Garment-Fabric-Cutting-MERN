@@ -26,6 +26,12 @@ import {packingOverview,validatePackingPlan,validatePackingIssue} from "./packin
 import {dispatchOverview,validateDispatchPlan,validateDispatchException,validateDispatchTransport} from "./dispatchOverviewPolicy.js";
 import {warehouseOverview} from "./warehouseOverviewPolicy.js";
 import {shopOverview,validateShopReturnRequest} from "./shopOverviewPolicy.js";
+import {marketingOverview,validateMarketingLead,validateMarketingActivity,
+ validateMarketingCampaign,validateMarketingExpense} from "./marketingOverviewPolicy.js";
+import MarketingLead from "../models/MarketingLead.js";
+import MarketingActivity from "../models/MarketingActivity.js";
+import MarketingCampaign from "../models/MarketingCampaign.js";
+import MarketingExpense from "../models/MarketingExpense.js";
 import ShopCustomerReturnRequest from "../models/ShopCustomerReturnRequest.js";
 import DispatchSchedule from "../models/DispatchSchedule.js";
 import DispatchExceptionRequest from "../models/DispatchExceptionRequest.js";
@@ -839,6 +845,84 @@ router.post('/return',asyncHandler(async(req,res)=>{requireAccess(req,'SHOP');re
  const net=remaining?sale.totals.net-used('net'):ratio(sale.totals.net,count,sale.quantity),tax=remaining?sale.totals.tax-used('tax'):ratio(sale.totals.tax,count,sale.quantity),cost=remaining?totalCost-prior.reduce((n,e)=>n+e.details.cost,0):ratio(totalCost,count,sale.quantity),gross=net+tax;
  const journals=[{account:sale.paymentMode,debit:0,credit:gross},{account:'SALES',debit:net,credit:0},{account:'OUTPUT_TAX',debit:tax,credit:0},{account:'COGS',debit:0,credit:cost},{account:'INVENTORY',debit:cost,credit:0}];const documentId=await journalMove(scope,session,req,[{sku:lot.sku,location:location(child),delta:count*1000,value:cost}],journals,{net:-net,tax:-tax,gross:-gross},'RETAIL_RETURN');sale.returned+=count;await sale.save({session});return {quantity:count,documentId,details:{saleId:String(sale._id),refund:{net,tax,gross},cost,bundle:child,reason:clean(req.body.reason)}};
  }));}));
+// Marketing CRM planning and activity logs. Event transactions provide
+// idempotent, auditable writes and protect tenant/factory isolation.
+router.get('/marketing/overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'MARKETING',false);
+ const scope=workspaceFilter();
+ const [leads,activities,campaigns,expenses,demands,sales]=await Promise.all([
+  MarketingLead.find(scope).sort({createdAt:-1}).limit(2001).lean(),
+  MarketingActivity.find(scope).sort({createdAt:-1}).limit(5001).lean(),
+  MarketingCampaign.find(scope).sort({startDate:-1}).limit(2001).lean(),
+  MarketingExpense.find(scope).sort({date:-1}).limit(2001).lean(),
+  Demand.find(scope).sort({createdAt:-1}).limit(2001).lean(),
+  Sale.find(scope).sort({createdAt:-1}).limit(10001).lean()
+ ]);
+ if(leads.length>2000||activities.length>5000||campaigns.length>2000||expenses.length>2000||
+    demands.length>2000||sales.length>10000)
+  throw new ApiError(409,'Marketing report capacity reached; filter/archive before totalizing');
+ res.json(marketingOverview(leads,activities,campaigns,expenses,demands,sales));
+}));
+router.post('/marketing/leads',asyncHandler(async(req,res)=>{
+ requireAccess(req,'MARKETING');
+ const values=validateMarketingLead(req.body);await MarketingLead.init();
+ res.status(201).json(await transaction(req,'MARKETING_LEAD',async(scope,session)=>{
+  const [lead]=await MarketingLead.create([{...scope,key:req.body.key,...values,status:'NEW',
+   createdBy:req.user.userId}],{session});
+  return {details:{lead}};
+ }));
+}));
+router.post('/marketing/leads/:id/status',asyncHandler(async(req,res)=>{
+ requireAccess(req,'MARKETING');
+ if(!mongoose.isValidObjectId(req.params.id))throw new ApiError(400,'Valid lead required');
+ const status=String(req.body.status||'').toUpperCase();
+ if(!['NEW','CONTACTED','QUALIFIED','PROPOSAL','WON','LOST'].includes(status))
+  throw new ApiError(400,'Valid sales pipeline status required');
+ res.json(await transaction(req,'MARKETING_LEAD_STATUS',async(scope,session)=>{
+  const lead=await MarketingLead.findOne({...scope,_id:req.params.id}).session(session);
+  if(!lead)throw new ApiError(404,'Lead not found');
+  const previous=lead.status;lead.status=status;await lead.save({session});
+  return {details:{leadId:String(lead._id),companyName:lead.companyName,previous,status}};
+ }));
+}));
+router.post('/marketing/activities',asyncHandler(async(req,res)=>{
+ requireAccess(req,'MARKETING');
+ const values=validateMarketingActivity(req.body);
+ if(!mongoose.isValidObjectId(req.body.leadId))throw new ApiError(400,'Select an existing lead');
+ await MarketingActivity.init();
+ res.status(201).json(await transaction(req,'MARKETING_ACTIVITY',async(scope,session)=>{
+  const lead=await MarketingLead.findOne({...scope,_id:req.body.leadId}).session(session);
+  if(!lead)throw new ApiError(404,'Lead not found in this factory');
+  const [activity]=await MarketingActivity.create([{...scope,key:req.body.key,
+   leadId:String(lead._id),...values,createdBy:req.user.userId}],{session});
+  return {details:{activity}};
+ }));
+}));
+router.post('/marketing/campaigns',asyncHandler(async(req,res)=>{
+ requireAccess(req,'MARKETING');
+ const values=validateMarketingCampaign(req.body);await MarketingCampaign.init();
+ res.status(201).json(await transaction(req,'MARKETING_CAMPAIGN',async(scope,session)=>{
+  const [campaign]=await MarketingCampaign.create([{...scope,key:req.body.key,...values,
+   createdBy:req.user.userId}],{session});
+  return {details:{campaign}};
+ }));
+}));
+router.post('/marketing/expenses',asyncHandler(async(req,res)=>{
+ requireAccess(req,'MARKETING');
+ const values=validateMarketingExpense(req.body);
+ const campaignId=String(req.body.campaignId||'').trim();
+ if(campaignId&&!mongoose.isValidObjectId(campaignId))throw new ApiError(400,'Invalid linked campaign');
+ await MarketingExpense.init();
+ res.status(201).json(await transaction(req,'MARKETING_EXPENSE',async(scope,session)=>{
+  if(campaignId&&!await MarketingCampaign.exists({...scope,_id:campaignId}).session(session))
+   throw new ApiError(404,'Campaign not found');
+  const [expense]=await MarketingExpense.create([{...scope,key:req.body.key,...values,
+   campaignId,createdBy:req.user.userId}],{session});
+  // Management tracking only. No ErpDocument/ErpEntry/journal posting.
+  return {details:{expense}};
+ }));
+}));
+
 router.get('/marketing/analysis',asyncHandler(async(req,res)=>{
  requireAccess(req,'MARKETING',false);const scope=workspaceFilter(),days=Number(req.query.days||30);if(!Number.isInteger(days)||days<1||days>365)fail('Analysis days 1–365');const rows=await Sale.find({...scope,createdAt:{$gte:new Date(Date.UTC(new Date().getUTCFullYear(),new Date().getUTCMonth(),new Date().getUTCDate())-(days-1)*86400000)}}).limit(10001).lean();if(rows.length>10000)fail('Use smaller analysis window');const bundles=await Bundle.find({...scope,qty:{$gt:0}}).limit(10001).lean();if(bundles.length>10000)fail('Stock report exceeds limit');const lots=await Lot.find({...scope,_id:{$in:[...new Set(bundles.map(b=>b.lotId))]}}).lean(),skuBy=new Map(lots.map(l=>[String(l._id),l.sku])),group=new Map();
  for(const s of rows){const k=`${s.shop}|${s.sku}`,g=group.get(k)||{shop:s.shop,sku:s.sku,sold:0,returns:0,stock:0,inTransit:0};g.sold+=s.quantity-s.returned;g.returns+=s.returned;group.set(k,g);}
