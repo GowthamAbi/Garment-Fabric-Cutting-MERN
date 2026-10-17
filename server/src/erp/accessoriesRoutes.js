@@ -7,7 +7,7 @@ import {workspaceFilter,postDocument} from "./service.js";
 import {allowedDepartment,enabledDepartment} from "./departmentPolicy.js";
 import {ErpBalance,ErpDocument,ErpParty,ErpSku} from "./models.js";
 import AccessoriesAdjustmentRequest from "../models/AccessoriesAdjustmentRequest.js";
-import {ACCESSORY_ACTIONS,ACCESSORY_STAGES,accessoryStockRows,accessoriesMovementNote,
+import {ACCESSORY_ACTIONS,ACCESSORY_STAGES,accessoryOrderRequirements,accessoryStockRows,accessoriesMovementNote,
   accessoryStageFromNote,validateAccessoryAdjustment,validateAccessoryMovement,
   validateAccessoryPurchase,validateAccessorySku} from "./accessoriesPolicy.js";
 
@@ -57,6 +57,7 @@ router.get("/overview",asyncHandler(async(req,res)=>{
     ErpParty.find({...scope,kind:{$in:["SUPPLIER","BOTH"]},active:{$ne:false}}).sort({code:1}).limit(250).lean(),
   ]);
   const stock=accessoryStockRows(skus,balances);
+  const requirements=accessoryOrderRequirements(workOrders,issues,stock);
   const pending=orders.map(po=>({
     id:String(po._id),number:po.number,date:po.date,partyCode:po.partyCode,
     cancelled:Boolean(po.cancelledAt),lines:(po.lines||[]).filter(l=>stock.some(s=>s.code===l.sku)).map(line=>{
@@ -77,8 +78,10 @@ router.get("/overview",asyncHandler(async(req,res)=>{
     beforeSewingIssues:history.filter(h=>h.stage==="BEFORE_SEWING"&&h.type==="MATERIAL_ISSUE"&&!h.reversed).length,
     afterSewingIssues:history.filter(h=>h.stage==="AFTER_SEWING"&&h.type==="MATERIAL_ISSUE"&&!h.reversed).length,
     adjustmentRequests:adjustments.filter(a=>a.status==="PENDING").length,
+    pendingDemandQty:Number(requirements.reduce((n,r)=>n+r.pendingQty,0).toFixed(3)),
+    workOrdersWithShortage:new Set(requirements.filter(r=>r.shortageQty>0).map(r=>r.workOrderId)).size,
   };
-  res.json({summary,stock,purchases:pending,
+  res.json({summary,stock,requirements,purchases:pending,
     workOrders:workOrders.map(w=>({id:String(w._id),number:w.number,postedAt:w.date,sku:w.lines?.[0]?.sku||""})),
     suppliers:suppliers.map(s=>({code:s.code,name:s.name})),
     history,adjustments:adjustments.map(a=>({
