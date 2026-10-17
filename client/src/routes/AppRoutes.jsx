@@ -12,6 +12,7 @@ import AccessoriesDepartmentPage from "../pages/erp/AccessoriesDepartmentPage.js
 import ElasticDepartmentPage from "../pages/erp/ElasticDepartmentPage.jsx";
 import StitchingDepartmentPage from "../pages/erp/StitchingDepartmentPage.jsx";
 import InwardDepartmentPage from "../pages/erp/InwardDepartmentPage.jsx";
+import CheckingDepartmentPage from "../pages/erp/CheckingDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -319,6 +320,38 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <InwardDepartmentPage mode="history" notify={notify} />;
     case "Inward Print Workspace":
       return <InwardDepartmentPage mode="print" notify={notify} />;
+    case "Checking Plans Workspace":
+      return <CheckingDepartmentPage mode="plans" notify={notify} />;
+    case "Checking Pending Workspace":
+      return <CheckingDepartmentPage mode="pending" notify={notify} />;
+    case "Checking Results Workspace":
+      return <CheckingDepartmentPage mode="results" notify={notify} />;
+    case "Checking Defects Workspace":
+      return <CheckingDepartmentPage mode="defects" notify={notify} />;
+    case "Checking Followup Workspace":
+      return <CheckingDepartmentPage mode="followup" notify={notify} />;
+    case "Checking Holds Workspace":
+      return <CheckingDepartmentPage mode="holds" notify={notify} />;
+    case "Checking Reports Workspace":
+      return <CheckingDepartmentPage mode="reports" notify={notify} />;
+    case "Checking Bundles Workspace":
+      return <CheckingDepartmentPage mode="bundles" notify={notify} />;
+    case "Checking Entry Workspace":
+      return <CheckingDepartmentPage mode="entry" notify={notify} />;
+    case "Checking Split Workspace":
+      return <CheckingDepartmentPage mode="split" notify={notify} />;
+    case "Checking Classification Workspace":
+      return <CheckingDepartmentPage mode="classify" notify={notify} />;
+    case "Checking Oil Workspace":
+      return <CheckingDepartmentPage mode="oil" notify={notify} />;
+    case "Checking Recheck Workspace":
+      return <CheckingDepartmentPage mode="recheck" notify={notify} />;
+    case "Checking Hold Workspace":
+      return <CheckingDepartmentPage mode="hold" notify={notify} />;
+    case "Checking Scan Workspace":
+      return <CheckingDepartmentPage mode="scan" notify={notify} />;
+    case "Checking History Workspace":
+      return <CheckingDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

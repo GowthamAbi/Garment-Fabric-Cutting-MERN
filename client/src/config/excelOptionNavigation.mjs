@@ -138,6 +138,24 @@ const ROUTES=Object.freeze({
   "Inward History":"Inward History Workspace",
   "Receipt Print & Reports":"Inward Print Workspace"
  },
+ CHECKING:{
+  "Quality Checking Plans":"Checking Plans Workspace",
+  "Pending Checking Qty":"Checking Pending Workspace",
+  "Pass / Reject / Rework":"Checking Results Workspace",
+  "Defect-Wise Analysis":"Checking Defects Workspace",
+  "Rework & Oil Removal Follow-Up":"Checking Followup Workspace",
+  "Quality Hold Monitoring":"Checking Holds Workspace",
+  "QC Reports":"Checking Reports Workspace",
+  "Bundles for Checking":"Checking Bundles Workspace",
+  "Checking Entry":"Checking Entry Workspace",
+  "Pass / Rework / Reject Entry":"Checking Split Workspace",
+  "Defect Classification":"Checking Classification Workspace",
+  "Oil Removal Route":"Checking Oil Workspace",
+  "Rechecking Entry":"Checking Recheck Workspace",
+  "Quality Hold Request":"Checking Hold Workspace",
+  "Bundle QR":"Checking Scan Workspace",
+  "Checking History":"Checking History Workspace"
+ },
  WAREHOUSE:{
   "Warehouse Stock Overview":"Warehouse Management",
   "Warehouse Stock":"Warehouse Management",
