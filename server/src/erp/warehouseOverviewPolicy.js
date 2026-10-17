@@ -10,6 +10,8 @@ export function warehouseOverview(lots=[],bundles=[],events=[],masters=[],except
  const locations=masters.filter(m=>m.kind==="WAREHOUSE"&&m.active!==false)
    .map(m=>({key:m.key,name:m.name||m.key,address:m.address||""}));
  const locSet=new Set(locations.map(x=>x.key));
+ const shops=masters.filter(m=>m.kind==="SHOP"&&m.active!==false)
+   .map(m=>({key:m.key,name:m.name||m.key}));
  const bins=masters.filter(m=>m.kind==="BIN"&&m.active!==false&&locSet.has(m.warehouse))
    .map(m=>({key:m.key,warehouse:m.warehouse,rack:m.rack||"",bin:m.bin||"",name:m.name||m.key}));
  const rows=[],aggregates=new Map(),summary={
@@ -86,7 +88,7 @@ export function warehouseOverview(lots=[],bundles=[],events=[],masters=[],except
     kind:x.kind,status:x.status,reason:x.reason,requestedBy:x.requestedBy,
     createdAt:x.createdAt||null,documentId:x.documentId||""}));
  summary.openCountRequests=requests.filter(x=>x.status==="PENDING").length;
- return {summary,locations,bins,bundles:rows,stocks:[...aggregates.values()],
+ return {summary,locations,shops,bins,bundles:rows,stocks:[...aggregates.values()],
   inbound:shipments,history,requests,
   notes:{inboundReceipt:"Warehouse TRANSFER only",shopReturns:"SHOP origin transit",
    adjustment:"Separate independent admin decision",aging:"Bundle creation age only"}};

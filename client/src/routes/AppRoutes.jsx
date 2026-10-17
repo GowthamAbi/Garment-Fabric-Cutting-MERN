@@ -16,6 +16,7 @@ import CheckingDepartmentPage from "../pages/erp/CheckingDepartmentPage.jsx";
 import IroningDepartmentPage from "../pages/erp/IroningDepartmentPage.jsx";
 import PackingDepartmentPage from "../pages/erp/PackingDepartmentPage.jsx";
 import DispatchDepartmentPage from "../pages/erp/DispatchDepartmentPage.jsx";
+import WarehouseDepartmentPage from "../pages/erp/WarehouseDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -445,6 +446,42 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <DispatchDepartmentPage mode="pending" notify={notify} />;
     case "Dispatch History Workspace":
       return <DispatchDepartmentPage mode="history" notify={notify} />;
+    case "Warehouse Overview Workspace":
+      return <WarehouseDepartmentPage mode="overview" notify={notify} />;
+    case "Warehouse Inbound Workspace":
+      return <WarehouseDepartmentPage mode="inbound" notify={notify} />;
+    case "Warehouse Pending Receipts Workspace":
+      return <WarehouseDepartmentPage mode="receipts" notify={notify} />;
+    case "Warehouse Transfers Workspace":
+      return <WarehouseDepartmentPage mode="transfers" notify={notify} />;
+    case "Warehouse Aging Workspace":
+      return <WarehouseDepartmentPage mode="aging" notify={notify} />;
+    case "Warehouse Variance Workspace":
+      return <WarehouseDepartmentPage mode="variance" notify={notify} />;
+    case "Warehouse Reports Workspace":
+      return <WarehouseDepartmentPage mode="reports" notify={notify} />;
+    case "Warehouse Location Master Workspace":
+      return <WarehouseDepartmentPage mode="master" notify={notify} />;
+    case "Warehouse Receipt Entry Workspace":
+      return <WarehouseDepartmentPage mode="receipt" notify={notify} />;
+    case "Warehouse Putaway Workspace":
+      return <WarehouseDepartmentPage mode="putaway" notify={notify} />;
+    case "Warehouse Stock Workspace":
+      return <WarehouseDepartmentPage mode="stock" notify={notify} />;
+    case "Warehouse Outward Workspace":
+      return <WarehouseDepartmentPage mode="outward" notify={notify} />;
+    case "Warehouse Shop Transfer Workspace":
+      return <WarehouseDepartmentPage mode="shop" notify={notify} />;
+    case "Warehouse Shop Return Workspace":
+      return <WarehouseDepartmentPage mode="returns" notify={notify} />;
+    case "Warehouse Count Workspace":
+      return <WarehouseDepartmentPage mode="count" notify={notify} />;
+    case "Warehouse Adjustment Workspace":
+      return <WarehouseDepartmentPage mode="adjustment" notify={notify} />;
+    case "Warehouse Ledger Workspace":
+      return <WarehouseDepartmentPage mode="ledger" notify={notify} />;
+    case "Warehouse History Workspace":
+      return <WarehouseDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

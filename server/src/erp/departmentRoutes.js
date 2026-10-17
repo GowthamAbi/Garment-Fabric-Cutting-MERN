@@ -60,7 +60,17 @@ async function transaction(req,kind,fn){
  });return result;}finally{await session.endSession();}
 }
 async function sequence(scope,session,prefix){const s=await ErpSequence.findOneAndUpdate({...scope,key:`DPT:${prefix}`},{$inc:{value:1}},{upsert:true,new:true,session});return `${prefix}-${new Date().getUTCFullYear()}-${String(s.value).padStart(7,'0')}`;}
-function bundleAccess(req,b){if(b.stage.startsWith("WAREHOUSE:")||b.stage==="TRANSIT_WAREHOUSE"){if(!locationAllowed(req.user,"WAREHOUSE",b.destination))throw new ApiError(403,"Assigned warehouse required");}if(b.stage.startsWith("SHOP:")||b.stage.startsWith("TRANSIT_SHOP:"))shopAccess(req,b.destination);}
+function bundleAccess(req,b){
+ if(b.stage.startsWith("WAREHOUSE:")||b.stage==="TRANSIT_WAREHOUSE"){
+  if(!locationAllowed(req.user,"WAREHOUSE",b.destination))throw new ApiError(403,"Assigned warehouse required");
+ }
+ if(b.stage.startsWith("SHOP:"))shopAccess(req,b.destination);
+ // Warehouse initiates a shop-bound transit, shop staff later receives it.
+ // Do not let unrelated departments access transit shop bundles.
+ if(b.stage.startsWith("TRANSIT_SHOP:")&&
+   !allowedDepartment(req.user,"WAREHOUSE",false)&&!allowedShop(req.user,b.destination))
+  throw new ApiError(403,"Warehouse or assigned shop access required");
+}
 async function getBundle(id,scope,session,req){if(!mongoose.isValidObjectId(id))fail('Invalid bundle');const b=await Bundle.findOne({...scope,_id:id}).session(session);if(!b||b.qty<=0)fail('Bundle is empty or unavailable');bundleAccess(req,b);return b;}
 async function newBundle(scope,session,lot,qty,stage,parent='',destination='',cycle=0){const [b]=await Bundle.create([{...scope,code:await sequence(scope,session,'BND'),lotId:String(lot._id),parentId:parent,qty,stage,destination,cycle}],{session});return b;}
 async function journalMove(scope,session,req,moves,journals=[],totals={net:0,tax:0,gross:0},type='DEPARTMENT_MOVEMENT'){
@@ -256,7 +266,7 @@ router.get('/warehouse-overview',asyncHandler(async(req,res)=>{
   Event.find({...scope,kind:{$in:['TRANSFER','RELOCATE','EXTERNAL_INWARD','EXTERNAL_OUTWARD',
    'STOCK_EXCEPTION','STOCK_EXCEPTION_DECISION']},reversedBy:{$exists:false}})
    .sort({createdAt:-1}).limit(10001).lean(),
-  Master.find({...scope,kind:{$in:['WAREHOUSE','BIN']}}).limit(2001).lean(),
+  Master.find({...scope,kind:{$in:['WAREHOUSE','BIN','SHOP']}}).limit(2001).lean(),
   Exception.find(scope).sort({createdAt:-1}).limit(2001).lean(),
   ErpSku.find(scope).limit(4001).lean()
  ]);
@@ -275,7 +285,7 @@ router.get('/warehouse-overview',asyncHandler(async(req,res)=>{
    e.bundleId&&bundles.some(b=>String(b._id)===e.bundleId&&allowed.has(b.destination));
  });
  res.json(warehouseOverview(lots,bundles.filter(b=>allowed.has(b.destination)),filteredEvents,
-   masters.filter(m=>m.kind==='WAREHOUSE'?allowed.has(m.key):allowed.has(m.warehouse)),
+   masters.filter(m=>m.kind==='SHOP'||(m.kind==='WAREHOUSE'?allowed.has(m.key):allowed.has(m.warehouse))),
    requests.filter(e=>allowed.has(e.destination)),skus));
 }));
 

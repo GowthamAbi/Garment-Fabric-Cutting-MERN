@@ -1,0 +1,12 @@
+import {request} from "./axiosInstance.js";
+const base="/erp/departments";
+const post=(path,body)=>request(base+path,{method:"POST",body:JSON.stringify(body)});
+export const getWarehouseOverview=()=>request(base+"/warehouse-overview");
+export const getWarehouseBoundaries=()=>request(base+"/boundaries/WAREHOUSE");
+export const receiveWarehouseBundle=body=>post("/transfer",body);
+export const transferWarehouseStock=body=>post("/transfer",body);
+export const createWarehouseMaster=body=>post("/masters",{...body,kind:"WAREHOUSE"});
+export const createWarehouseBin=body=>post("/warehouse-bins",body);
+export const relocateWarehouseStock=body=>post("/relocate",body);
+export const requestWarehouseCount=body=>post("/stock-exceptions",body);
+export const externalWarehouseOutward=body=>post("/external-outward",{...body,department:"WAREHOUSE"});
