@@ -149,7 +149,7 @@ export default function ElasticDepartmentPage({mode="overview",notify}){
    {showHistory&&<div className="classic-card"><h3>Elastic Issue / Return History</h3>
      <Grid head={["Document No","Action","Plan","Reference","SKU","Colour / Size","MTR","Date"]} rows={historyTable}/>
    </div>}
-   {["progress","reports","target"].includes(mode)&&<div className="classic-card">
+   {["progress","reports","target","cut"].includes(mode)&&<div className="classic-card">
      <h3>Original Elastic Machine Tracking & Timeline</h3>
      <p>Machine Gantt, running/stoppage hours, breakdown status and clickable one-week reports remain available.
        Machine PCS/hours are legacy production tracking; Elastic MTR stock is tracked separately by posted ERP documents.</p>
