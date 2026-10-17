@@ -17,6 +17,7 @@ import IroningDepartmentPage from "../pages/erp/IroningDepartmentPage.jsx";
 import PackingDepartmentPage from "../pages/erp/PackingDepartmentPage.jsx";
 import DispatchDepartmentPage from "../pages/erp/DispatchDepartmentPage.jsx";
 import WarehouseDepartmentPage from "../pages/erp/WarehouseDepartmentPage.jsx";
+import ShopDepartmentPage from "../pages/erp/ShopDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -482,6 +483,38 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <WarehouseDepartmentPage mode="ledger" notify={notify} />;
     case "Warehouse History Workspace":
       return <WarehouseDepartmentPage mode="history" notify={notify} />;
+    case "Shop Sales Workspace":
+      return <ShopDepartmentPage mode="sales" notify={notify} />;
+    case "Shop Margin Workspace":
+      return <ShopDepartmentPage mode="margin" notify={notify} />;
+    case "Shop Stock Workspace":
+      return <ShopDepartmentPage mode="stock" notify={notify} />;
+    case "Shop Transfers Status Workspace":
+      return <ShopDepartmentPage mode="receipts" notify={notify} />;
+    case "Shop Returns Workspace":
+      return <ShopDepartmentPage mode="returns" notify={notify} />;
+    case "Shop Issues Workspace":
+      return <ShopDepartmentPage mode="issues" notify={notify} />;
+    case "Shop Reports Workspace":
+      return <ShopDepartmentPage mode="reports" notify={notify} />;
+    case "Shop POS Workspace":
+      return <ShopDepartmentPage mode="pos" notify={notify} />;
+    case "Shop Invoice Workspace":
+      return <ShopDepartmentPage mode="invoice" notify={notify} />;
+    case "Shop Payment Workspace":
+      return <ShopDepartmentPage mode="payment" notify={notify} />;
+    case "Shop Receipt Workspace":
+      return <ShopDepartmentPage mode="receipt" notify={notify} />;
+    case "Shop Transfer Workspace":
+      return <ShopDepartmentPage mode="transfer" notify={notify} />;
+    case "Shop Return Request Workspace":
+      return <ShopDepartmentPage mode="return" notify={notify} />;
+    case "Shop Count Workspace":
+      return <ShopDepartmentPage mode="count" notify={notify} />;
+    case "Shop Print Workspace":
+      return <ShopDepartmentPage mode="print" notify={notify} />;
+    case "Shop History Workspace":
+      return <ShopDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

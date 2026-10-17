@@ -299,7 +299,10 @@ router.post('/shop-return-requests',asyncHandler(async(req,res)=>{
   .limit(501).lean();
  if(pending.length>500)throw new ApiError(409,'Too many open requests for invoice');
  const values=validateShopReturnRequest(req.body,sale,pending);
- const hash=requestHash({saleId:String(sale._id),...values});
+ // Hash the user's immutable request, not pending request totals that can
+ // change between network retries of the same idempotency key.
+ const hash=requestHash({saleId:String(sale._id),quantity:values.quantity,
+  kind:values.kind,reason:values.reason});
  await ShopCustomerReturnRequest.init();
  let old=await ShopCustomerReturnRequest.findOne({...scope,key}).lean();
  if(old){
