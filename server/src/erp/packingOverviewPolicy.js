@@ -75,8 +75,11 @@ export function packingOverview(lots=[],bundles=[],events=[],masters=[],plans=[]
  summary.lotCount=lotsMap.size;
  const history=[],daily=new Map(),materialConsumption=new Map();
  for(const e of events){
-  if(e.kind!=="PACK"||e.department!=="PACKING"||e.reversedBy||!byLot.has(String(e.lotId)))continue;
-  const l=byLot.get(String(e.lotId)),q=num(e.quantity),date=iso(e.createdAt instanceof Date?e.createdAt:new Date(e.createdAt||""));
+  // Legacy POST /pack returns details.carton.lotId rather than event.lotId.
+  const eventLotId=e.lotId||e.details?.carton?.lotId;
+  if(e.kind!=="PACK"||e.department!=="PACKING"||e.reversedBy||
+     !byLot.has(String(eventLotId)))continue;
+  const l=byLot.get(String(eventLotId)),q=num(e.quantity),date=iso(e.createdAt instanceof Date?e.createdAt:new Date(e.createdAt||""));
   summary.packedEventPcs+=q;
   const row={id:String(e._id),date,createdAt:e.createdAt||null,dcNo:l.dcNo||"",lotNo:l.code||"",
    sku:l.sku||"",section:l.section||"",quantity:q,cartonNo:e.details?.carton?.code||"",
