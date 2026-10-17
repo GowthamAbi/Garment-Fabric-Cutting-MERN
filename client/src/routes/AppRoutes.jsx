@@ -11,6 +11,7 @@ import CompanyPurchaseOrders from "../pages/erp/CompanyPurchaseOrders.jsx";
 import AccessoriesDepartmentPage from "../pages/erp/AccessoriesDepartmentPage.jsx";
 import ElasticDepartmentPage from "../pages/erp/ElasticDepartmentPage.jsx";
 import StitchingDepartmentPage from "../pages/erp/StitchingDepartmentPage.jsx";
+import InwardDepartmentPage from "../pages/erp/InwardDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -290,6 +291,34 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <StitchingDepartmentPage mode="handover" notify={notify} />;
     case "Stitching Trace Workspace":
       return <StitchingDepartmentPage mode="trace" notify={notify} />;
+    case "Inward Expected Workspace":
+      return <InwardDepartmentPage mode="expected" notify={notify} />;
+    case "Inward Vendor Workspace":
+      return <InwardDepartmentPage mode="vendor" notify={notify} />;
+    case "Inward Progress Workspace":
+      return <InwardDepartmentPage mode="progress" notify={notify} />;
+    case "Inward Balance Workspace":
+      return <InwardDepartmentPage mode="balance" notify={notify} />;
+    case "Inward Variance Workspace":
+      return <InwardDepartmentPage mode="variance" notify={notify} />;
+    case "Inward Rework Workspace":
+      return <InwardDepartmentPage mode="rework" notify={notify} />;
+    case "Inward Reports Workspace":
+      return <InwardDepartmentPage mode="reports" notify={notify} />;
+    case "Inward Entry Workspace":
+      return <InwardDepartmentPage mode="entry" notify={notify} />;
+    case "Inward Partial Workspace":
+      return <InwardDepartmentPage mode="partial" notify={notify} />;
+    case "Inward Scan Workspace":
+      return <InwardDepartmentPage mode="scan" notify={notify} />;
+    case "Inward Request Workspace":
+      return <InwardDepartmentPage mode="request" notify={notify} />;
+    case "Inward Pending Workspace":
+      return <InwardDepartmentPage mode="pending" notify={notify} />;
+    case "Inward History Workspace":
+      return <InwardDepartmentPage mode="history" notify={notify} />;
+    case "Inward Print Workspace":
+      return <InwardDepartmentPage mode="print" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":
