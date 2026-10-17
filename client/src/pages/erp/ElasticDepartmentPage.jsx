@@ -12,7 +12,7 @@ const titles={
  correction:"Wastage / Correction Request",history:"Elastic History",
 };
 const blank={code:"",name:"",minimumQty:"0",sku:"",partyCode:"",purchaseOrderId:"",
- fabricPlanNo:"",planNo:"",reference:"",quantity:"",rate:"0",countedMtr:"0",reason:""};
+ fabricPlanNo:"",planNo:"",lineKey:"",reference:"",quantity:"",rate:"0",countedMtr:"0",reason:""};
 const format=x=>Number(x||0).toLocaleString("en-IN",{maximumFractionDigits:3});
 const empty={summary:{},stock:[],plans:[],purchases:[],history:[],corrections:[],suppliers:[]};
 const fields={
@@ -42,7 +42,7 @@ export default function ElasticDepartmentPage({mode="overview",notify}){
  const stockTable=stock.map(r=>[r.code,r.name,r.unit,format(r.available),format(r.minimum),format(r.shortage),r.lowStock?"LOW":"OK"]);
  const planTable=(data.plans||[]).map(p=>[p.planNo,p.fabricPlanNo,p.dcNo,p.sku,format(p.targetMtr),format(p.cutMtr),format(p.pendingMtr),p.completionPercent+"%"]);
  const purchaseTable=(data.purchases||[]).flatMap(p=>p.lines.map(l=>[p.number,p.partyCode,l.sku,format(l.orderedMtr),format(l.receivedMtr),format(l.pendingMtr)]));
- const historyTable=(data.history||[]).map(h=>[h.number,h.kind,h.planNo,h.reference,h.sku,format(h.quantity),h.date?new Date(h.date).toLocaleDateString():""]);
+ const historyTable=(data.history||[]).map(h=>[h.number,h.kind,h.planNo,h.reference,h.sku,(h.colour||"")+" / "+(h.size||""),format(h.quantity),h.date?new Date(h.date).toLocaleDateString():""]);
  const correctionTable=(data.corrections||[]).map(c=>[c.reference,c.sku,format(c.expectedMtr),format(c.countedMtr),format(c.varianceMtr),c.reason,c.status]);
  const showStock=["overview","availability","stock","issues","waste","reports"].includes(mode);
  const showPlans=["overview","plans","target","progress","issues","reports"].includes(mode);
@@ -71,8 +71,9 @@ export default function ElasticDepartmentPage({mode="overview",notify}){
      if(mode==="master")result=await elasticApi.material(form);
      if(mode==="inward")result=await (purchaseAction==="inward"?elasticApi.inward(form):elasticApi.purchase(form));
      if(mode==="plan")result=await elasticApi.plan(form);
-     if(mode==="cut")result=await elasticApi.cut(form);
-     if(mode==="return")result=await (returnAction==="return"?elasticApi.return(form):elasticApi.cut(form));
+     if(mode==="cut")result=await elasticApi.cut({...form,colour:form.lineKey.split("::")[0],size:form.lineKey.split("::")[1]});
+     if(mode==="return"){const body={...form,colour:form.lineKey.split("::")[0],size:form.lineKey.split("::")[1]};
+       result=await (returnAction==="return"?elasticApi.return(body):elasticApi.cut(body));}
      if(mode==="correction")result=await elasticApi.correction(form);
      notify?.("Elastic saved: "+(result?.planNo||result?.number||result?.reference||result?.code||"record"));
      setForm(blank);await load();
@@ -118,6 +119,11 @@ export default function ElasticDepartmentPage({mode="overview",notify}){
           :skuOptions)}
        {mode==="plan"&&fields.plan.map(([label,key])=>input(label,key,"text",key==="planNo"))}
        {(mode==="cut"||mode==="return")&&select("Elastic Plan No","planNo",mode==="return"&&returnAction==="return"?returnOptions:planOptions)}
+       {(mode==="cut"||mode==="return")&&select("Colour / Size","lineKey",
+         ((data.plans||[]).find(x=>x.planNo===form.planNo)?.sizeProgress||[])
+           .filter(x=>mode==="return"&&returnAction==="return"?x.cutMtr>0:x.pendingMtr>0)
+           .map(x=>({value:x.colour+"::"+x.size,
+             label:x.colour+" / "+x.size+" · "+format(mode==="return"&&returnAction==="return"?x.cutMtr:x.pendingMtr)+" MTR"})))}
        {(mode==="inward"||mode==="cut"||mode==="return")&&input("Quantity (MTR)","quantity","number")}
        {mode==="inward"&&purchaseAction==="purchase"&&input("Rate (₹ / MTR)","rate","number")}
        {(mode==="cut"||mode==="return")&&input("Document Reference","reference")}
@@ -140,7 +146,7 @@ export default function ElasticDepartmentPage({mode="overview",notify}){
      <Grid head={["PO","Supplier","SKU","Ordered MTR","Received MTR","Pending MTR"]} rows={purchaseTable}/>
    </div>}
    {showHistory&&<div className="classic-card"><h3>Elastic Issue / Return History</h3>
-     <Grid head={["Document No","Action","Plan","Reference","SKU","MTR","Date"]} rows={historyTable}/>
+     <Grid head={["Document No","Action","Plan","Reference","SKU","Colour / Size","MTR","Date"]} rows={historyTable}/>
    </div>}
    {showCorrections&&<div className="classic-card"><h3>Wastage / Correction Requests (Pending Approval)</h3>
      <Grid head={["Reference","SKU","Ledger MTR","Physical MTR","Variance MTR","Reason","Status"]} rows={correctionTable}/>
