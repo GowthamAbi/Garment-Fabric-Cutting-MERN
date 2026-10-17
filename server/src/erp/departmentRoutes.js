@@ -223,7 +223,7 @@ router.get('/stitching-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'STITCHING',false);
  const scope=workspaceFilter();
  const [lots,bundles,masters,targets,events]=await Promise.all([
-  Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1001).lean(),
+  Lot.find({...scope,operations:{$exists:true,$ne:[]},status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1001).lean(),
   Bundle.find({...scope,qty:{$gt:0}}).limit(10001).lean(),
   Master.find({...scope,kind:'STITCHING',active:{$ne:false}}).limit(2001).lean(),
   Target.find(scope).sort({date:-1}).limit(2001).lean(),
