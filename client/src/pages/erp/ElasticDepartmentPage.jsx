@@ -3,6 +3,7 @@ import {RefreshCw,Save,Download,Printer} from "lucide-react";
 import {exportCsv} from "../../api.js";
 import {useAuth} from "../../context/AuthContext.jsx";
 import {elasticApi} from "../../api/elasticApi.js";
+import MachineStatusPage from "../production/MachineStatusPage.jsx";
 const titles={
  overview:"Elastic Dashboard",plans:"Elastic Plan Overview",availability:"Material Availability",
  target:"Target vs Actual",progress:"Elastic Cutting Progress",issues:"Pending Issues / Shortage",
@@ -147,6 +148,12 @@ export default function ElasticDepartmentPage({mode="overview",notify}){
    </div>}
    {showHistory&&<div className="classic-card"><h3>Elastic Issue / Return History</h3>
      <Grid head={["Document No","Action","Plan","Reference","SKU","Colour / Size","MTR","Date"]} rows={historyTable}/>
+   </div>}
+   {["progress","reports","target"].includes(mode)&&<div className="classic-card">
+     <h3>Original Elastic Machine Tracking & Timeline</h3>
+     <p>Machine Gantt, running/stoppage hours, breakdown status and clickable one-week reports remain available.
+       Machine PCS/hours are legacy production tracking; Elastic MTR stock is tracked separately by posted ERP documents.</p>
+     <MachineStatusPage elasticOnly />
    </div>}
    {showCorrections&&<div className="classic-card"><h3>Wastage / Correction Requests (Pending Approval)</h3>
      <Grid head={["Reference","SKU","Ledger MTR","Physical MTR","Variance MTR","Reason","Status"]} rows={correctionTable}/>
