@@ -22,6 +22,9 @@ import {stitchingOverview} from "./stitchingOverviewPolicy.js";
 import {inwardOverview,validateInwardDiscrepancy} from "./inwardOverviewPolicy.js";
 import {checkingOverview,validateQualityHold} from "./checkingOverviewPolicy.js";
 import {ironingOverview,validateIroningTarget,validateIroningIssue} from "./ironingOverviewPolicy.js";
+import {packingOverview,validatePackingPlan,validatePackingIssue} from "./packingOverviewPolicy.js";
+import PackingProductionPlan from "../models/PackingProductionPlan.js";
+import PackingRepackRequest from "../models/PackingRepackRequest.js";
 import IroningTarget from "../models/IroningTarget.js";
 import IroningIssueRequest from "../models/IroningIssueRequest.js";
 import CheckingQualityHoldRequest from "../models/CheckingQualityHoldRequest.js";
@@ -233,6 +236,88 @@ router.post('/targets',asyncHandler(async(req,res)=>{
 // This report and non-posting hold request are strictly tenant/factory scoped.
 // Ironing target and issue records are planning/review only. Production
 // receipt/completion MUST use the existing transactional /advance endpoint.
+// Packing overview never posts inventory; only /pack allocates material in
+// the existing MongoDB transaction and generates an actual PACKED bundle.
+router.get('/packing-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'PACKING',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,events,masters,plans,issues,balances,skus]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1501).lean(),
+  Bundle.find({...scope,qty:{$gt:0},stage:{$in:['IRONED','PACKED']}}).limit(10001).lean(),
+  Event.find({...scope,department:'PACKING',kind:'PACK',
+   reversedBy:{$exists:false}}).sort({createdAt:-1}).limit(10001).lean(),
+  Master.find({...scope,kind:'PACKING'}).limit(2001).lean(),
+  PackingProductionPlan.find(scope).sort({date:-1}).limit(2001).lean(),
+  PackingRepackRequest.find(scope).sort({createdAt:-1}).limit(2001).lean(),
+  ErpBalance.find({...scope,location:'ACCESSORIES'}).limit(2001).lean(),
+  ErpSku.find(scope).limit(4001).lean()
+ ]);
+ if(lots.length>1500||bundles.length>10000||events.length>10000||masters.length>2000||
+  plans.length>2000||issues.length>2000||balances.length>2000||skus.length>4000)
+  throw new ApiError(409,'Packing report limit exceeded; archive/filter before reporting');
+ res.json(packingOverview(lots,bundles,events,masters,plans,issues,balances,skus));
+}));
+router.post('/packing-plans',asyncHandler(async(req,res)=>{
+ requireAccess(req,'PACKING');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Valid stable plan key required');
+ const values=validatePackingPlan(req.body);
+ if(!await ErpSku.exists({...scope,code:values.sku,kind:'FINISHED',active:{$ne:false}}))
+  throw new ApiError(400,'Existing active finished SKU required');
+ const requestHashValue=requestHash(values);
+ await PackingProductionPlan.init();
+ let old=await PackingProductionPlan.findOne({...scope,key}).lean();
+ if(old){
+  if(old.requestHash!==requestHashValue)throw new ApiError(409,'Plan key reused with different content');
+  if(old.createdBy!==req.user.userId&&!['company_owner','company_admin','admin'].includes(req.user.role))
+   throw new ApiError(403,'Plan belongs to another user');
+  return res.json(old);
+ }
+ try{
+  const row=await PackingProductionPlan.create({...scope,key,requestHash:requestHashValue,...values,
+   createdBy:req.user.userId});
+  return res.status(201).json(row);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  old=await PackingProductionPlan.findOne({...scope,key}).lean();
+  if(old?.requestHash===requestHashValue&&old.createdBy===req.user.userId)return res.json(old);
+  throw new ApiError(409,'Packing plan already exists for date/SKU/DC');
+ }
+}));
+router.post('/packing-repack-requests',asyncHandler(async(req,res)=>{
+ requireAccess(req,'PACKING');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))throw new ApiError(400,'Valid stable issue key required');
+ if(!mongoose.isValidObjectId(req.body.bundleId))throw new ApiError(400,'Valid packed carton bundle required');
+ const bundle=await Bundle.findOne({...scope,_id:req.body.bundleId,
+   stage:'PACKED',qty:{$gt:0}}).lean();
+ if(!bundle)throw new ApiError(404,'Active packed carton not found');
+ const lot=await Lot.findOne({...scope,_id:bundle.lotId,status:{$ne:'CANCELLED'}}).lean();
+ if(!lot)throw new ApiError(404,'Packing lot not found');
+ const values=validatePackingIssue(req.body,bundle),
+  hash=requestHash({bundleId:String(bundle._id),...values});
+ await PackingRepackRequest.init();
+ let old=await PackingRepackRequest.findOne({...scope,key}).lean();
+ if(old){
+  if(old.requestHash!==hash)throw new ApiError(409,'Issue key reused with different content');
+  if(old.requestedBy!==req.user.userId&&!['company_owner','company_admin','admin'].includes(req.user.role))
+   throw new ApiError(403,'Issue belongs to another user');
+  return res.json(old);
+ }
+ try{
+  const row=await PackingRepackRequest.create({...scope,key,requestHash:hash,
+   lotId:String(lot._id),lotNo:lot.code,dcNo:lot.dcNo,
+   bundleId:String(bundle._id),cartonNo:bundle.code,
+   ...values,requestedBy:req.user.userId});
+  return res.status(201).json(row);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  old=await PackingRepackRequest.findOne({...scope,key}).lean();
+  if(old?.requestHash===hash&&old.requestedBy===req.user.userId)return res.json(old);
+  throw new ApiError(409,'Duplicate issue request key');
+ }
+}));
+
 router.get('/ironing-overview',asyncHandler(async(req,res)=>{
  requireAccess(req,'IRONING',false);
  const scope=workspaceFilter();
