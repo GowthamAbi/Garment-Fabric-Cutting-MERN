@@ -40,6 +40,7 @@ import {
 
 import {listCuttingMachines,saveCuttingMachine,cuttingTargetActual} from "../controllers/cuttingDepartmentController.js";
 import {requireLegacyFabricFactory} from "../controllers/fabricPlanMonitorController.js";
+import {elasticMachineSummary} from "../controllers/elasticMachineSummaryController.js";
 
 const router = Router();
 const productionAccess = allowDepartment(
@@ -82,6 +83,11 @@ router.get("/cutting-machine-status", cuttingRead, asyncHandler(requireLegacyFab
 router.post("/cutting-machine-plans", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(createAssignment));
 router.patch("/cutting-machine-plans/:id/action", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(assignmentAction));
 router.patch("/cutting-machine-plans/:id/transfer", cuttingWrite, asyncHandler(requireLegacyFabricFactory), asyncHandler(transferAssignment));
+
+// Legacy Elastic timeline; read-only and isolated by both department and
+// single-factory guard until old machine/job records have factoryId migration.
+const elasticRead = allowDepartment("ELASTIC", "saas_super_admin", "company_owner", "company_admin", "admin", "elastic_admin", "elastic_entry", "management", "view_only");
+router.get("/elastic-machine-summary", elasticRead, asyncHandler(requireLegacyFabricFactory), asyncHandler(elasticMachineSummary));
 
 router.use(productionAccess);
 router.get("/summary", asyncHandler(getProductionSummary));
