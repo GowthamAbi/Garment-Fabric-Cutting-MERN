@@ -34,3 +34,20 @@
 
 ## Release decision
 **NOT PRODUCTION READY.** Existing CI, Atlas CRUD smoke and staging startup passed. Transactional Fabric business workflows, purchase/integration gaps and real-role staging acceptance remain unresolved. No changes to production or existing customer data.
+
+
+## 17 October follow-up: real replica-set Fabric workflow verification
+
+A new **isolated MongoDB replica-set** GitHub Actions job now executes `server/tests/fabricMongoWorkflow.test.js` against a temporary Docker MongoDB 7 database, and deletes the database/container at the end.
+
+- Source commit: `f05283a452b9e6559eeefd640c33dd19309d2f86`.
+- [Fabric Database Workflow QA run 38995472644](https://github.com/GowthamAbi/Garment-Fabric-Cutting-MERN/actions/runs/38995472644): **PASS**, 1 test, 0 failures, 0 skipped.
+- [Approval Development Checks run 38995472569](https://github.com/GowthamAbi/Garment-Fabric-Cutting-MERN/actions/runs/38995472569): **PASS**.
+- The transaction test creates a temporary QA company, one factory, Fabric Head and Staff fixtures; persists Fabric Master, approved item, inward receipt (two rolls totalling 10 kg), plan (2 kg required), and a 1.25 kg issue. Inward, roll and issue register all reconcile to **8.75 kg remaining**.
+- Validates generated batch/QR data, role separation (Head POST forbidden; cross-department denied), idempotent replay, conflicting replay, wrong Dia, over-issue rejection, and ledger non-duplication.
+- This test injects role context via an in-test harness, **not full browser login/session authentication**, and tests a separate CI replica set rather than the deployed staging database.
+- Isolated Atlas `UGS-Staging` connection also previously passed insert/read/delete smoke testing.
+- An attempt to provision persistent QA login users on the live staging Atlas cluster could not be completed. The **two temporarily inserted QA fixture documents (registry and company) were immediately deleted**, and no staging login users were added. Unused temporary credentials were discarded. No production records were altered.
+- Persistent staging company/user provisioning, real authenticated UI flow, mobile, print/physical QR, Cutting→Folding integration, multi-factory migration and legacy issue-writer reconciliation **remain pending**.
+
+**Release gate:** This improves Fabric database verification but does **not** establish 21/21 Excel requirements as production-ready.
