@@ -15,6 +15,7 @@ export function legacyDepartment(path){
  if(/^\/fabric-cutting\/plans(\/|$)/.test(path))return 'CUTTING';
  if(/^\/fabric-cutting\/(masters|process-masters|item-masters|inwards|inward-stock|balance-stock|rolls)(\/|$)/.test(path))return 'FABRIC';
  if(/^\/production\/(cutting-machine-(plans|status)|cutting-machines|cutting-overview)(\/|$)/.test(path))return 'CUTTING';
+ if(/^\/production\/elastic-machine-summary$/.test(path))return 'ELASTIC';
  return null;
 }
 export function enforceAccessBoundary(req){
