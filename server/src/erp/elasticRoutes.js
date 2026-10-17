@@ -143,14 +143,16 @@ router.post("/cut",asyncHandler(async(req,res)=>{
  const docs=await ErpDocument.find({...scope,type:"STOCK_TRANSFER",
    reversedBy:{$exists:false},"notes":{$regex:/^ELASTIC\|(CUT|RETURN)\|/}}).limit(5000).lean();
  if(docs.length===5000)throw new ApiError(409,"Elastic movement reconciliation limit; archive first");
- const balance=elasticPlanProgress([plan],docs)[0];
- if(quantity>balance.pendingMtr+0.000001)
+ const balance=elasticPlanProgress([plan],docs)[0],key=idempotency(req);
+ // Same-key retries must reach the ERP idempotency check even after quota is used.
+ const alreadyPosted=await ErpDocument.exists({...scope,idempotencyKey:key});
+ if(!alreadyPosted&&quantity>balance.pendingMtr+0.000001)
    throw new ApiError(409,`Plan has only ${balance.pendingMtr} MTR pending`);
  // Idempotent stock posting serializes material quantity; cross-request plan quantity
  // reconciliation still needs an atomic plan reservation before final E2E approval.
  const posted=await postDocument({type:"STOCK_TRANSFER",
    lines:[{sku:plan.sku,quantity,location:"ELASTIC",target:"DELIVERY"}],
-   notes:elasticCutNote("CUT",planNo,reference)},idempotency(req),req.user.userId);
+   notes:elasticCutNote("CUT",planNo,reference)},key,req.user.userId);
  res.status(201).json({...receiptView(posted),planNo});
 }));
 router.post("/return",asyncHandler(async(req,res)=>{
@@ -163,11 +165,12 @@ router.post("/return",asyncHandler(async(req,res)=>{
  const docs=await ErpDocument.find({...scope,type:"STOCK_TRANSFER",
    reversedBy:{$exists:false},"notes":{$regex:/^ELASTIC\|(CUT|RETURN)\|/}}).limit(5000).lean();
  if(docs.length===5000)throw new ApiError(409,"Elastic reconciliation limit");
- const progress=elasticPlanProgress([plan],docs)[0];
- if(data.quantity>progress.cutMtr+0.000001)throw new ApiError(409,"Return exceeds net issued metres");
+ const progress=elasticPlanProgress([plan],docs)[0],key=idempotency(req);
+ const alreadyPosted=await ErpDocument.exists({...scope,idempotencyKey:key});
+ if(!alreadyPosted&&data.quantity>progress.cutMtr+0.000001)throw new ApiError(409,"Return exceeds net issued metres");
  const posted=await postDocument({type:"STOCK_TRANSFER",
    lines:[{sku:data.sku,quantity:data.quantity,location:"DELIVERY",target:"ELASTIC"}],
-   notes:elasticCutNote("RETURN",planNo,data.reference)},idempotency(req),req.user.userId);
+   notes:elasticCutNote("RETURN",planNo,data.reference)},key,req.user.userId);
  res.status(201).json(receiptView(posted));
 }));
 router.post("/corrections",asyncHandler(async(req,res)=>{
