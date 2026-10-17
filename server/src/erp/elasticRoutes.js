@@ -11,7 +11,8 @@ import {requireLegacyFabricFactory} from "../controllers/fabricPlanMonitorContro
 import ElasticWorkPlan from "../models/ElasticWorkPlan.js";
 import ElasticCorrectionRequest from "../models/ElasticCorrectionRequest.js";
 import {elasticCode,elasticQuantity,elasticMaterialInput,elasticReceiptInput,elasticMovementInput,
- elasticRequirementLines,elasticStockRows,elasticMovementTag,elasticCutNote,elasticPlanProgress} from "./elasticPolicy.js";
+ elasticRequirementLines,elasticStockRows,elasticMovementTag,elasticCutNote,elasticPlanProgress,
+ elasticLineCode,elasticSizeProgress} from "./elasticPolicy.js";
 
 const router=Router();
 const cleaned=v=>String(v||"").trim();
@@ -51,7 +52,9 @@ router.get("/overview",asyncHandler(async(req,res)=>{
  ]);
  const stock=elasticStockRows(materials,balances);
  const productionDocs=documents.filter(d=>elasticMovementTag(d.notes));
- const enriched=elasticPlanProgress(plans,productionDocs);
+ const enriched=elasticPlanProgress(plans,productionDocs).map(plan=>({
+   ...plan,sizeProgress:elasticSizeProgress(plan,productionDocs)
+ }));
  const purchases=purchaseOrders.map(order=>{
    const rows=(order.lines||[]).filter(line=>stock.some(s=>s.code===line.sku)).map(line=>{
      const received=receipts.filter(d=>String(d.sourceId)===String(order._id))
@@ -143,16 +146,19 @@ router.post("/cut",asyncHandler(async(req,res)=>{
  const docs=await ErpDocument.find({...scope,type:"STOCK_TRANSFER",
    reversedBy:{$exists:false},"notes":{$regex:/^ELASTIC\|(CUT|RETURN)\|/}}).limit(5000).lean();
  if(docs.length===5000)throw new ApiError(409,"Elastic movement reconciliation limit; archive first");
+ const colour=elasticLineCode(req.body.colour),size=elasticLineCode(req.body.size);
+ const line=elasticSizeProgress(plan,docs).find(x=>x.colour===colour&&x.size===size);
+ if(!line)throw new ApiError(409,"Colour/Size not in Elastic plan");
  const balance=elasticPlanProgress([plan],docs)[0],key=idempotency(req);
  // Same-key retries must reach the ERP idempotency check even after quota is used.
  const alreadyPosted=await ErpDocument.exists({...scope,idempotencyKey:key});
- if(!alreadyPosted&&quantity>balance.pendingMtr+0.000001)
-   throw new ApiError(409,`Plan has only ${balance.pendingMtr} MTR pending`);
+ if(!alreadyPosted&&(quantity>balance.pendingMtr+0.000001||quantity>line.pendingMtr+0.000001))
+   throw new ApiError(409,`Only ${line.pendingMtr} MTR remaining for ${colour}/${size}`);
  // Idempotent stock posting serializes material quantity; cross-request plan quantity
  // reconciliation still needs an atomic plan reservation before final E2E approval.
  const posted=await postDocument({type:"STOCK_TRANSFER",
    lines:[{sku:plan.sku,quantity,location:"ELASTIC",target:"DELIVERY"}],
-   notes:elasticCutNote("CUT",planNo,reference)},key,req.user.userId);
+   notes:elasticCutNote("CUT",planNo,reference,colour,size)},key,req.user.userId);
  res.status(201).json({...receiptView(posted),planNo});
 }));
 router.post("/return",asyncHandler(async(req,res)=>{
@@ -165,12 +171,16 @@ router.post("/return",asyncHandler(async(req,res)=>{
  const docs=await ErpDocument.find({...scope,type:"STOCK_TRANSFER",
    reversedBy:{$exists:false},"notes":{$regex:/^ELASTIC\|(CUT|RETURN)\|/}}).limit(5000).lean();
  if(docs.length===5000)throw new ApiError(409,"Elastic reconciliation limit");
+ const colour=elasticLineCode(req.body.colour),size=elasticLineCode(req.body.size);
+ const line=elasticSizeProgress(plan,docs).find(x=>x.colour===colour&&x.size===size);
+ if(!line)throw new ApiError(409,"Colour/Size not in Elastic plan");
  const progress=elasticPlanProgress([plan],docs)[0],key=idempotency(req);
  const alreadyPosted=await ErpDocument.exists({...scope,idempotencyKey:key});
- if(!alreadyPosted&&data.quantity>progress.cutMtr+0.000001)throw new ApiError(409,"Return exceeds net issued metres");
+ if(!alreadyPosted&&(data.quantity>progress.cutMtr+0.000001||data.quantity>line.cutMtr+0.000001))
+   throw new ApiError(409,"Return exceeds net issued MTR for this colour/size");
  const posted=await postDocument({type:"STOCK_TRANSFER",
    lines:[{sku:data.sku,quantity:data.quantity,location:"DELIVERY",target:"ELASTIC"}],
-   notes:elasticCutNote("RETURN",planNo,data.reference)},key,req.user.userId);
+   notes:elasticCutNote("RETURN",planNo,data.reference,colour,size)},key,req.user.userId);
  res.status(201).json(receiptView(posted));
 }));
 router.post("/corrections",asyncHandler(async(req,res)=>{
