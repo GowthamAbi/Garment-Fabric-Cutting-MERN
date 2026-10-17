@@ -28,7 +28,7 @@ const n=value=>Number(value||0).toLocaleString("en-IN",{maximumFractionDigits:3}
 export default function AccessoriesDepartmentPage({mode="overview",notify}){
   const {user}=useAuth();
   const readonly=user?.role==="department_incharge";
-  const [data,setData]=useState({stock:[],purchases:[],workOrders:[],suppliers:[],history:[],adjustments:[],summary:{}});
+  const [data,setData]=useState({stock:[],requirements:[],purchases:[],workOrders:[],suppliers:[],history:[],adjustments:[],summary:{}});
   const [form,setForm]=useState(initial);
   const [busy,setBusy]=useState(false),[search,setSearch]=useState("");
   const [subMode,setSubMode]=useState(mode==="purchase"?"purchase":"return");
@@ -109,7 +109,8 @@ export default function AccessoriesDepartmentPage({mode="overview",notify}){
         "PO Lines Pending":data.summary?.pendingPoLines||0,
         "Before Sewing Issues":data.summary?.beforeSewingIssues||0,
         "After Sewing Issues":data.summary?.afterSewingIssues||0,
-        "Adjustment Requests":data.summary?.adjustmentRequests||0}).map(([name,count])=>
+        "Adjustment Requests":data.summary?.adjustmentRequests||0,
+        "BOM Pending Qty":data.summary?.pendingDemandQty||0}).map(([name,count])=>
         <div className="classic-card" key={name}><small>{name}</small><h3>{count}</h3></div>)}
     </div>}
     {isForm&&readonly&&<div className="classic-card">Department Head access is read-only. Staff submit operational entries.</div>}
@@ -154,12 +155,20 @@ export default function AccessoriesDepartmentPage({mode="overview",notify}){
       <h3>Purchase Orders & Goods Receipt Status</h3>
       <DataGrid headers={["Purchase No","Supplier","SKU","Ordered","Received","Pending","Status"]} rows={purchaseRows}/>
     </div>}
+    {["requirement","overview","shortage","reports"].includes(mode)&&<div className="classic-card">
+      <h3>Accessories Requirement – Work Order BOM</h3>
+      <DataGrid headers={["Work Order","Accessories SKU","Required Qty","Issued Qty","Pending Qty","Available Qty","Order Shortage"]}
+        rows={(data.requirements||[]).map(r=>[r.workOrderNo,r.sku,n(r.requiredQty),n(r.issuedQty),
+          n(r.pendingQty),n(r.availableQty),n(r.shortageQty)])}
+        empty="No approved Work Order BOM requires an Accessories SKU yet."/>
+      <p>Work Order demand is calculated from posted BOM and material issue/return documents. Stock shown is shared across plans, not reserved per order.</p>
+    </div>}
     {["requirement","overview"].includes(mode)&&<div className="classic-card">
       <h3>Posted Work Orders</h3>
       <DataGrid headers={["Work Order","Output SKU","Date"]} rows={(data.workOrders||[]).map(w=>[
         w.number,w.sku,w.postedAt?new Date(w.postedAt).toLocaleDateString():""
       ])}/>
-      <p>Component demand quantities follow each approved Work Order BOM; consolidated component requirements are pending development.</p>
+      <p>Use the above BOM table for required, issued, pending and available quantities.</p>
     </div>}
     {showHistory&&<div className="classic-card">
       <h3>Accessories Issue / Return / Transfer History</h3>
