@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {elasticMaterialInput,elasticQuantity,elasticStockRows,elasticMovementInput,
- elasticRequirementLines,elasticMovementTag,elasticCutNote,elasticPlanProgress} from "../src/erp/elasticPolicy.js";
+ elasticRequirementLines,elasticMovementTag,elasticCutNote,elasticPlanProgress,elasticSizeProgress} from "../src/erp/elasticPolicy.js";
 import {allowedDepartment,enabledDepartment} from "../src/erp/departmentPolicy.js";
 
 test("Elastic stock is derived from ERP MTR ledger, no independent balance",()=>{
@@ -61,4 +61,22 @@ test("Elastic department policy enforces Head read, Staff write, subscribed depa
  assert.equal(allowedDepartment({...staff,department:"CUTTING"},"ELASTIC",false),false);
  assert.equal(enabledDepartment(company,"ELASTIC"),true);
  assert.equal(enabledDepartment({...company,enabledDepartments:["CUTTING"]},"ELASTIC"),false);
+});
+
+
+test("Elastic colour/size cutting and returns are traced separately from shared total",()=>{
+ const plan={planNo:"ELA-001",sku:"ELA01",targetMtr:35,lines:[
+   {colour:"BLUE",size:"M",wantedMtr:20},{colour:"BLUE",size:"L",wantedMtr:15}]};
+ const docs=[
+   {notes:elasticCutNote("CUT","ELA-001","CUT-M01","BLUE","M"),lines:[{sku:"ELA01",qty:12000}]},
+   {notes:elasticCutNote("CUT","ELA-001","CUT-L01","BLUE","L"),lines:[{sku:"ELA01",qty:10000}]},
+   {notes:elasticCutNote("RETURN","ELA-001","RET-M01","BLUE","M"),lines:[{sku:"ELA01",qty:1000}]},
+ ];
+ assert.deepEqual(elasticMovementTag(docs[0].notes),{kind:"CUT",planNo:"ELA-001",reference:"CUT-M01",
+   colour:"BLUE",size:"M"});
+ const rows=elasticSizeProgress(plan,docs);
+ assert.equal(rows[0].cutMtr,11);assert.equal(rows[0].pendingMtr,9);
+ assert.equal(rows[1].cutMtr,10);assert.equal(rows[1].pendingMtr,5);
+ assert.equal(elasticPlanProgress([plan],docs)[0].cutMtr,21);
+ assert.throws(()=>elasticCutNote("CUT","ELA-001","BAD","INVALID|COLOUR","M"),/Invalid/);
 });
