@@ -14,6 +14,7 @@ import StitchingDepartmentPage from "../pages/erp/StitchingDepartmentPage.jsx";
 import InwardDepartmentPage from "../pages/erp/InwardDepartmentPage.jsx";
 import CheckingDepartmentPage from "../pages/erp/CheckingDepartmentPage.jsx";
 import IroningDepartmentPage from "../pages/erp/IroningDepartmentPage.jsx";
+import PackingDepartmentPage from "../pages/erp/PackingDepartmentPage.jsx";
 import DashboardPage from "../pages/dashboard/DashboardPage.jsx";
 import Departments from "../pages/erp/Departments.jsx";
 import ErpWorkspace from "../pages/erp/ErpWorkspace.jsx";
@@ -381,6 +382,36 @@ export default function AppRoutes({ page, notify, onPageChange, _fromExcelOption
       return <IroningDepartmentPage mode="history" notify={notify} />;
     case "Ironing Print Workspace":
       return <IroningDepartmentPage mode="print" notify={notify} />;
+    case "Packing Plan Overview Workspace":
+      return <PackingDepartmentPage mode="overview" notify={notify} />;
+    case "Packing Ready Workspace":
+      return <PackingDepartmentPage mode="ready" notify={notify} />;
+    case "Packing Progress Workspace":
+      return <PackingDepartmentPage mode="progress" notify={notify} />;
+    case "Packing Materials Workspace":
+      return <PackingDepartmentPage mode="materials" notify={notify} />;
+    case "Packing Assortment Workspace":
+      return <PackingDepartmentPage mode="assortment" notify={notify} />;
+    case "Packing Issues Workspace":
+      return <PackingDepartmentPage mode="issues" notify={notify} />;
+    case "Packing Reports Workspace":
+      return <PackingDepartmentPage mode="reports" notify={notify} />;
+    case "Packing Master Workspace":
+      return <PackingDepartmentPage mode="master" notify={notify} />;
+    case "Packing Plan Entry Workspace":
+      return <PackingDepartmentPage mode="plan" notify={notify} />;
+    case "Packing Entry Workspace":
+      return <PackingDepartmentPage mode="entry" notify={notify} />;
+    case "Packing Materials Issue Workspace":
+      return <PackingDepartmentPage mode="material-issue" notify={notify} />;
+    case "Packing Label Workspace":
+      return <PackingDepartmentPage mode="label" notify={notify} />;
+    case "Packing Stock Workspace":
+      return <PackingDepartmentPage mode="stock" notify={notify} />;
+    case "Packing Issue Entry Workspace":
+      return <PackingDepartmentPage mode="issue" notify={notify} />;
+    case "Packing History Workspace":
+      return <PackingDepartmentPage mode="history" notify={notify} />;
     case "Fabric Inward Entry":
       return <FabricInwardPage notify={notify} />;
     case "Fabric Inward Print":

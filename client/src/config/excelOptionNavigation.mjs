@@ -174,6 +174,24 @@ const ROUTES=Object.freeze({
   "Ironing History":"Ironing History Workspace",
   "Print & Reports":"Ironing Print Workspace"
  },
+ PACKING:{
+  "Packing Plan Overview":"Packing Plan Overview Workspace",
+  "Ready for Packing":"Packing Ready Workspace",
+  "Packed vs Pending":"Packing Progress Workspace",
+  "Packing Material Availability":"Packing Materials Workspace",
+  "Size / Colour / Carton Status":"Packing Assortment Workspace",
+  "Repacking / Damage":"Packing Issues Workspace",
+  "Packing Reports":"Packing Reports Workspace",
+  "Packing Material Master":"Packing Master Workspace",
+  "Packing Plan":"Packing Plan Entry Workspace",
+  "Packing Entry":"Packing Entry Workspace",
+  "Packing Accessories Issue":"Packing Materials Issue Workspace",
+  "Size / Colour Assortment":"Packing Assortment Workspace",
+  "Carton QR / Label":"Packing Label Workspace",
+  "Packed Stock & Pending":"Packing Stock Workspace",
+  "Repacking Request":"Packing Issue Entry Workspace",
+  "Packing History / Print":"Packing History Workspace"
+ },
  WAREHOUSE:{
   "Warehouse Stock Overview":"Warehouse Management",
   "Warehouse Stock":"Warehouse Management",
