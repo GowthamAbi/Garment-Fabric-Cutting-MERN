@@ -18,6 +18,7 @@ import {DEPARTMENTS,WORKFLOW_DEPARTMENTS,allowedShop,allowedDepartment,enabledDe
 import {fail,money,ratio,safeInteger} from './policy.js';
 import { forecastDemand, dailyNetSales, scenarioForecast } from './forecastPolicy.js';
 import { departmentSummary } from './departmentReports.js';
+import {stitchingOverview} from "./stitchingOverviewPolicy.js";
 import accessoriesRoutes from "./accessoriesRoutes.js";
 import elasticRoutes from "./elasticRoutes.js";
 import DeliveryChallan from '../models/DeliveryChallan.js';
@@ -215,6 +216,23 @@ router.post('/targets',asyncHandler(async(req,res)=>{
   if(!await Master.exists({...scope,kind:'STITCHING',sku,operations:operation,active:{$ne:false}}).session(session))fail('Select a saved stitching operation for this SKU');
   const [target]=await Target.create([{...scope,key:req.body.key,date,sku,operation,operator,shift,quantity:pieces(req.body.quantity),createdBy:req.user.userId}],{session});return {details:{target}};
  }));
+}));
+// Existing ERP lot/bundle/event data — read-only Stitching reporting, no
+// fabricated piece counts or side-channel visibility into other departments.
+router.get('/stitching-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'STITCHING',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,masters,targets,events]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1001).lean(),
+  Bundle.find({...scope,qty:{$gt:0}}).limit(10001).lean(),
+  Master.find({...scope,kind:'STITCHING',active:{$ne:false}}).limit(2001).lean(),
+  Target.find(scope).sort({date:-1}).limit(2001).lean(),
+  Event.find({...scope,department:'STITCHING',reversedBy:{$exists:false}})
+    .sort({createdAt:-1}).limit(10001).lean(),
+ ]);
+ if(lots.length>1000||bundles.length>10000||masters.length>2000||
+    targets.length>2000||events.length>10000)throw new ApiError(409,'Stitching report limit reached; filter/archive before reporting');
+ res.json(stitchingOverview(lots,bundles,masters,targets,events));
 }));
 router.get('/reconciliation',asyncHandler(async(req,res)=>{
  if(!['company_owner','admin','company_admin'].includes(req.user.role))throw new ApiError(403,'Company administrator required');
