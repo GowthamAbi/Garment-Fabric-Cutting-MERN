@@ -20,6 +20,8 @@ import { forecastDemand, dailyNetSales, scenarioForecast } from './forecastPolic
 import { departmentSummary } from './departmentReports.js';
 import {stitchingOverview} from "./stitchingOverviewPolicy.js";
 import {inwardOverview,validateInwardDiscrepancy} from "./inwardOverviewPolicy.js";
+import {checkingOverview,validateQualityHold} from "./checkingOverviewPolicy.js";
+import CheckingQualityHoldRequest from "../models/CheckingQualityHoldRequest.js";
 import InwardDiscrepancyRequest from "../models/InwardDiscrepancyRequest.js";
 import accessoriesRoutes from "./accessoriesRoutes.js";
 import elasticRoutes from "./elasticRoutes.js";
@@ -224,7 +226,56 @@ router.post('/targets',asyncHandler(async(req,res)=>{
 
  // Inward is distinct from the legacy PO purchasing /transactions/inward API.
  // Returns only tenant+factory-scoped ERP lot, bundle and movement data.
- router.get('/inward-overview',asyncHandler(async(req,res)=>{
+ // Checking entry reuses POST /check and /advance to keep one ERP stock ledger.
+// This report and non-posting hold request are strictly tenant/factory scoped.
+router.get('/checking-overview',asyncHandler(async(req,res)=>{
+ requireAccess(req,'CHECKING',false);
+ const scope=workspaceFilter();
+ const [lots,bundles,events,holds]=await Promise.all([
+  Lot.find({...scope,status:{$ne:'CANCELLED'}}).sort({createdAt:-1}).limit(1501).lean(),
+  Bundle.find({...scope,qty:{$gt:0},stage:{$in:['CHECKING','GOOD','REWORK','REWORK_DONE','OIL','OIL_DONE','WASTE']}})
+   .limit(10001).lean(),
+  Event.find({...scope,department:'CHECKING',kind:{$in:['CHECK','ADVANCE']},
+    reversedBy:{$exists:false}}).sort({createdAt:-1}).limit(10001).lean(),
+  CheckingQualityHoldRequest.find(scope).sort({createdAt:-1}).limit(2001).lean()
+ ]);
+ if(lots.length>1500||bundles.length>10000||events.length>10000||holds.length>2000)
+  throw new ApiError(409,'Checking report capacity exceeded; filter/archive before reporting');
+ res.json(checkingOverview(lots,bundles,events,holds));
+}));
+router.post('/checking-hold-requests',asyncHandler(async(req,res)=>{
+ requireAccess(req,'CHECKING');
+ const scope=workspaceFilter(),key=String(req.body.key||"").trim();
+ if(!/^[A-Za-z0-9_-]{16,100}$/.test(key))
+  throw new ApiError(400,'Stable 16–100 character idempotency key required');
+ if(!mongoose.isValidObjectId(req.body.bundleId))throw new ApiError(400,'Valid Checking bundle ID required');
+ const bundle=await Bundle.findOne({...scope,_id:req.body.bundleId,stage:'CHECKING',qty:{$gt:0}}).lean();
+ if(!bundle)throw new ApiError(404,'Active Checking bundle not found');
+ const lot=await Lot.findOne({...scope,_id:bundle.lotId,status:{$ne:'CANCELLED'}}).lean();
+ if(!lot)throw new ApiError(404,'Matching QC lot not found');
+ const values=validateQualityHold(req.body,bundle),hash=requestHash({bundleId:String(bundle._id),...values});
+ await CheckingQualityHoldRequest.init();
+ let existing=await CheckingQualityHoldRequest.findOne({...scope,key}).lean();
+ if(existing){
+  if(existing.requestHash!==hash)throw new ApiError(409,'Hold key used for different request');
+  if(existing.requestedBy!==req.user.userId&&!['company_owner','admin','company_admin'].includes(req.user.role))
+   throw new ApiError(403,'Request belongs to another user');
+  return res.json(existing);
+ }
+ try{
+  const created=await CheckingQualityHoldRequest.create({...scope,key,requestHash:hash,
+   lotId:String(lot._id),lotNo:lot.code,dcNo:lot.dcNo,bundleId:String(bundle._id),
+   bundleNo:bundle.code,...values,requestedBy:req.user.userId});
+  return res.status(201).json(created);
+ }catch(e){
+  if(e.code!==11000)throw e;
+  existing=await CheckingQualityHoldRequest.findOne({...scope,key}).lean();
+  if(existing?.requestHash===hash&&existing?.requestedBy===req.user.userId)return res.json(existing);
+  throw new ApiError(409,'Concurrent duplicate hold request key');
+ }
+}));
+
+router.get('/inward-overview',asyncHandler(async(req,res)=>{
   requireAccess(req,'INWARD',false);
   const scope=workspaceFilter();
   const [lots,bundles,events,requests]=await Promise.all([
